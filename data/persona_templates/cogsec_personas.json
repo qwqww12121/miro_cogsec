@@ -1,0 +1,18 @@
+{
+  "adversary_template": {
+    "role": "telecom_fraud_agent",
+    "strategy_source": "ThreatKnowledgeRAG",
+    "constraints": "ONLY use strategies from retrieved fraud cases. DO NOT invent new tactics.",
+    "cialdini_weights": {
+      "Authority": 0.8,
+      "Scarcity": 0.7,
+      "Fear": 0.9
+    }
+  },
+  "user_template": {
+    "role": "victim_agent",
+    "cognitive_profile": "<DYNAMIC_PROFILE>",
+    "cognitive_mode": "SYSTEM_2",
+    "mode_switch_condition": "time_pressure > 7 AND emotional_volatility > 7"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "patterns": [
+    {
+      "id": "screen_share_bank_card",
+      "tags": ["screen_share", "bank_card"],
+      "regex": "(共享屏幕|远程(控制|协助)|screen\\s*share).{0,24}(银行卡|卡号|cvv|验证码|bank\\s*card)"
+    },
+    {
+      "id": "safe_account_transfer",
+      "tags": ["safe_account", "transfer"],
+      "regex": "(安全账户|监管账户|safe\\s*account).{0,24}(转账|汇款|打款|transfer)"
+    },
+    {
+      "id": "police_secrecy_isolation",
+      "tags": ["police", "secrecy", "isolation"],
+      "regex": "(公安|警方|police).{0,28}(保密|不要告诉|单独联系|隔离|不要联系家人|secrecy|isolation)"
+    }
+  ]
+}

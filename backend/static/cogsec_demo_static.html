@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CogSec-MiroFish 静态前端示例</title>
+  <link rel="stylesheet" href="./cogsec_demo.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">CogSec-MiroFish Static Demo</p>
+        <h1>认知安全静态前端示例</h1>
+        <p class="hero-text">
+          这个页面直接加载内置样例数据，用来演示 CogSec 工作台的前端结构与可视化效果，不依赖 Flask API。
+        </p>
+      </div>
+      <div class="hero-badge">
+        <span>模式</span>
+        <strong>Static</strong>
+      </div>
+    </header>
+
+    <section class="panel input-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Input</p>
+          <h2>场景输入</h2>
+        </div>
+        <div class="actions">
+          <button id="fill-sample-btn" class="ghost-btn">填入示例</button>
+          <button id="analyze-btn" class="primary-btn">刷新示例</button>
+        </div>
+      </div>
+
+      <label class="field">
+        <span>诈骗类别（可选）</span>
+        <select id="scenario-type">
+          <option value="">自动识别</option>
+          <option value="虚假征信类">虚假征信类</option>
+          <option value="刷单返利类">刷单返利类</option>
+          <option value="虚假网络投资理财类">虚假网络投资理财类</option>
+          <option value="冒充电商物流客服类">冒充电商物流客服类</option>
+          <option value="冒充公检法及政府机关类">冒充公检法及政府机关类</option>
+          <option value="冒充领导熟人类">冒充领导熟人类</option>
+          <option value="网络游戏产品虚假交易类">网络游戏产品虚假交易类</option>
+          <option value="网络婚恋交友类">网络婚恋交友类</option>
+          <option value="机票退改签类">机票退改签类</option>
+          <option value="虚假贷款代办信用卡类">虚假贷款代办信用卡类</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>场景文本</span>
+        <textarea id="scenario-input" rows="6"></textarea>
+      </label>
+
+      <div id="status-box" class="status-box idle">等待加载静态示例</div>
+    </section>
+
+    <section id="result-shell" class="result-shell hidden">
+      <div class="metrics-grid" id="metrics-grid"></div>
+
+      <div class="two-col">
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Profile</p>
+              <h2>18 维认知画像</h2>
+            </div>
+          </div>
+          <div id="profile-groups" class="profile-groups"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Outcome</p>
+              <h2>最终评分对比</h2>
+            </div>
+          </div>
+          <div id="score-summary" class="score-summary"></div>
+          <div class="chart-box">
+            <svg id="trend-chart" viewBox="0 0 760 280" preserveAspectRatio="none"></svg>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Timeline</p>
+            <h2>危险 / 防御双分支流程</h2>
+          </div>
+        </div>
+        <div id="timeline-grid" class="timeline-grid"></div>
+      </section>
+
+      <div class="two-col">
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Graph</p>
+              <h2>关系图可视化</h2>
+            </div>
+          </div>
+          <div id="graph-stage" class="graph-stage"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Advice</p>
+              <h2>个性化建议</h2>
+            </div>
+          </div>
+          <div id="recommend-list" class="recommend-list"></div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">JSON</p>
+            <h2>原始返回</h2>
+          </div>
+        </div>
+        <pre id="raw-json" class="raw-json"></pre>
+      </section>
+    </section>
+  </div>
+
+  <script>
+    window.__COGSEC_STATIC_MODE__ = true;
+    window.__COGSEC_DEFAULT_SCENARIO__ = "我接到自称电商平台客服的电话，对方说我的快递丢失了，要马上操作退款。他让我不要告诉别人，直接加QQ，发来一个链接让我填写银行卡和验证码。";
+    window.__COGSEC_STATIC_ANALYSIS__ = {
+      profile: {
+        time_pressure: 8.4,
+        financial_pressure: 5.0,
+        info_asymmetry: 5.8,
+        emotional_volatility: 5.0,
+        cognitive_load: 7.0,
+        authority_intensity: 8.0,
+        authority_compliance: 5.0,
+        social_proof_sensitivity: 5.0,
+        scarcity_sensitivity: 5.0,
+        loss_aversion_threshold: 7.3,
+        gambler_fallacy: 5.0,
+        trust_threshold: 5.0,
+        decision_delay: 5.0,
+        verification_habit: 3.6,
+        help_seeking: 5.0,
+        link_check_ability: 3.7,
+        transaction_review: 3.6,
+        prior_experience: 5.0,
+        scenario_type: "冒充电商物流客服类",
+        overall_vulnerability_score: 54.55,
+        protection_score: 4.32,
+        reasoning: {
+          time_pressure: "命中关键词：马上",
+          financial_pressure: "未给出明确依据。",
+          info_asymmetry: "命中关键词：不要告诉别人",
+          emotional_volatility: "未给出明确依据。",
+          cognitive_load: "涉及多步骤金融操作，认知负荷更高。",
+          authority_intensity: "命中关键词：客服",
+          authority_compliance: "未给出明确依据。",
+          social_proof_sensitivity: "未给出明确依据。",
+          scarcity_sensitivity: "未给出明确依据。",
+          loss_aversion_threshold: "匹配到诈骗类别默认画像。",
+          gambler_fallacy: "未给出明确依据。",
+          trust_threshold: "未给出明确依据。",
+          decision_delay: "未给出明确依据。",
+          verification_habit: "匹配到诈骗类别默认画像。",
+          help_seeking: "未给出明确依据。",
+          link_check_ability: "命中关键词：链接",
+          transaction_review: "涉及支付或验证码环节，默认提高交易风险。",
+          prior_experience: "未给出明确依据。"
+        }
+      },
+      strategies: [
+        {
+          id: "case_logistics_001:screen_share",
+          cialdini_principle: "commitment",
+          tactic_name: "远程协助接管设备",
+          description: "要求下载会议软件、共享屏幕或开启远程控制。",
+          escalation_condition: "受害者不会操作退款流程时。",
+          intensity_level: 3,
+          typical_dialogue: "你不会操作的话，我远程帮你点一下就行。"
+        },
+        {
+          id: "case_logistics_001:refund_pressure",
+          cialdini_principle: "authority",
+          tactic_name: "客服退款流程施压",
+          description: "冒充平台客服，引导进入退款或理赔流程并获取验证码。",
+          escalation_condition: "受害者确认近期有快递或电商订单时。",
+          intensity_level: 2,
+          typical_dialogue: "为了给你退款，需要你先配合验证银行卡。"
+        },
+        {
+          id: "case_credit_001:authority_call",
+          cialdini_principle: "authority",
+          tactic_name: "征信中心权威施压",
+          description: "冒充征信或监管人员，以影响征信和司法风险制造服从压力。",
+          escalation_condition: "受害者表达担忧或害怕账户冻结时。",
+          intensity_level: 3,
+          typical_dialogue: "你的征信即将受影响，请立即按我说的做。"
+        }
+      ],
+      branch_a_log: [
+        {
+          step: 1,
+          branch: "A",
+          agent_action: "攻击者继续使用“远程协助接管设备”推进操作",
+          victim_response: "受害者继续配合，准备填写个人信息并转账",
+          triggered_principles: ["commitment"],
+          score_delta: { CHS: -4.09, ASS: -14.0, SSS: -0.5, EES: 9.0 }
+        },
+        {
+          step: 2,
+          branch: "A",
+          agent_action: "攻击者继续使用“客服退款流程施压”推进操作",
+          victim_response: "受害者继续配合，准备填写个人信息并转账",
+          triggered_principles: ["authority", "scarcity"],
+          score_delta: { CHS: -6.65, ASS: -17.2, SSS: -0.5, EES: 13.0 }
+        },
+        {
+          step: 3,
+          branch: "A",
+          agent_action: "攻击者继续使用“征信中心权威施压”推进操作",
+          victim_response: "受害者继续配合，准备提交验证码和收款账户",
+          triggered_principles: ["authority"],
+          score_delta: { CHS: -3.5, ASS: -17.89, SSS: -0.5, EES: 12.0 }
+        }
+      ],
+      branch_b_log: [
+        {
+          step: 1,
+          branch: "B",
+          agent_action: "受害者识别“远程协助接管设备”并通过官方渠道核验",
+          victim_response: "暂停操作，回拨官方客服，并向家人求助",
+          triggered_principles: ["commitment"],
+          score_delta: { CHS: 0.0, ASS: 0.0, SSS: -0.5, EES: 0.0 }
+        },
+        {
+          step: 2,
+          branch: "B",
+          agent_action: "受害者识别“客服退款流程施压”并通过官方渠道核验",
+          victim_response: "拒绝加私人联系方式，只在官方 App 中继续处理",
+          triggered_principles: ["authority"],
+          score_delta: { CHS: 0.0, ASS: 0.0, SSS: -0.5, EES: 0.0 }
+        },
+        {
+          step: 3,
+          branch: "B",
+          agent_action: "受害者识别“征信中心权威施压”并通过官方渠道核验",
+          victim_response: "保留证据并发起举报，不再继续任何转账或验证码操作",
+          triggered_principles: ["authority"],
+          score_delta: { CHS: 0.0, ASS: 0.0, SSS: -0.5, EES: 0.0 }
+        }
+      ],
+      counterfactual_report: {
+        risk_level: "MEDIUM",
+        critical_bifurcation_step: 3,
+        critical_bifurcation_reason: "第 3 步出现最大分叉：危险分支继续服从权威施压，而防御分支已经转向官方核验与求助，资产与认知风险快速拉开差距。",
+        summary_branch_a: "危险分支在连续的远程协助、退款施压与征信权威话术中逐步下滑到中风险区间。",
+        summary_branch_b: "防御分支始终保持高资产安全与高认知清醒度，成功阻断诈骗闭环。",
+        recommendations: [
+          {
+            priority: 1,
+            action: "凡涉及资金、征信、账号安全的操作，必须通过官方 App 或公开客服二次核验。",
+            reason: "当前二次核验习惯偏弱，是本案例最先需要补齐的防线。"
+          },
+          {
+            priority: 2,
+            action: "固定执行“查来电、看域名、核收款方”的三步复核。",
+            reason: "链接核验和交易复核分数偏低，容易被伪装入口绕过。"
+          },
+          {
+            priority: 3,
+            action: "遇到“马上处理”“今天过期”这类催促时，先暂停 10 分钟再操作。",
+            reason: "时间压力是这次样例里最强的风险触发因子。"
+          }
+        ],
+        score_comparison: {
+          branch_a_final: { CHS: 85.76, ASS: 50.91, SSS: 48.5, EES: 34.0 },
+          branch_b_final: { CHS: 100.0, ASS: 100.0, SSS: 48.5, EES: 0.0 },
+          timeline_a: [
+            { t: 0, CHS: 100.0, ASS: 100.0, SSS: 50.0, EES: 0.0 },
+            { t: 1, CHS: 95.91, ASS: 86.0, SSS: 49.5, EES: 9.0 },
+            { t: 2, CHS: 89.26, ASS: 68.8, SSS: 49.0, EES: 22.0 },
+            { t: 3, CHS: 85.76, ASS: 50.91, SSS: 48.5, EES: 34.0 }
+          ],
+          timeline_b: [
+            { t: 0, CHS: 100.0, ASS: 100.0, SSS: 50.0, EES: 0.0 },
+            { t: 1, CHS: 100.0, ASS: 100.0, SSS: 49.5, EES: 0.0 },
+            { t: 2, CHS: 100.0, ASS: 100.0, SSS: 49.0, EES: 0.0 },
+            { t: 3, CHS: 100.0, ASS: 100.0, SSS: 48.5, EES: 0.0 }
+          ]
+        }
+      },
+      graph: {
+        nodes: [
+          { id: "profile", name: "冒充电商物流客服类", category: "scenario", value: 54.55, risk: 54.55, description: "综合脆弱度 54.55/100" },
+          { id: "feature:time_pressure", name: "time_pressure", category: "state", value: 8.4, risk: 8.4, description: "时间催促明显" },
+          { id: "feature:financial_pressure", name: "financial_pressure", category: "state", value: 5.0, risk: 5.0, description: "资金压力中性" },
+          { id: "feature:info_asymmetry", name: "info_asymmetry", category: "state", value: 5.8, risk: 5.8, description: "存在隐蔽沟通要求" },
+          { id: "feature:emotional_volatility", name: "emotional_volatility", category: "state", value: 5.0, risk: 5.0, description: "情绪波动中性" },
+          { id: "feature:authority_compliance", name: "authority_compliance", category: "vulnerability", value: 5.0, risk: 5.0, description: "对权威话术较易顺从" },
+          { id: "feature:social_proof_sensitivity", name: "social_proof_sensitivity", category: "vulnerability", value: 5.0, risk: 5.0, description: "从众敏感中性" },
+          { id: "feature:scarcity_sensitivity", name: "scarcity_sensitivity", category: "vulnerability", value: 5.0, risk: 5.0, description: "对稀缺刺激中性" },
+          { id: "feature:trust_threshold", name: "trust_threshold", category: "vulnerability", value: 5.0, risk: 5.0, description: "默认信任倾向中性" },
+          { id: "feature:decision_delay", name: "decision_delay", category: "protection", value: 5.0, risk: 5.0, description: "延迟决策一般" },
+          { id: "feature:verification_habit", name: "verification_habit", category: "protection", value: 3.6, risk: 6.4, description: "官方核验习惯偏弱" },
+          { id: "feature:help_seeking", name: "help_seeking", category: "protection", value: 5.0, risk: 5.0, description: "求助倾向一般" },
+          { id: "feature:link_check_ability", name: "link_check_ability", category: "protection", value: 3.7, risk: 6.3, description: "链接识别能力偏弱" },
+          { id: "strategy:screen_share", name: "远程协助接管设备", category: "strategy", value: 9.0, risk: 9.0, description: "诱导下载远控或共享屏幕" },
+          { id: "strategy:refund_pressure", name: "客服退款流程施压", category: "strategy", value: 6.0, risk: 8.0, description: "以退款理赔为由推进操作" },
+          { id: "strategy:authority_call", name: "征信中心权威施压", category: "strategy", value: 9.0, risk: 9.0, description: "借权威和惩罚后果压迫受害者" }
+        ],
+        links: [
+          { source: "profile", target: "feature:time_pressure", label: "time_pressure", value: 8.4 },
+          { source: "profile", target: "feature:financial_pressure", label: "financial_pressure", value: 5.0 },
+          { source: "profile", target: "feature:info_asymmetry", label: "info_asymmetry", value: 5.8 },
+          { source: "profile", target: "feature:emotional_volatility", label: "emotional_volatility", value: 5.0 },
+          { source: "profile", target: "feature:authority_compliance", label: "authority_compliance", value: 5.0 },
+          { source: "profile", target: "feature:social_proof_sensitivity", label: "social_proof_sensitivity", value: 5.0 },
+          { source: "profile", target: "feature:scarcity_sensitivity", label: "scarcity_sensitivity", value: 5.0 },
+          { source: "profile", target: "feature:trust_threshold", label: "trust_threshold", value: 5.0 },
+          { source: "profile", target: "feature:decision_delay", label: "decision_delay", value: 5.0 },
+          { source: "profile", target: "feature:verification_habit", label: "verification_habit", value: 3.6 },
+          { source: "profile", target: "feature:help_seeking", label: "help_seeking", value: 5.0 },
+          { source: "profile", target: "feature:link_check_ability", label: "link_check_ability", value: 3.7 },
+          { source: "profile", target: "strategy:screen_share", label: "commitment", value: 3 },
+          { source: "profile", target: "strategy:refund_pressure", label: "authority", value: 2 },
+          { source: "profile", target: "strategy:authority_call", label: "authority", value: 3 }
+        ]
+      },
+      meta: {
+        mode: "static_demo",
+        loaded_case_count: 5,
+        llm_mode: "static_sample",
+        llm_last_error: null,
+        llm_model_path: null,
+        llm_loaded_device: null
+      }
+    };
+  </script>
+  <script src="./cogsec_demo.js"></script>
+</body>
+</html>

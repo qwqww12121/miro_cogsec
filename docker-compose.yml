@@ -1,0 +1,35 @@
+services:
+  chroma:
+    image: chromadb/chroma:0.5.5
+    container_name: mirofish-chroma
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    volumes:
+      - ./data/chroma_db:/chroma/chroma
+
+  mirofish:
+    image: ghcr.io/666ghj/mirofish:latest
+    # 加速镜像（如拉取缓慢可替换上方地址）
+    # image: ghcr.nju.edu.cn/666ghj/mirofish:latest
+    container_name: mirofish
+    depends_on:
+      - chroma
+    env_file:
+      - .env
+    environment:
+      COGSEC_USE_LOCAL_GEMMA: ${COGSEC_USE_LOCAL_GEMMA:-true}
+      COGSEC_LOCAL_MODEL_PATH: ${COGSEC_LOCAL_MODEL_PATH:-/app/models/google--gemma-4-E2B-it}
+      LIWC_DICT_PATH: ${LIWC_DICT_PATH:-/app/data/liwc_chinese.json}
+      PRESIDIO_ENABLED: ${PRESIDIO_ENABLED:-true}
+      T0_PATTERNS_PATH: ${T0_PATTERNS_PATH:-/app/data/t0_regex_patterns.json}
+      RISK_SCORE_THRESHOLD_CRITICAL: ${RISK_SCORE_THRESHOLD_CRITICAL:-0.85}
+      REVERSIBILITY_WARN_THRESHOLD: ${REVERSIBILITY_WARN_THRESHOLD:-0.3}
+    ports:
+      - "3000:3000"
+      - "5001:5001"
+    restart: unless-stopped
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+      - ./data:/app/data
+      - ./models:/app/models

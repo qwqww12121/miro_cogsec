@@ -1,0 +1,149 @@
+{
+  "cases": [
+    {
+      "id": "case_credit_001",
+      "category": "虚假征信类",
+      "attack_role": "fake_credit_officer",
+      "target_info": ["银行卡", "验证码", "屏幕共享"],
+      "attack_strategies": [
+        {
+          "id": "case_credit_001:authority_call",
+          "cialdini_principle": "authority",
+          "tactic_name": "征信中心权威施压",
+          "description": "冒充征信或监管人员，以影响征信和司法风险制造服从压力。",
+          "typical_dialogue": "你的征信即将受影响，请立即按我说的做。",
+          "escalation_condition": "受害者表达担忧或害怕账户冻结时。",
+          "intensity_level": 3
+        },
+        {
+          "id": "case_credit_001:safe_account",
+          "cialdini_principle": "scarcity",
+          "tactic_name": "安全账户限时转移",
+          "description": "要求在短时间内把资金转入所谓安全账户。",
+          "typical_dialogue": "系统窗口只保留 10 分钟，现在不转就会自动扣罚。",
+          "escalation_condition": "受害者尚未完成转账时。",
+          "intensity_level": 3
+        }
+      ],
+      "dialogue_examples": [{"attacker": "马上核验", "victim": "我有点担心"}],
+      "risk_keywords": ["征信", "安全账户", "司法风险", "冻结"],
+      "red_flags": ["要求屏幕共享", "要求向安全账户转账"]
+    },
+    {
+      "id": "case_rebate_001",
+      "category": "刷单返利类",
+      "attack_role": "task_operator",
+      "target_info": ["垫付款", "收款码", "银行卡"],
+      "attack_strategies": [
+        {
+          "id": "case_rebate_001:small_profit",
+          "cialdini_principle": "reciprocity",
+          "tactic_name": "小额返利建立信任",
+          "description": "先给受害者小额甜头，再引导进入更大金额任务。",
+          "typical_dialogue": "这单你已经赚到了，继续做高级单返佣更高。",
+          "escalation_condition": "受害者体验到首次返利后。",
+          "intensity_level": 2
+        },
+        {
+          "id": "case_rebate_001:quota_pressure",
+          "cialdini_principle": "scarcity",
+          "tactic_name": "高级任务名额稀缺",
+          "description": "强调高级任务机会稀缺，逼迫快速垫付。",
+          "typical_dialogue": "高级单只剩最后两个名额，错过今天就没了。",
+          "escalation_condition": "受害者开始犹豫是否继续时。",
+          "intensity_level": 3
+        }
+      ],
+      "dialogue_examples": [{"attacker": "再做一单就能提现", "victim": "那我继续"}],
+      "risk_keywords": ["返利", "任务", "垫付", "佣金"],
+      "red_flags": ["先返小利后要大额垫付", "提现前还要继续充值"]
+    },
+    {
+      "id": "case_invest_001",
+      "category": "虚假网络投资理财类",
+      "attack_role": "investment_advisor",
+      "target_info": ["投资本金", "证券账户", "转账凭证"],
+      "attack_strategies": [
+        {
+          "id": "case_invest_001:expert_packaging",
+          "cialdini_principle": "authority",
+          "tactic_name": "导师包装与内幕背书",
+          "description": "包装专业导师身份，提供内幕消息和稳赚预期。",
+          "typical_dialogue": "我是内部老师，这波行情只有小范围学员能跟上。",
+          "escalation_condition": "受害者表现出赚钱意愿时。",
+          "intensity_level": 2
+        },
+        {
+          "id": "case_invest_001:group_proof",
+          "cialdini_principle": "social_proof",
+          "tactic_name": "群聊盈利截图从众引导",
+          "description": "通过群聊截图和他人收益记录制造从众效应。",
+          "typical_dialogue": "群里其他人都已经翻倍了，你现在入场还来得及。",
+          "escalation_condition": "受害者担心自己错失收益时。",
+          "intensity_level": 3
+        }
+      ],
+      "dialogue_examples": [{"attacker": "大家都跟上了", "victim": "我也想试试"}],
+      "risk_keywords": ["导师", "内幕", "群聊", "盈利截图"],
+      "red_flags": ["承诺稳赚不赔", "展示可伪造收益截图"]
+    },
+    {
+      "id": "case_logistics_001",
+      "category": "冒充电商物流客服类",
+      "attack_role": "fake_customer_service",
+      "target_info": ["银行卡", "验证码", "远程控制"],
+      "attack_strategies": [
+        {
+          "id": "case_logistics_001:refund_pressure",
+          "cialdini_principle": "authority",
+          "tactic_name": "客服退款流程施压",
+          "description": "冒充平台客服，引导进入退款或理赔流程并获取验证码。",
+          "typical_dialogue": "为了给你退款，需要你先配合验证银行卡。",
+          "escalation_condition": "受害者确认近期有快递或电商订单时。",
+          "intensity_level": 2
+        },
+        {
+          "id": "case_logistics_001:screen_share",
+          "cialdini_principle": "commitment",
+          "tactic_name": "远程协助接管设备",
+          "description": "要求下载会议软件、共享屏幕或开启远程控制。",
+          "typical_dialogue": "你不会操作的话，我远程帮你点一下就行。",
+          "escalation_condition": "受害者不会操作退款流程时。",
+          "intensity_level": 3
+        }
+      ],
+      "dialogue_examples": [{"attacker": "快递丢件赔付", "victim": "需要怎么处理"}],
+      "risk_keywords": ["客服", "退款", "理赔", "远程协助"],
+      "red_flags": ["要求验证码", "要求下载远控软件"]
+    },
+    {
+      "id": "case_romance_001",
+      "category": "网络婚恋交友类",
+      "attack_role": "romance_scammer",
+      "target_info": ["转账", "投资链接", "身份信息"],
+      "attack_strategies": [
+        {
+          "id": "case_romance_001:emotional_bond",
+          "cialdini_principle": "liking",
+          "tactic_name": "情感绑定建立信任",
+          "description": "通过持续陪伴与情感关怀降低警惕。",
+          "typical_dialogue": "我是真心想和你一起规划未来，所以才告诉你这个机会。",
+          "escalation_condition": "受害者对关系投入感情后。",
+          "intensity_level": 2
+        },
+        {
+          "id": "case_romance_001:future_commitment",
+          "cialdini_principle": "commitment",
+          "tactic_name": "共同未来承诺施压",
+          "description": "把转账或投资包装为共同未来的一部分。",
+          "typical_dialogue": "如果你愿意和我一起生活，就帮我渡过这个坎。",
+          "escalation_condition": "受害者开始承诺见面或长期关系时。",
+          "intensity_level": 3
+        }
+      ],
+      "dialogue_examples": [{"attacker": "我只信任你", "victim": "那我帮你"}],
+      "risk_keywords": ["感情", "陪伴", "未来", "信任"],
+      "red_flags": ["未见面即借钱", "以未来关系为名要求投资"]
+    }
+  ]
+}
