@@ -1,28 +1,33 @@
 services:
   chroma:
     image: chromadb/chroma:0.5.5
-    container_name: mirofish-chroma
+    container_name: miro-cogsec-chroma
     ports:
       - "8000:8000"
     restart: unless-stopped
     volumes:
       - ./data/chroma_db:/chroma/chroma
 
-  mirofish:
-    image: ghcr.io/666ghj/mirofish:latest
-    # 加速镜像（如拉取缓慢可替换上方地址）
-    # image: ghcr.nju.edu.cn/666ghj/mirofish:latest
-    container_name: mirofish
+  miro-cogsec:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: miro-cogsec:local
+    container_name: miro-cogsec
     depends_on:
       - chroma
     env_file:
       - .env
     environment:
-      COGSEC_USE_LOCAL_GEMMA: ${COGSEC_USE_LOCAL_GEMMA:-true}
-      COGSEC_LOCAL_MODEL_PATH: ${COGSEC_LOCAL_MODEL_PATH:-/app/models/google--gemma-4-E2B-it}
+      CHROMA_PATH: ${CHROMA_PATH:-/app/data/chroma_db}
+      CHROMADB_PATH: ${CHROMADB_PATH:-/app/data/chroma_db}
+      FRAUD_CASE_DB_PATH: ${FRAUD_CASE_DB_PATH:-/app/data/fraud_cases.json}
       LIWC_DICT_PATH: ${LIWC_DICT_PATH:-/app/data/liwc_chinese.json}
-      PRESIDIO_ENABLED: ${PRESIDIO_ENABLED:-true}
       T0_PATTERNS_PATH: ${T0_PATTERNS_PATH:-/app/data/t0_regex_patterns.json}
+      LOCAL_SANITIZE_ENABLED: ${LOCAL_SANITIZE_ENABLED:-true}
+      PRESIDIO_ENABLED: ${PRESIDIO_ENABLED:-false}
+      COGSEC_USE_LOCAL_GEMMA: ${COGSEC_USE_LOCAL_GEMMA:-false}
+      COGSEC_LOCAL_MODEL_PATH: ${COGSEC_LOCAL_MODEL_PATH:-/app/models/google--gemma-4-E2B-it}
       RISK_SCORE_THRESHOLD_CRITICAL: ${RISK_SCORE_THRESHOLD_CRITICAL:-0.85}
       REVERSIBILITY_WARN_THRESHOLD: ${REVERSIBILITY_WARN_THRESHOLD:-0.3}
     ports:
