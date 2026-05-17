@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Miro-CogSec Raw Benchmark Seed",
+  "type": "object",
+  "required": ["id", "source", "input"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {"type": "string"},
+    "source": {
+      "type": "object",
+      "required": ["dataset", "url", "license", "relation"],
+      "additionalProperties": true,
+      "properties": {
+        "dataset": {"type": "string"},
+        "url": {"type": "string"},
+        "license": {"type": "string"},
+        "split": {"type": "string"},
+        "label_id": {"type": ["integer", "string", "null"]},
+        "label_name": {"type": ["string", "null"]},
+        "relation": {"type": "string"}
+      }
+    },
+    "input": {
+      "type": "object",
+      "required": ["language", "channel", "text"],
+      "additionalProperties": true,
+      "properties": {
+        "language": {"type": "string"},
+        "channel": {"type": "string"},
+        "text": {"type": "string"},
+        "sanitization": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "sampling": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}
