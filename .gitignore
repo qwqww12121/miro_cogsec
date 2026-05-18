@@ -64,3 +64,4 @@ data/**/*.parquet
 
 # 本地模型权重
 models/
+CLAUDE.md
