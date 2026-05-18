@@ -2,7 +2,7 @@
   <section class="screen-card">
     <div class="header-row">
       <div>
-        <p class="eyebrow">Screen 5</p>
+        <p class="eyebrow">模块 5</p>
         <h3 class="title">个性化干预处方屏</h3>
       </div>
       <div class="window-pill">
@@ -11,8 +11,8 @@
     </div>
 
     <div class="window-card">
-      <strong>Best Intervention Window</strong>
-      <p>{{ report?.best_intervention_window?.label || 'No explicit window.' }}</p>
+      <strong>最佳干预窗口</strong>
+      <p>{{ report?.best_intervention_window?.label || '暂无明确干预窗口。' }}</p>
     </div>
 
     <div class="prescription-grid">
@@ -25,12 +25,12 @@
           <span class="priority-pill">P{{ item.priority }}</span>
           <strong>{{ item.title }}</strong>
         </div>
-        <p class="node">failure node: {{ item.target_failure_node }}</p>
+        <p class="node">失效节点：{{ item.target_failure_node }}</p>
         <p class="reason">{{ item.rationale }}</p>
         <ul>
           <li v-for="action in item.recommended_actions || []" :key="action">{{ action }}</li>
         </ul>
-        <p class="meta">channel: {{ item.channel }} · fallback: {{ item.fallback }}</p>
+        <p class="meta">渠道：{{ item.channel }} · 回退：{{ item.fallback }}</p>
       </article>
     </div>
 

@@ -2,7 +2,7 @@
   <section class="viz-card">
     <div class="card-header">
       <div>
-        <p class="eyebrow">Threat Graph</p>
+        <p class="eyebrow">威胁图谱</p>
         <h3 class="title">认知风险关系图</h3>
       </div>
       <div class="meta-badge">

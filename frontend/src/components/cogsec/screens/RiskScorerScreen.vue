@@ -1,22 +1,22 @@
 <template>
   <section class="screen-card">
-    <h3>RiskScorer</h3>
+    <h3>风险评分器</h3>
     <div class="kpi-grid">
       <div class="kpi">
-        <span>Risk Score</span>
-        <strong>{{ Number(finalA?.risk_score || 0).toFixed(1) }}</strong>
+        <span>最终风险</span>
+        <strong>{{ Number(scoreComparison?.final_risk || scoreComparison?.risk_breakdown?.final_risk || 0).toFixed(1) }}</strong>
       </div>
       <div class="kpi">
-        <span>Cognitive Mode</span>
+        <span>认知模式</span>
         <strong>{{ finalA?.cognitive_mode || '-' }}</strong>
       </div>
       <div class="kpi">
-        <span>Reversibility</span>
-        <strong>{{ Number(finalA?.reversibility || 0).toFixed(2) }}</strong>
+        <span>可逆性 (A末)</span>
+        <strong>{{ Number(finalA?.reversibility ?? 0).toFixed(3) }}</strong>
       </div>
       <div class="kpi">
-        <span>Posterior P(scam)</span>
-        <strong>{{ Number(finalA?.posterior_probability || 0).toFixed(3) }}</strong>
+        <span>后验风险 (A末)</span>
+        <strong>{{ Number(finalA?.posterior_risk ?? 0).toFixed(3) }}</strong>
       </div>
     </div>
 
@@ -47,7 +47,10 @@ const props = defineProps({
   }
 })
 
-const finalA = computed(() => props.scoreComparison?.branch_a_final || {})
+const finalA = computed(() => {
+  const timeline = props.scoreComparison?.timeline_a || []
+  return timeline.length ? timeline[timeline.length - 1] : {}
+})
 </script>
 
 <style scoped>

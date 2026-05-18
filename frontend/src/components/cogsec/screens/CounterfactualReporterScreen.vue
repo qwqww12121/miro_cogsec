@@ -1,6 +1,6 @@
 <template>
   <section class="screen-card">
-    <h3>CounterfactualReporter</h3>
+    <h3>反事实报告</h3>
     <p class="meta">{{ report?.critical_bifurcation_reason || '' }}</p>
 
     <BranchTimeline

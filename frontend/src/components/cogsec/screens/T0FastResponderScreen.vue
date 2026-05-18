@@ -1,11 +1,11 @@
 <template>
   <section class="screen-card">
-    <h3>T0FastResponder</h3>
+    <h3>T0 快速响应器</h3>
     <p class="meta">
-      Latency: {{ Number(data?.latency_ms || 0).toFixed(3) }}ms
-      · Target &lt; 500ms: {{ data?.target_met ? 'YES' : 'NO' }}
+      延迟：{{ Number(data?.latency_ms || 0).toFixed(3) }}ms
+      · 目标 &lt; 500ms：{{ data?.target_met ? '达标' : '未达标' }}
     </p>
-    <p class="meta">Alert: {{ data?.alert ? 'TRIGGERED' : 'CLEAR' }}</p>
+    <p class="meta">警报：{{ data?.alert ? '已触发' : '未触发' }}</p>
 
     <ul v-if="(data?.hits || []).length" class="hit-list">
       <li v-for="item in data.hits" :key="`${item.rule_id}-${item.span_start}`">

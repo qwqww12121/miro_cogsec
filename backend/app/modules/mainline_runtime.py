@@ -53,7 +53,7 @@ class MiroFishRuntime:
         },
         {
             "type": "screen_share",
-            "keywords": ["共享屏幕", "远程控制", "会议软件", "screen share"],
+            "keywords": ["共享屏幕", "屏幕共享", "远程控制", "会议软件", "screen share", "开启共享", "远程协助"],
             "severity": 0.88,
             "asset": "设备控制权",
         },
@@ -65,19 +65,19 @@ class MiroFishRuntime:
         },
         {
             "type": "unknown_app_download",
-            "keywords": ["下载 app", "安装 app", "下载软件", "未知应用", "链接安装"],
+            "keywords": ["下载 app", "安装 app", "下载软件", "未知应用", "链接安装", "下载app", "安装app", "的app", "的APP"],
             "severity": 0.83,
             "asset": "终端与账户",
         },
         {
             "type": "social_isolation",
-            "keywords": ["不要告诉别人", "不要联系家人", "单独联系", "保密"],
+            "keywords": ["不要告诉别人", "不要联系家人", "单独联系", "保密", "不要告诉任何人", "不能告诉", "办案纪律", "不许外传"],
             "severity": 0.74,
             "asset": "社会支持系统",
         },
         {
             "type": "fake_official_verification",
-            "keywords": ["官方核验", "安全核验", "监管流程", "伪官方"],
+            "keywords": ["官方核验", "安全核验", "监管流程", "伪官方", "公安局", "民警", "警察局", "冒充公安", "警方通知", "安全账户核验"],
             "severity": 0.8,
             "asset": "信任边界",
         },
@@ -532,45 +532,114 @@ class MiroFishRuntime:
         fork_type = fork_meta["type"]
         risky_action = self._risky_action_label(fork_type)
         safe_action = self._safe_action_label(fork_type)
+        lbl = self._fork_specific_labels(fork_type)
         if branch == "A":
             return [
-                {"action": "Adversary raises urgency and authority pressure", "action_type": "pressure", "irreversible": False},
-                {"action": "Primary Agent isolates from family and external verification", "action_type": "isolation", "irreversible": False},
+                {"action": lbl["a_pressure"], "action_type": "pressure", "irreversible": False},
+                {"action": lbl["a_isolation"], "action_type": "isolation", "irreversible": False},
                 {"action": risky_action, "action_type": fork_type, "irreversible": fork_type in {"transfer_money", "verification_code"}},
-                {"action": "Adversary escalates asset extraction through chained instructions", "action_type": "escalation", "irreversible": False},
-                {"action": "WorldState crosses irreversible threshold and loss materializes", "action_type": "irreversible", "irreversible": True},
-                {"action": "Audit Agent reconstructs compromised path for post-hoc defense", "action_type": "audit_reconstruction", "irreversible": False},
+                {"action": lbl["a_escalation"], "action_type": "escalation", "irreversible": False},
+                {"action": lbl["a_irreversible"], "action_type": "irreversible", "irreversible": True},
+                {"action": "审计Agent重构受损路径，生成事后防御方案与同类场景预警规则", "action_type": "audit_reconstruction", "irreversible": False},
             ]
         return [
-            {"action": "Primary Agent pauses and delays the decision", "action_type": "delay", "irreversible": False},
+            {"action": lbl["b_delay"], "action_type": "delay", "irreversible": False},
             {"action": safe_action, "action_type": "verification", "irreversible": False},
-            {"action": "Primary Agent re-engages family or trusted peer for cross-check", "action_type": "help_seeking", "irreversible": False},
-            {"action": "Audit Agent verifies evidence consistency and breaks the attack chain", "action_type": "audit_verification", "irreversible": False},
-            {"action": "Asset exposure is contained and reversibility recovers", "action_type": "containment", "irreversible": False},
-            {"action": "Intervention prescription is stored for future similar forks", "action_type": "prescription", "irreversible": False},
+            {"action": lbl["b_help_seeking"], "action_type": "help_seeking", "irreversible": False},
+            {"action": lbl["b_audit"], "action_type": "audit_verification", "irreversible": False},
+            {"action": "资产暴露风险得到遏制，可逆性恢复，受害者保存关键证据", "action_type": "containment", "irreversible": False},
+            {"action": "干预处方已存档，生成针对此类攻击的个人化预警规则", "action_type": "prescription", "irreversible": False},
         ]
+
+    def _fork_specific_labels(self, fork_type: str) -> Dict[str, str]:
+        labels: Dict[str, Dict[str, str]] = {
+            "transfer_money": {
+                "a_pressure": "攻击者以征信受损或账户冻结为由，要求受害者立即向'安全账户'转款完成核验",
+                "a_isolation": "受害者被要求对家人保密并关闭第三方通讯，与外部核验渠道切断",
+                "a_escalation": "攻击者声称'核验金额不足'，要求追加转款或提供验证码以完成账户解冻",
+                "a_irreversible": "资金已转入攻击者控制账户，损失不可逆，受害者失去追回窗口",
+                "b_delay": "受害者以'需向家人确认'为由暂停转款，要求对方提供可查询的官方文件",
+                "b_help_seeking": "受害者拨打银行官方客服，确认账户无冻结记录，识破'安全账户'骗局",
+                "b_audit": "审计Agent比对转账指令与官方流程，证实'安全账户'为诈骗手法并阻断",
+            },
+            "screen_share": {
+                "a_pressure": "攻击者以'系统检测到异常登录'为由，要求受害者立即开启屏幕共享配合处置",
+                "a_isolation": "攻击者引导受害者关闭其他软件，声称'防止信号干扰核验系统'",
+                "a_escalation": "攻击者趁屏幕共享实时获取账户密码，随即操控受害者账户执行转账",
+                "a_irreversible": "屏幕共享期间账户凭证完全泄露，设备控制权已落入攻击者手中",
+                "b_delay": "受害者察觉屏幕共享请求与官方流程不符，主动挂断并截图留存证据",
+                "b_help_seeking": "受害者向家人说明情况后，通过官方客服确认该机构无远程核验业务",
+                "b_audit": "审计Agent验证远程连接来源非官方域名，证实屏幕共享为社会工程手段",
+            },
+            "verification_code": {
+                "a_pressure": "攻击者以'账户解冻必须验证身份'为由，要求受害者立即提供短信验证码",
+                "a_isolation": "攻击者警告受害者'期间不得向他人透露，否则流程中断，后果自负'",
+                "a_escalation": "攻击者利用验证码登录受害者账户，升级为批量资金转移操作",
+                "a_irreversible": "账户控制权已通过验证码转移至攻击者，余额清零损失不可逆",
+                "b_delay": "受害者以'需先核实来电身份'拒绝立即提供验证码，要求提供工号备查",
+                "b_help_seeking": "受害者通过官方APP自主查看账户状态，确认无任何异常冻结记录",
+                "b_audit": "审计Agent识别验证码请求实为账户登录行为，而非官方身份核验流程",
+            },
+            "unknown_app_download": {
+                "a_pressure": "攻击者以'专用协查系统必须安装'为由，发送第三方APP安装包链接",
+                "a_isolation": "攻击者要求受害者关闭手机安全防护，声称'防止误报影响协查系统运行'",
+                "a_escalation": "恶意APP获取通讯录、短信读取及支付权限，实施静默后台资金转移",
+                "a_irreversible": "恶意APP已获取完整设备权限，持续驻留并劫持支付与账户操作",
+                "b_delay": "受害者拒绝通过陌生链接安装，要求提供官方应用商店正规下载渠道",
+                "b_help_seeking": "受害者在应用商店搜索确认该应用不存在，判断为仿冒恶意软件",
+                "b_audit": "审计Agent分析安装包签名证书，确认非官方机构发布并阻断安装流程",
+            },
+            "social_isolation": {
+                "a_pressure": "攻击者以'案件保密规定'为由，要求受害者绝对不得向任何人透露通话内容",
+                "a_isolation": "受害者停止与家人及朋友沟通，陷入信息茧房，完全依赖攻击者叙述",
+                "a_escalation": "攻击者借受害者完全孤立状态，升级为资产控制与身份信息索取",
+                "a_irreversible": "受害者在无外部监督下完成所有高风险操作，损失发生后无人知晓",
+                "b_delay": "受害者对'保密要求'产生怀疑，要求对方出示书面通知后再配合",
+                "b_help_seeking": "受害者将情况告知家人，共同通过官方渠道核实事件是否属实",
+                "b_audit": "审计Agent识别社会隔离要求为诈骗经典手法，触发高危操作预警",
+            },
+            "fake_official_verification": {
+                "a_pressure": "攻击者提供伪造工号和官方界面截图，声称受害者面临紧迫法律风险",
+                "a_isolation": "攻击者要求受害者通过其指定渠道'核实身份'，切断与真实官方的联系",
+                "a_escalation": "受害者完成伪造核实流程后，攻击者以'配合不足'为由要求继续操作",
+                "a_irreversible": "受害者个人信息与账户凭证通过伪官方渠道全部泄露，无法撤销",
+                "b_delay": "受害者要求对方提供可在官网查询的公示文件，拒绝通过陌生链接核实",
+                "b_help_seeking": "受害者主动拨打官方公示号码，确认该工号不存在，识别为仿冒机构",
+                "b_audit": "审计Agent比对来电号码与官方发布信息，识别仿冒号码并发出预警",
+            },
+        }
+        default = {
+            "a_pressure": "攻击者持续以紧迫性话术施压，要求受害者立即配合执行关键操作",
+            "a_isolation": "受害者被要求保密并中断外部联系，陷入单一信息来源的封闭状态",
+            "a_escalation": "攻击者通过连环指令逐步升级资产套取与控制范围",
+            "a_irreversible": "世界状态越过不可逆阈值，受害者核心资产或凭证已泄露",
+            "b_delay": "受害者主动暂停，要求对方提供可独立核实的官方证明后再行动",
+            "b_help_seeking": "受害者向家人或可信同伴说明情况，共同核实事件真实性",
+            "b_audit": "审计Agent验证攻击链证据一致性，识别欺骗节点并实施阻断",
+        }
+        return labels.get(fork_type, default)
 
     def _risky_action_label(self, fork_type: str) -> str:
         mapping = {
-            "transfer_money": "Primary Agent transfers funds to a fake safe account",
-            "screen_share": "Primary Agent shares the screen and exposes secure workflow",
-            "verification_code": "Primary Agent discloses the one-time verification code",
-            "unknown_app_download": "Primary Agent installs an untrusted application package",
-            "social_isolation": "Primary Agent cuts off family and peer contact",
-            "fake_official_verification": "Primary Agent follows the fake official verification flow",
+            "transfer_money": "受害者将资金转入攻击者指定的所谓'安全账户'",
+            "screen_share": "受害者开启屏幕共享，暴露敏感操作界面",
+            "verification_code": "受害者将一次性验证码告知对方",
+            "unknown_app_download": "受害者安装来源不明的第三方应用包",
+            "social_isolation": "受害者切断与家人及外部核验渠道的联系",
+            "fake_official_verification": "受害者按要求完成伪造的'官方核实'流程",
         }
-        return mapping.get(fork_type, "Primary Agent complies with the attacker-led high-risk instruction")
+        return mapping.get(fork_type, "受害者在攻击者引导下执行高风险操作")
 
     def _safe_action_label(self, fork_type: str) -> str:
         mapping = {
-            "transfer_money": "Primary Agent verifies the transfer request through an official bank or platform channel",
-            "screen_share": "Primary Agent rejects screen sharing and switches to an official support endpoint",
-            "verification_code": "Primary Agent withholds the verification code and resets account trust channels",
-            "unknown_app_download": "Primary Agent blocks the download and checks the publisher through official stores",
-            "social_isolation": "Primary Agent restores contact with family and trusted peers before acting",
-            "fake_official_verification": "Primary Agent exits the fake flow and performs an independent callback",
+            "transfer_money": "受害者通过官方银行或平台渠道核实转账请求后拒绝操作",
+            "screen_share": "受害者拒绝屏幕共享并转接官方客服核实",
+            "verification_code": "受害者拒绝透露验证码并重置账户信任渠道",
+            "unknown_app_download": "受害者拒绝下载并通过官方应用商店核查发布者信息",
+            "social_isolation": "受害者先联系家人和可信同伴交叉核实后再行动",
+            "fake_official_verification": "受害者退出伪造流程并通过独立回拨方式核实身份",
         }
-        return mapping.get(fork_type, "Primary Agent verifies independently before any further action")
+        return mapping.get(fork_type, "受害者独立核实后再决定是否执行下一步")
 
     def _branch_stage(self, branch: str, step_index: int, irreversible: bool) -> str:
         if branch == "A":

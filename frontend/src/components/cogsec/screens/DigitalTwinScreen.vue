@@ -2,7 +2,7 @@
   <section class="screen-card">
     <div class="header-row">
       <div>
-        <p class="eyebrow">Screen 1</p>
+        <p class="eyebrow">模块 1</p>
         <h3 class="title">用户数字孪生屏</h3>
       </div>
       <div class="mode-pill" :class="personaStateVector?.cognitive_mode === 'SYSTEM_1' ? 'danger' : 'safe'">
@@ -14,19 +14,19 @@
 
     <div class="stats-grid">
       <article class="stat-card">
-        <span>Confidence</span>
+        <span>置信度</span>
         <strong>{{ Number(personaStateVector?.confidence_level || 0).toFixed(2) }}</strong>
       </article>
       <article class="stat-card">
-        <span>Storage Policy</span>
+        <span>存储策略</span>
         <strong>{{ personaStateVector?.storage_policy?.default || sanitization?.storage_policy || 'session_only' }}</strong>
       </article>
       <article class="stat-card">
-        <span>T0 Latency</span>
+        <span>T0 延迟</span>
         <strong>{{ Number(t0Data?.latency_ms || 0).toFixed(2) }} ms</strong>
       </article>
       <article class="stat-card">
-        <span>PII Retry</span>
+        <span>PII 重试</span>
         <strong>{{ sanitization?.retry_count || 0 }}</strong>
       </article>
     </div>
@@ -37,22 +37,22 @@
         :key="item.key"
         class="vector-card"
       >
-        <span>{{ item.key }}</span>
+        <span>{{ keyLabels[item.key] || item.key }}</span>
         <strong>{{ item.value }}</strong>
       </article>
     </div>
 
     <div class="aux-grid">
       <section class="aux-card">
-        <h4>System Switch Policy</h4>
-        <p>System 1 trigger: time_pressure &gt; 7 and emotional_volatility &gt; 7</p>
-        <p>System 2 re-entry: verification_habit &gt;= 6 and decision_delay &gt;= 6</p>
+        <h4>系统切换规则</h4>
+        <p>系统1 触发条件：time_pressure &gt; 7 且 emotional_volatility &gt; 7</p>
+        <p>系统2 恢复条件：verification_habit &gt;= 6 且 decision_delay &gt;= 6</p>
       </section>
       <section class="aux-card">
-        <h4>Privacy Guardrail</h4>
-        <p>minimal_necessary: {{ sanitization?.minimal_necessary ? 'true' : 'false' }}</p>
-        <p>session_only: {{ sanitization?.storage_policy || 'session_only' }}</p>
-        <p>PII leak detected: {{ sanitization?.pii_leak_detected ? 'true' : 'false' }}</p>
+        <h4>隐私防护</h4>
+        <p>最小必要原则：{{ sanitization?.minimal_necessary ? '已启用' : '未启用' }}</p>
+        <p>存储策略：{{ sanitization?.storage_policy || 'session_only' }}</p>
+        <p>PII 泄露检测：{{ sanitization?.pii_leak_detected ? '已检出' : '未检出' }}</p>
       </section>
     </div>
   </section>
@@ -79,6 +79,27 @@ const props = defineProps({
     default: () => ({})
   }
 })
+
+const keyLabels = {
+  analytic_control: '分析控制力',
+  asset_sensitivity: '资产敏感度',
+  authority_compliance: '权威服从度',
+  confidence_level: '置信度',
+  digital_trust_boundary: '数字信任边界',
+  emotional_volatility: '情绪波动性',
+  financial_stress: '财务压力',
+  fomo_susceptibility: '紧迫感易感性',
+  help_seeking_tendency: '求助倾向',
+  loss_aversion: '损失厌恶',
+  risk_recovery_awareness: '风险复原意识',
+  system1_bias: '系统1偏倚',
+  system2_control: '系统2控制',
+  time_pressure_sensitivity: '时间压力敏感度',
+  verification_habit: '核实习惯',
+  decision_delay: '决策延迟',
+  cognitive_load: '认知负荷',
+  social_influence: '社会影响力',
+}
 
 const excludedKeys = new Set(['switch_policy', 'storage_policy', 'source_profile', 'cognitive_mode'])
 
@@ -151,10 +172,15 @@ const profileSummary = computed(() => {
   line-height: 1.7;
 }
 
-.stats-grid,
-.aux-grid {
+.stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.aux-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -209,9 +235,12 @@ const profileSummary = computed(() => {
 
 @media (max-width: 1100px) {
   .stats-grid,
-  .vector-grid,
-  .aux-grid {
+  .vector-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .aux-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

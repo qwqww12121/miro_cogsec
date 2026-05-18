@@ -232,13 +232,15 @@ class CounterfactualReporter:
             score_comparison={
                 "final_risk": risk_breakdown.final_risk,
                 "risk_breakdown": risk_breakdown.to_dict(),
+                "branch_a_final": self._synth_scores(branch_a_log, defensive=False),
+                "branch_b_final": self._synth_scores(branch_b_log, defensive=True),
                 "timeline_a": [
-                    item.get("world_state", {})
-                    for item in branch_a_log
+                    {**{"t": i}, **self._ws_to_timeline(item.get("world_state", {}), defensive=False)}
+                    for i, item in enumerate(branch_a_log)
                 ],
                 "timeline_b": [
-                    item.get("world_state", {})
-                    for item in branch_b_log
+                    {**{"t": i}, **self._ws_to_timeline(item.get("world_state", {}), defensive=True)}
+                    for i, item in enumerate(branch_b_log)
                 ],
                 "reversibility_curve": fork_comparison.reversibility_curve,
             },
@@ -254,6 +256,34 @@ class CounterfactualReporter:
             intervention_prescriptions=structured["intervention_prescriptions"],
             implementation_status=structured["implementation_status"],
         )
+
+    def _synth_scores(self, branch_log: list, defensive: bool) -> dict:
+        """从分支日志末态合成四维评分。"""
+        ws = branch_log[-1].get("world_state", {}) if branch_log else {}
+        post_risk = float(ws.get("posterior_risk", 0.0))
+        exposure = float(ws.get("asset_exposure", 0.0))
+        reversibility = float(ws.get("reversibility", 1.0))
+        if defensive:
+            return {
+                "CHS": round(max(0.0, min(100.0, 100 - post_risk * 30)), 1),
+                "ASS": round(max(0.0, min(100.0, 100 - exposure * 50)), 1),
+                "SSS": round(max(0.0, min(100.0, 55 + reversibility * 30)), 1),
+                "EES": round(max(0.0, min(100.0, post_risk * 20)), 1),
+            }
+        return {
+            "CHS": round(max(0.0, min(100.0, 100 - post_risk * 70)), 1),
+            "ASS": round(max(0.0, min(100.0, 100 - exposure * 90)), 1),
+            "SSS": round(max(0.0, min(100.0, 50 - (1 - reversibility) * 40)), 1),
+            "EES": round(max(0.0, min(100.0, post_risk * 60 + exposure * 30)), 1),
+        }
+
+    def _ws_to_timeline(self, ws: dict, defensive: bool) -> dict:
+        """将 world_state 转换为图表所需时间线格式。"""
+        scores = self._synth_scores([{"world_state": ws}], defensive=defensive)
+        scores["posterior_risk"] = round(float(ws.get("posterior_risk", 0.0)) * 100, 2)
+        scores["reversibility"] = round(float(ws.get("reversibility", 1.0)) * 100, 2)
+        scores["cognitive_mode"] = ws.get("cognitive_mode", "SYSTEM_2")
+        return scores
 
     def _find_bifurcation(
         self,

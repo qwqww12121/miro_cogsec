@@ -50,8 +50,18 @@ class PrivacySanitizer:
         "CH_ID": r"(?<!\d)\d{17}[\dXx](?!\d)",
         "CH_PHONE": r"(?<!\d)1[3-9]\d{9}(?!\d)",
         "BANK_CARD": r"(?<!\d)(?:\d[ -]?){16,19}(?!\d)",
+        "AMOUNT": r"(?<!\d)\d{3,}(?:\.\d{1,2})?(?=\s*[元万块钱])",
         "PERSON_NAME": r"(?<![\w\u4e00-\u9fff])(?:[赵钱孙李周吴郑王冯陈褚卫蒋沈韩杨朱秦尤许何吕施张孔曹严华金魏陶姜戚谢邹喻柏水窦章云苏潘葛奚范彭郎鲁韦昌马苗凤花方俞任袁柳唐罗薛伍余米贝姚孟顾尹江钟高夏蔡田樊胡凌霍虞万支柯昝管卢莫经房裘缪干解应宗丁宣贲邓郁单杭洪包诸左石崔吉钮龚程嵇邢滑裴陆荣翁荀羊於惠甄曲家封芮羿储靳汲邴糜松井段富巫乌焦巴弓牧隗山谷车侯宓蓬全郗班仰秋仲伊宫宁仇栾暴甘斜厉戎祖武符刘景詹束龙叶幸司韶郜黎蓟薄印宿白怀蒲邰从鄂索咸籍赖卓蔺屠蒙池乔阴郁胥能苍双闻莘党翟谭贡劳逄姬申扶堵冉宰郦雍郤璩桑桂濮牛寿通边扈燕冀郏浦尚农温别庄晏柴瞿阎充慕连茹习宦艾鱼容向古易慎戈廖庾终暨居衡步都耿满弘匡国文寇广禄阙东欧殳沃利蔚越夔隆师巩厍聂晁勾敖融冷訾辛阚那简饶空曾毋沙乜养鞠须丰巢关蒯相查后荆红游竺权逯盖益桓公][\u4e00-\u9fff]{1,2})(?![\w\u4e00-\u9fff])",
     }
+
+    PERSON_NAME_BLACKLIST: frozenset = frozenset([
+        "程序", "程序员", "赵体", "赵国", "钱包", "孙子", "孙女", "孙氏",
+        "李国", "李用", "周边", "周年", "吴语", "吴用", "郑重", "郑明",
+        "王国", "王权", "王牌", "冯唐", "韩国", "杨树", "张贴", "张开",
+        "陈述", "陈旧", "沈默", "刘海", "刘备", "蒋介", "马路", "马车",
+        "唐朝", "柳树", "袁术", "朱砂", "秦朝", "许多", "徐速", "黄金",
+        "蓝色", "白色", "黑色", "红色", "绿色",
+    ])
 
     PRESIDIO_MAP: Dict[str, str] = {
         "PHONE_NUMBER": "CH_PHONE",
@@ -159,6 +169,8 @@ class PrivacySanitizer:
             for match in re.finditer(pattern, text):
                 start, end = match.start(), match.end()
                 if end - start <= 1:
+                    continue
+                if entity_type == "PERSON_NAME" and text[start:end] in self.PERSON_NAME_BLACKLIST:
                     continue
                 counters[entity_type] = counters.get(entity_type, 0) + 1
                 entities.append(

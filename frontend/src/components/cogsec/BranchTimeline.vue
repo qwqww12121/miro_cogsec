@@ -2,7 +2,7 @@
   <section class="timeline-card">
     <div class="header-row">
       <div>
-        <p class="eyebrow">Branch Timeline</p>
+        <p class="eyebrow">分支时间线</p>
         <h3 class="title">双分支演化时间线</h3>
       </div>
       <div class="critical-pill">
@@ -65,17 +65,19 @@ const renderChart = () => {
     },
     tooltip: {
       trigger: 'item',
+      confine: true,
       backgroundColor: '#111827',
       borderWidth: 0,
       textStyle: { color: '#f8fafc' },
+      extraCssText: 'max-width:260px;white-space:normal;word-break:break-all;',
       formatter: (params) => {
         const payload = params.data?.[2] || params.data
         if (!payload || !payload.agent_action) return ''
         return `
-          <div style="max-width:260px;">
+          <div style="max-width:240px;white-space:normal;word-break:break-all;line-height:1.6;">
             <div style="font-weight:700;margin-bottom:8px;">第 ${payload.step} 步</div>
             <div style="color:#cbd5e1;margin-bottom:6px;">${payload.agent_action}</div>
-            <div style="line-height:1.6;">${payload.victim_response || ''}</div>
+            <div>${payload.victim_response || ''}</div>
           </div>
         `
       }

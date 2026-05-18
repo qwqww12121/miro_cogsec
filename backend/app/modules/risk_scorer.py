@@ -221,6 +221,7 @@ class RiskScorer:
         evidence_graph_consistency: float,
         anomaly_flags: Optional[List[str]] = None,
         irreversibility_loss: Optional[float] = None,
+        fork_count: int = 1,
     ) -> CounterfactualRiskBreakdown:
         """Score the mainline risk from branch evidence instead of scenario text."""
         branch_a = [self._branch_payload(item) for item in branch_a_state_trace]
@@ -248,7 +249,8 @@ class RiskScorer:
             * max(0.1, irreversibility_loss)
             * max(0.1, evidence_consistency),
         )
-        final_risk = round(min(100.0, (product ** 0.55) * 100.0), 2)
+        fork_bonus = min(1.20, 1.0 + max(0, fork_count - 1) * 0.04)
+        final_risk = round(min(100.0, (product ** 0.55) * 100.0 * fork_bonus), 2)
         risk_level = self._risk_level_from_score(final_risk)
         audit_required = "score_jump_audit" in anomaly_flags or final_risk >= 85.0
 

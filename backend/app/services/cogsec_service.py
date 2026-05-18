@@ -104,6 +104,7 @@ class CogSecService:
         branch_a_log = [step.to_dict() for step in runtime_result.fork_comparison.branch_a_state_trace]
         branch_b_log = [step.to_dict() for step in runtime_result.fork_comparison.branch_b_state_trace]
 
+        triggered_fork_count = self._count_triggered_forks(sanitization_result.sanitized_text or scenario_text)
         risk_breakdown = RiskScorer(profile).evaluate_counterfactual(
             branch_a_state_trace=runtime_result.fork_comparison.branch_a_state_trace,
             branch_b_state_trace=runtime_result.fork_comparison.branch_b_state_trace,
@@ -114,6 +115,7 @@ class CogSecService:
             evidence_graph_consistency=runtime_result.fork_comparison.evidence_graph_consistency,
             anomaly_flags=runtime_result.fork_comparison.anomaly_flags,
             irreversibility_loss=runtime_result.fork_comparison.irreversibility_loss,
+            fork_count=triggered_fork_count,
         )
 
         case_evidence = self._build_case_evidence(profile.scenario_type, risk_graph_bundle.attack_strategy_chain)
@@ -368,16 +370,22 @@ class CogSecService:
         if self._case_library_loaded:
             return
 
-        loaded_cases = self.threat_rag.load_cases_from_file(Config.FRAUD_CASE_DB_PATH)
+        try:
+            loaded_cases = self.threat_rag.load_cases_from_file(Config.FRAUD_CASE_DB_PATH)
+        except Exception as exc:
+            logger.warning("加载欺诈案例文件失败（%s），已降级到内置案例库。路径：%s 错误：%s",
+                           type(exc).__name__, Config.FRAUD_CASE_DB_PATH, exc)
+            loaded_cases = []
+
         if loaded_cases:
             self._case_library_loaded = True
-            logger.info("已从文件加载 %s 条欺诈案例", len(loaded_cases))
+            logger.info("已从文件加载 %s 条欺诈案例（路径：%s）", len(loaded_cases), Config.FRAUD_CASE_DB_PATH)
             return
 
         fallback_cases = [FraudCase.from_dict(item) for item in self._default_case_library()]
         self.threat_rag.ingest_cases(fallback_cases)
         self._case_library_loaded = True
-        logger.warning("欺诈案例文件不存在，已加载内置默认案例库。")
+        logger.warning("欺诈案例文件为空或不存在，已加载内置默认案例库。期望路径：%s", Config.FRAUD_CASE_DB_PATH)
 
     def _safe_build_llm_client(self) -> Optional[LLMClient]:
         """在环境变量齐全时创建 LLM 客户端。"""
@@ -401,6 +409,16 @@ class CogSecService:
         except Exception as exc:  # pragma: no cover
             logger.warning("LLM 客户端初始化失败，转为启发式模式: %s", exc)
             return None
+
+    def _count_triggered_forks(self, text: str) -> int:
+        """统计场景文本中触发的 fork 规则数量，用于多规则叠加计分。"""
+        from ..modules.mainline_runtime import MiroFishRuntime
+        text_lower = (text or "").lower()
+        count = sum(
+            1 for rule in MiroFishRuntime.FORK_RULES
+            if any(kw.lower() in text_lower for kw in rule["keywords"])
+        )
+        return max(1, count)
 
     def _fallback_strategies(self) -> List[Any]:
         """无案例时使用的默认策略。"""

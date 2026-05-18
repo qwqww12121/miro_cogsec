@@ -1,7 +1,7 @@
 <template>
   <section class="screen-card">
-    <h3>PrivacySanitizer</h3>
-    <p class="meta">Engine: {{ data?.used_presidio ? 'Presidio + Regex' : 'Regex Fallback' }}</p>
+    <h3>隐私脱敏器</h3>
+    <p class="meta">引擎：{{ data?.used_presidio ? 'Presidio + 正则' : '正则回退模式' }}</p>
     <div class="preview">
       {{ data?.sanitized_text || '' }}
     </div>
@@ -9,9 +9,9 @@
     <table v-if="(data?.entities || []).length" class="entity-table">
       <thead>
         <tr>
-          <th>Type</th>
-          <th>Placeholder</th>
-          <th>Span</th>
+          <th>类型</th>
+          <th>替换占位</th>
+          <th>位置</th>
         </tr>
       </thead>
       <tbody>

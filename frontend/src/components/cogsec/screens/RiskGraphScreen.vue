@@ -2,23 +2,23 @@
   <section class="screen-card">
     <div class="header-row">
       <div>
-        <p class="eyebrow">Screen 2</p>
+        <p class="eyebrow">模块 2</p>
         <h3 class="title">攻击-人-环境风险图谱屏</h3>
       </div>
       <div class="score-badge">
-        consistency {{ Number(graphBundle?.consistency_score || 0).toFixed(3) }}
+        一致性得分 {{ Number(graphBundle?.consistency_score || 0).toFixed(3) }}
       </div>
     </div>
 
     <div class="pill-row">
-      <span v-for="item in graphBundle?.persuasion_principles || []" :key="item" class="pill">{{ item }}</span>
+      <span v-for="item in [...new Set(graphBundle?.persuasion_principles || [])]" :key="item" class="pill">{{ item }}</span>
     </div>
 
     <GraphVisualization :graph-data="graphBundle" />
 
     <div class="detail-grid">
       <section class="detail-card">
-        <h4>Evidence Items</h4>
+        <h4>证据条目</h4>
         <ul>
           <li v-for="item in graphBundle?.evidence_items || []" :key="item.id">
             <strong>{{ item.label }}</strong>
@@ -27,23 +27,21 @@
         </ul>
       </section>
       <section class="detail-card">
-        <h4>Fork Nodes</h4>
+        <h4>触发节点</h4>
         <ul>
           <li v-for="item in graphBundle?.fork_points || []" :key="item.id">
             <strong>{{ item.type }}</strong>
-            <span>{{ item.asset }} · severity {{ Number(item.severity || 0).toFixed(2) }}</span>
+            <span>{{ item.asset }} · 危险度 {{ Number(item.severity || 0).toFixed(2) }}</span>
           </li>
         </ul>
       </section>
     </div>
 
-    <MasterStaticDiagram />
   </section>
 </template>
 
 <script setup>
 import GraphVisualization from '../GraphVisualization.vue'
-import MasterStaticDiagram from '../MasterStaticDiagram.vue'
 
 defineProps({
   graphBundle: {

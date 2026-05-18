@@ -2,7 +2,7 @@
   <section class="screen-card">
     <div class="header-row">
       <div>
-        <p class="eyebrow">Screen 4</p>
+        <p class="eyebrow">模块 4</p>
         <h3 class="title">风险 / 可逆性曲线屏</h3>
       </div>
       <div class="risk-pill" :class="riskLevelClass">{{ breakdown?.risk_level || 'LOW' }}</div>
@@ -10,19 +10,19 @@
 
     <div class="kpi-grid">
       <article class="kpi-card">
-        <span>FinalRisk</span>
+        <span>最终风险</span>
         <strong>{{ Number(breakdown?.final_risk || 0).toFixed(1) }}</strong>
       </article>
       <article class="kpi-card">
-        <span>PersonaPrior</span>
+        <span>画像先验</span>
         <strong>{{ Number(breakdown?.persona_prior || 0).toFixed(3) }}</strong>
       </article>
       <article class="kpi-card">
-        <span>TrajectoryGap</span>
+        <span>轨迹差值</span>
         <strong>{{ Number(breakdown?.trajectory_gap || 0).toFixed(3) }}</strong>
       </article>
       <article class="kpi-card">
-        <span>IrreversibilityLoss</span>
+        <span>不可逆损失</span>
         <strong>{{ Number(breakdown?.irreversibility_loss || 0).toFixed(3) }}</strong>
       </article>
     </div>
@@ -99,28 +99,28 @@ const renderChart = () => {
     series: [
       {
         type: 'line',
-        name: 'Branch A Risk',
+        name: '分支A 风险',
         smooth: true,
         data: curve.map((item) => item.branch_a_risk),
         lineStyle: { color: '#dc2626', width: 3 }
       },
       {
         type: 'line',
-        name: 'Branch B Risk',
+        name: '分支B 风险',
         smooth: true,
         data: curve.map((item) => item.branch_b_risk),
         lineStyle: { color: '#16a34a', width: 3 }
       },
       {
         type: 'line',
-        name: 'Branch A Reversibility',
+        name: '分支A 可逆性',
         smooth: true,
         data: curve.map((item) => item.branch_a_reversibility),
         lineStyle: { color: '#f97316', width: 2, type: 'dashed' }
       },
       {
         type: 'line',
-        name: 'Branch B Reversibility',
+        name: '分支B 可逆性',
         smooth: true,
         data: curve.map((item) => item.branch_b_reversibility),
         lineStyle: { color: '#0f766e', width: 2, type: 'dashed' }

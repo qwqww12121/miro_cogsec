@@ -2,7 +2,7 @@
   <section class="screen-card">
     <div class="header-row">
       <div>
-        <p class="eyebrow">Screen 3</p>
+        <p class="eyebrow">模块 3</p>
         <h3 class="title">MIRO-FISH 双分支反事实推演屏</h3>
       </div>
       <div class="fork-pill">{{ forkComparison?.fork_point_type || 'fork' }}</div>
@@ -19,24 +19,24 @@
       <article v-for="item in combinedSteps" :key="item.step" class="step-card">
         <div class="step-head">
           <strong>T{{ item.step }}</strong>
-          <span>posterior gap {{ item.gap }}</span>
+          <span>后验差值 {{ item.gap }}</span>
         </div>
         <div class="branch-block danger">
-          <h4>Branch A</h4>
+          <h4>分支 A</h4>
           <p>{{ item.a?.action || '-' }}</p>
           <small>
-            mode {{ item.a?.world_state?.cognitive_mode || '-' }} ·
-            risk {{ format(item.a?.world_state?.posterior_risk) }} ·
-            reversibility {{ format(item.a?.world_state?.reversibility) }}
+            模式 {{ item.a?.world_state?.cognitive_mode || '-' }} ·
+            风险 {{ format(item.a?.world_state?.posterior_risk) }} ·
+            可逆性 {{ format(item.a?.world_state?.reversibility) }}
           </small>
         </div>
         <div class="branch-block safe">
-          <h4>Branch B</h4>
+          <h4>分支 B</h4>
           <p>{{ item.b?.action || '-' }}</p>
           <small>
-            mode {{ item.b?.world_state?.cognitive_mode || '-' }} ·
-            risk {{ format(item.b?.world_state?.posterior_risk) }} ·
-            reversibility {{ format(item.b?.world_state?.reversibility) }}
+            模式 {{ item.b?.world_state?.cognitive_mode || '-' }} ·
+            风险 {{ format(item.b?.world_state?.posterior_risk) }} ·
+            可逆性 {{ format(item.b?.world_state?.reversibility) }}
           </small>
         </div>
       </article>

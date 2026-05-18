@@ -2,7 +2,7 @@
   <section class="dashboard-card">
     <div class="header-row">
       <div>
-        <p class="eyebrow">Risk Dashboard</p>
+        <p class="eyebrow">风险仪表板</p>
         <h3 class="title">四维风险仪表板</h3>
       </div>
       <div class="score-pills">
