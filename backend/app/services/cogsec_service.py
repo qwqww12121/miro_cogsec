@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 import time
 from typing import Any, Dict, List, Optional
 
@@ -17,6 +17,10 @@ from ..modules import (
     RiskScorer,
     T0FastResponder,
     ThreatKnowledgeRAG,
+    build_scenario_context,
+    get_spec,
+    resolve_canonical,
+    scenario_metadata,
 )
 from ..utils import LocalGemmaClient
 from ..utils.llm_client import LLMClient
@@ -45,6 +49,9 @@ class CogSecAnalysisResult:
     metrics: Dict[str, Any]
     anomalies: List[str]
     implementation_status: Dict[str, Any]
+    scenario_metadata: Dict[str, Any] = field(default_factory=dict)
+    scenario_extension: Dict[str, Any] | None = None
+    role_report: Dict[str, Any] | None = None
 
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典。"""
@@ -69,9 +76,17 @@ class CogSecService:
         scenario_text: str,
         questionnaire: Optional[Dict[str, Any]] = None,
         scenario_type: Optional[str] = None,
+        user_role: str = "individual",
     ) -> CogSecAnalysisResult:
         """从场景文本生成完整的 CogSec 分析结果。"""
         started = time.perf_counter()
+        canonical = resolve_canonical(scenario_type)
+        scenario_ctx = build_scenario_context(
+            scenario_type=scenario_type,
+            user_role=user_role,
+            raw_inputs=[{"content": scenario_text, "role": "user"}],
+        )
+
         self._ensure_case_library()
         t0_result = self.t0_responder.scan(scenario_text)
         sanitization_result = self.privacy_sanitizer.sanitize_with_retry(
@@ -145,7 +160,26 @@ class CogSecService:
             "phase_ii": [],
         }
 
-        return CogSecAnalysisResult(
+        sc_meta = scenario_metadata(canonical)
+        sc_meta["resolved_from"] = scenario_type
+        sc_meta["user_role"] = user_role
+
+        # -- propagation extension (Phase IV) --
+        scenario_extension = None
+        try:
+            spec = get_spec(canonical)
+        except KeyError:
+            spec = None
+
+        if spec is not None and hasattr(spec, "supports_propagation") and spec.supports_propagation():
+            try:
+                propagation_result = spec.run_propagation(scenario_ctx, quick_mode=True)
+                scenario_extension = {"propagation": propagation_result}
+            except Exception as exc:
+                logger.warning("scenario propagation failed for %s: %s", canonical, exc)
+                scenario_extension = {"propagation_error": str(exc)}
+
+        analysis_result = CogSecAnalysisResult(
             profile=profile.to_dict(),
             persona_state_vector=persona_state_vector.to_dict(),
             strategies=risk_graph_bundle.attack_strategy_chain,
@@ -159,6 +193,9 @@ class CogSecService:
             intervention_prescriptions=report.intervention_prescriptions or [],
             t0_fast_response=t0_result,
             sanitization=sanitization_result.to_dict(),
+            scenario_metadata=sc_meta,
+            scenario_extension=scenario_extension,
+            role_report=None,
             metrics={
                 "t0_latency_ms": t0_result.get("latency_ms"),
                 "t0_target_met": t0_result.get("target_met"),
@@ -179,6 +216,26 @@ class CogSecService:
             anomalies=anomalies,
             implementation_status=implementation_status,
         )
+
+        # -- role report rendering (Phase V) --
+        try:
+            from ..modules.reporters import render_role_report
+
+            result_dict = analysis_result.to_dict()
+            role_report = render_role_report(
+                result_dict=result_dict,
+                user_role=user_role,
+                scenario_type=canonical,
+            )
+            analysis_result.role_report = role_report
+        except Exception as exc:
+            logger.warning("role report rendering failed: %s", exc)
+            analysis_result.role_report = {
+                "error": str(exc),
+                "role": user_role,
+            }
+
+        return analysis_result
 
     def _score_branch(self, branch_log: List[Dict[str, Any]], scorer: RiskScorer) -> None:
         """滚动更新分支分数，并写回每步分数增量。"""

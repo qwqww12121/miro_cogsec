@@ -130,10 +130,8 @@ class PrivacySanitizer:
         """Detect whether sensitive data still exists in text."""
         if not text:
             return False
-        for entity_type, pattern in self.FALLBACK_PATTERNS.items():
-            for match in re.finditer(pattern, text):
-                if entity_type == "PERSON_NAME" and match.group() in self.PERSON_NAME_BLACKLIST:
-                    continue
+        for pattern in self.FALLBACK_PATTERNS.values():
+            if re.search(pattern, text):
                 return True
         return False
 

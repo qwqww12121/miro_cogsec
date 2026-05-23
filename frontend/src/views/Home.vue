@@ -141,7 +141,7 @@
         <!-- 右栏：输入控制台 -->
         <div class="right-panel">
           <div class="console-box">
-            <div class="console-section input-section">
+            <div class="console-section">
               <div class="console-header">
                 <span class="console-label">>_ 场景输入</span>
                 <span class="console-meta">支持: 对话文本 / 短信描述 / 事件经过</span>
@@ -152,6 +152,7 @@
                   v-model="scenarioText"
                   class="code-input"
                   placeholder="// 粘贴可疑对话内容或描述诈骗场景&#10;// 例: 对方自称公安局，要求配合资金核查，需转账至安全账户..."
+                  rows="12"
                   :disabled="loading"
                 ></textarea>
                 <div class="model-badge">引擎: CogSec-MiroFish v3.0</div>
@@ -837,8 +838,6 @@ const resetToInput = () => {
   box-shadow: 0 16px 32px rgba(15, 23, 42, 0.06);
   position: relative;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 .right-panel::before {
@@ -858,19 +857,10 @@ const resetToInput = () => {
   border-radius: 16px;
   background: #ffffff;
   padding: 8px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 .console-section {
   padding: 20px;
-}
-
-.console-section.input-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 .console-section.btn-section {
@@ -896,9 +886,6 @@ const resetToInput = () => {
   border: 1px solid #d8e2ee;
   border-radius: 12px;
   background: #f9fcff;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 .code-input {
@@ -909,10 +896,9 @@ const resetToInput = () => {
   font-family: var(--font-mono);
   font-size: 0.9rem;
   line-height: 1.7;
-  resize: none;
+  resize: vertical;
   outline: none;
-  min-height: 0;
-  flex: 1;
+  min-height: 220px;
   box-sizing: border-box;
   color: var(--black);
 }
