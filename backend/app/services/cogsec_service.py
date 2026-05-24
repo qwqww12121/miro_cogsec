@@ -22,6 +22,7 @@ from ..modules import (
     resolve_canonical,
     scenario_metadata,
 )
+from ..modules.scenario_detector import ScenarioDetector
 from ..utils import LocalGemmaClient
 from ..utils.llm_client import LLMClient
 from ..utils.logger import get_logger
@@ -89,6 +90,14 @@ class CogSecService:
 
         self._ensure_case_library()
         t0_result = self.t0_responder.scan(scenario_text)
+
+        detection = ScenarioDetector().detect(
+            text=scenario_text,
+            t0_result=t0_result,
+            user_declared=scenario_type,
+        )
+        canonical = detection.canonical
+
         sanitization_result = self.privacy_sanitizer.sanitize_with_retry(
             scenario_text,
             storage_policy="session_only",
@@ -100,7 +109,7 @@ class CogSecService:
         profile = self.profile_extractor.extract(
             scenario=sanitization_result.sanitized_text or scenario_text,
             questionnaire=questionnaire,
-            scenario_type=scenario_type,
+            scenario_type=canonical,
         )
         persona_state_vector = profile.to_persona_state_vector()
         risk_graph_bundle = self.threat_rag.build_risk_graph_bundle(
@@ -165,7 +174,7 @@ class CogSecService:
         sc_meta["user_role"] = user_role
 
         # -- propagation extension (Phase IV) --
-        scenario_extension = None
+        scenario_extension: Dict[str, Any] = {"detection": detection.to_dict()}
         try:
             spec = get_spec(canonical)
         except KeyError:
@@ -174,10 +183,10 @@ class CogSecService:
         if spec is not None and hasattr(spec, "supports_propagation") and spec.supports_propagation():
             try:
                 propagation_result = spec.run_propagation(scenario_ctx, quick_mode=True)
-                scenario_extension = {"propagation": propagation_result}
+                scenario_extension["propagation"] = propagation_result
             except Exception as exc:
                 logger.warning("scenario propagation failed for %s: %s", canonical, exc)
-                scenario_extension = {"propagation_error": str(exc)}
+                scenario_extension["propagation_error"] = str(exc)
 
         analysis_result = CogSecAnalysisResult(
             profile=profile.to_dict(),

@@ -38,9 +38,18 @@ class EventPropagationScenarioSpec(ScenarioSpec):
     # -- required methods ------------------------------------------------
 
     def build_persona_prompt(self, ctx: ScenarioContext) -> str:
+        seed = _join_inputs(ctx, max_chars=300) or "（未提供具体内容）"
         return (
-            "[event_propagation] Full persona prompt for event-propagation profiling "
-            "will be implemented in Phase II."
+            "当前场景为【事件传播分析】。\n"
+            "分析目标：评估信息在传播链中的认知失真风险与受众脆弱性。\n"
+            "请重点关注以下维度在事件传播中的表现：\n"
+            "- 信息不对称（info_asymmetry）：事件真相与流传版本的偏差程度\n"
+            "- 情绪波动（emotional_volatility）：事件触发的受众情绪强度\n"
+            "- 时间压力（time_pressure）：传播链的扩散速度与紧迫感\n"
+            "- 社会认同敏感性（social_proof_sensitivity）：从众转发倾向\n"
+            "- 稀缺性敏感（scarcity_sensitivity）：对独家/首发信息的渴求程度\n"
+            "- 核查习惯（verification_habit）：转发前是否主动核验来源\n"
+            f"参考材料摘要：{seed}"
         )
 
     def build_worldstate_seed(self, ctx: ScenarioContext) -> dict:
