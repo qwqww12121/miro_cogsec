@@ -12,7 +12,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": false,
@@ -53,7 +53,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 0.616,
           "notes": [],
@@ -75,7 +75,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": false,
@@ -116,7 +116,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 0.443,
           "notes": [],
@@ -138,7 +138,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": true,
@@ -179,7 +179,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 0.271,
           "notes": [
@@ -203,7 +203,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": false,
@@ -244,7 +244,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 0.099,
           "notes": [],
@@ -266,7 +266,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": true,
@@ -307,7 +307,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 0.0,
           "notes": [
@@ -331,7 +331,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": false,
@@ -372,7 +372,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 0.0,
           "notes": [],
@@ -396,7 +396,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": false,
@@ -437,7 +437,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 0.858,
           "notes": [],
@@ -459,7 +459,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": false,
@@ -500,7 +500,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 0.928,
           "notes": [],
@@ -522,7 +522,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": false,
@@ -563,7 +563,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 0.998,
           "notes": [],
@@ -585,7 +585,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": false,
@@ -626,7 +626,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 1.0,
           "notes": [],
@@ -648,7 +648,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": false,
@@ -689,7 +689,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 1.0,
           "notes": [],
@@ -711,7 +711,7 @@
         "evidence_refs": [
           "evidence:case_credit_001:authority_call",
           "evidence:case_credit_001:safe_account",
-          "evidence:case_logistics_001:screen_share"
+          "evidence:case_romance_001:future_commitment"
         ],
         "fork_point_type": "transfer_money",
         "irreversible": false,
@@ -752,7 +752,7 @@
           "evidence_hits": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "intervention_window": 1.0,
           "notes": [],
@@ -787,12 +787,12 @@
         },
         {
           "cialdini_principle": "commitment",
-          "description": "要求下载会议软件、共享屏幕或开启远程控制。",
-          "escalation_condition": "受害者不会操作退款流程时。",
-          "id": "case_logistics_001:screen_share",
+          "description": "把转账或投资包装为共同未来的一部分。",
+          "escalation_condition": "受害者开始承诺见面或长期关系时。",
+          "id": "case_romance_001:future_commitment",
           "intensity_level": 3,
-          "tactic_name": "远程协助接管设备",
-          "typical_dialogue": "你不会操作的话，我远程帮你点一下就行。"
+          "tactic_name": "共同未来承诺施压",
+          "typical_dialogue": "如果你愿意和我一起生活，就帮我渡过这个坎。"
         }
       ],
       "best_intervention_window": {
@@ -812,7 +812,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": false,
@@ -853,7 +853,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 0.616,
               "notes": [],
@@ -875,7 +875,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": false,
@@ -916,7 +916,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 0.443,
               "notes": [],
@@ -938,7 +938,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": true,
@@ -979,7 +979,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 0.271,
               "notes": [
@@ -1003,7 +1003,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": false,
@@ -1044,7 +1044,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 0.099,
               "notes": [],
@@ -1066,7 +1066,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": true,
@@ -1107,7 +1107,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 0.0,
               "notes": [
@@ -1131,7 +1131,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": false,
@@ -1172,7 +1172,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 0.0,
               "notes": [],
@@ -1196,7 +1196,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": false,
@@ -1237,7 +1237,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 0.858,
               "notes": [],
@@ -1259,7 +1259,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": false,
@@ -1300,7 +1300,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 0.928,
               "notes": [],
@@ -1322,7 +1322,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": false,
@@ -1363,7 +1363,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 0.998,
               "notes": [],
@@ -1385,7 +1385,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": false,
@@ -1426,7 +1426,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 1.0,
               "notes": [],
@@ -1448,7 +1448,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": false,
@@ -1489,7 +1489,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 1.0,
               "notes": [],
@@ -1511,7 +1511,7 @@
             "evidence_refs": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "fork_point_type": "transfer_money",
             "irreversible": false,
@@ -1552,7 +1552,7 @@
               "evidence_hits": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "intervention_window": 1.0,
               "notes": [],
@@ -1572,7 +1572,7 @@
       "critical_bifurcation_reason": "主判别 Fork 为 transfer_money，高危分支在第 1 步进入不可逆前窗口。",
       "critical_bifurcation_step": 1,
       "digital_twin_summary": {
-        "cognitive_profile_summary": "场景类型：authority_impersonation；综合脆弱度 40.0/100。 主要风险维度为 authority_compliance=5.0、social_proof_sensitivity=5.0、scarcity_sensitivity=5.0；主要保护因子为 decision_delay=5.0、verification_habit=5.0。",
+        "cognitive_profile_summary": "场景类型：fraud_im；综合脆弱度 40.0/100。 主要风险维度为 authority_compliance=5.0、social_proof_sensitivity=5.0、scarcity_sensitivity=5.0；主要保护因子为 decision_delay=5.0、verification_habit=5.0。",
         "persona_state_vector": {
           "analytic_control": 5.0,
           "asset_sensitivity": 5.0,
@@ -1716,7 +1716,7 @@
               "verification_habit": "未给出明确依据。"
             },
             "scarcity_sensitivity": 5.0,
-            "scenario_type": "authority_impersonation",
+            "scenario_type": "fraud_im",
             "social_proof_sensitivity": 5.0,
             "time_pressure": 5.0,
             "transaction_review": 5.0,
@@ -1743,7 +1743,7 @@
           "time_pressure_sensitivity": 5.0,
           "verification_habit": 5.0
         },
-        "scenario_type": "authority_impersonation"
+        "scenario_type": "fraud_im"
       },
       "fork_nodes": [
         {
@@ -1822,7 +1822,7 @@
           "reason": "最佳干预窗口出现在高危分支进入不可逆操作前。"
         }
       ],
-      "related_case_summary": "与“authority_impersonation”最相关的真实攻击话术包括：征信中心权威施压（authority，强度 3）；安全账户限时转移（scarcity，强度 3）；远程协助接管设备（commitment，强度 3）。",
+      "related_case_summary": "与“fraud_im”最相关的真实攻击话术包括：征信中心权威施压（authority，强度 3）；安全账户限时转移（scarcity，强度 3）；共同未来承诺施压（commitment，强度 3）。",
       "report_sections": {
         "attack_strategy_chain": [
           {
@@ -1845,12 +1845,12 @@
           },
           {
             "cialdini_principle": "commitment",
-            "description": "要求下载会议软件、共享屏幕或开启远程控制。",
-            "escalation_condition": "受害者不会操作退款流程时。",
-            "id": "case_logistics_001:screen_share",
+            "description": "把转账或投资包装为共同未来的一部分。",
+            "escalation_condition": "受害者开始承诺见面或长期关系时。",
+            "id": "case_romance_001:future_commitment",
             "intensity_level": 3,
-            "tactic_name": "远程协助接管设备",
-            "typical_dialogue": "你不会操作的话，我远程帮你点一下就行。"
+            "tactic_name": "共同未来承诺施压",
+            "typical_dialogue": "如果你愿意和我一起生活，就帮我渡过这个坎。"
           }
         ],
         "best_intervention_window": {
@@ -1870,7 +1870,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -1911,7 +1911,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.616,
                 "notes": [],
@@ -1933,7 +1933,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -1974,7 +1974,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.443,
                 "notes": [],
@@ -1996,7 +1996,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": true,
@@ -2037,7 +2037,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.271,
                 "notes": [
@@ -2061,7 +2061,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -2102,7 +2102,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.099,
                 "notes": [],
@@ -2124,7 +2124,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": true,
@@ -2165,7 +2165,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.0,
                 "notes": [
@@ -2189,7 +2189,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -2230,7 +2230,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.0,
                 "notes": [],
@@ -2254,7 +2254,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -2295,7 +2295,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.858,
                 "notes": [],
@@ -2317,7 +2317,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -2358,7 +2358,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.928,
                 "notes": [],
@@ -2380,7 +2380,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -2421,7 +2421,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.998,
                 "notes": [],
@@ -2443,7 +2443,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -2484,7 +2484,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 1.0,
                 "notes": [],
@@ -2506,7 +2506,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -2547,7 +2547,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 1.0,
                 "notes": [],
@@ -2569,7 +2569,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -2610,7 +2610,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 1.0,
                 "notes": [],
@@ -2628,7 +2628,7 @@
         },
         "cognitive_weakness_chain": [],
         "digital_twin_summary": {
-          "cognitive_profile_summary": "场景类型：authority_impersonation；综合脆弱度 40.0/100。 主要风险维度为 authority_compliance=5.0、social_proof_sensitivity=5.0、scarcity_sensitivity=5.0；主要保护因子为 decision_delay=5.0、verification_habit=5.0。",
+          "cognitive_profile_summary": "场景类型：fraud_im；综合脆弱度 40.0/100。 主要风险维度为 authority_compliance=5.0、social_proof_sensitivity=5.0、scarcity_sensitivity=5.0；主要保护因子为 decision_delay=5.0、verification_habit=5.0。",
           "persona_state_vector": {
             "analytic_control": 5.0,
             "asset_sensitivity": 5.0,
@@ -2772,7 +2772,7 @@
                 "verification_habit": "未给出明确依据。"
               },
               "scarcity_sensitivity": 5.0,
-              "scenario_type": "authority_impersonation",
+              "scenario_type": "fraud_im",
               "social_proof_sensitivity": 5.0,
               "time_pressure": 5.0,
               "transaction_review": 5.0,
@@ -2799,7 +2799,7 @@
             "time_pressure_sensitivity": 5.0,
             "verification_habit": 5.0
           },
-          "scenario_type": "authority_impersonation"
+          "scenario_type": "fraud_im"
         },
         "fork_nodes": [
           {
@@ -3122,12 +3122,12 @@
           },
           {
             "cialdini_principle": "commitment",
-            "description": "要求下载会议软件、共享屏幕或开启远程控制。",
-            "escalation_condition": "受害者不会操作退款流程时。",
-            "id": "case_logistics_001:screen_share",
+            "description": "把转账或投资包装为共同未来的一部分。",
+            "escalation_condition": "受害者开始承诺见面或长期关系时。",
+            "id": "case_romance_001:future_commitment",
             "intensity_level": 3,
-            "tactic_name": "远程协助接管设备",
-            "typical_dialogue": "你不会操作的话，我远程帮你点一下就行。"
+            "tactic_name": "共同未来承诺施压",
+            "typical_dialogue": "如果你愿意和我一起生活，就帮我渡过这个坎。"
           }
         ],
         "best_intervention_window": {
@@ -3147,7 +3147,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -3188,7 +3188,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.616,
                 "notes": [],
@@ -3210,7 +3210,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -3251,7 +3251,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.443,
                 "notes": [],
@@ -3273,7 +3273,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": true,
@@ -3314,7 +3314,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.271,
                 "notes": [
@@ -3338,7 +3338,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -3379,7 +3379,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.099,
                 "notes": [],
@@ -3401,7 +3401,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": true,
@@ -3442,7 +3442,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.0,
                 "notes": [
@@ -3466,7 +3466,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -3507,7 +3507,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.0,
                 "notes": [],
@@ -3531,7 +3531,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -3572,7 +3572,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.858,
                 "notes": [],
@@ -3594,7 +3594,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -3635,7 +3635,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.928,
                 "notes": [],
@@ -3657,7 +3657,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -3698,7 +3698,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 0.998,
                 "notes": [],
@@ -3720,7 +3720,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -3761,7 +3761,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 1.0,
                 "notes": [],
@@ -3783,7 +3783,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -3824,7 +3824,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 1.0,
                 "notes": [],
@@ -3846,7 +3846,7 @@
               "evidence_refs": [
                 "evidence:case_credit_001:authority_call",
                 "evidence:case_credit_001:safe_account",
-                "evidence:case_logistics_001:screen_share"
+                "evidence:case_romance_001:future_commitment"
               ],
               "fork_point_type": "transfer_money",
               "irreversible": false,
@@ -3887,7 +3887,7 @@
                 "evidence_hits": [
                   "evidence:case_credit_001:authority_call",
                   "evidence:case_credit_001:safe_account",
-                  "evidence:case_logistics_001:screen_share"
+                  "evidence:case_romance_001:future_commitment"
                 ],
                 "intervention_window": 1.0,
                 "notes": [],
@@ -3905,7 +3905,7 @@
         },
         "cognitive_weakness_chain": [],
         "digital_twin_summary": {
-          "cognitive_profile_summary": "场景类型：authority_impersonation；综合脆弱度 40.0/100。 主要风险维度为 authority_compliance=5.0、social_proof_sensitivity=5.0、scarcity_sensitivity=5.0；主要保护因子为 decision_delay=5.0、verification_habit=5.0。",
+          "cognitive_profile_summary": "场景类型：fraud_im；综合脆弱度 40.0/100。 主要风险维度为 authority_compliance=5.0、social_proof_sensitivity=5.0、scarcity_sensitivity=5.0；主要保护因子为 decision_delay=5.0、verification_habit=5.0。",
           "persona_state_vector": {
             "analytic_control": 5.0,
             "asset_sensitivity": 5.0,
@@ -4049,7 +4049,7 @@
                 "verification_habit": "未给出明确依据。"
               },
               "scarcity_sensitivity": 5.0,
-              "scenario_type": "authority_impersonation",
+              "scenario_type": "fraud_im",
               "social_proof_sensitivity": 5.0,
               "time_pressure": 5.0,
               "transaction_review": 5.0,
@@ -4076,7 +4076,7 @@
             "time_pressure_sensitivity": 5.0,
             "verification_habit": 5.0
           },
-          "scenario_type": "authority_impersonation"
+          "scenario_type": "fraud_im"
         },
         "fork_nodes": [
           {
@@ -4274,7 +4274,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": false,
@@ -4315,7 +4315,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 0.616,
             "notes": [],
@@ -4337,7 +4337,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": false,
@@ -4378,7 +4378,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 0.443,
             "notes": [],
@@ -4400,7 +4400,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": true,
@@ -4441,7 +4441,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 0.271,
             "notes": [
@@ -4465,7 +4465,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": false,
@@ -4506,7 +4506,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 0.099,
             "notes": [],
@@ -4528,7 +4528,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": true,
@@ -4569,7 +4569,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 0.0,
             "notes": [
@@ -4593,7 +4593,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": false,
@@ -4634,7 +4634,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 0.0,
             "notes": [],
@@ -4658,7 +4658,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": false,
@@ -4699,7 +4699,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 0.858,
             "notes": [],
@@ -4721,7 +4721,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": false,
@@ -4762,7 +4762,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 0.928,
             "notes": [],
@@ -4784,7 +4784,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": false,
@@ -4825,7 +4825,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 0.998,
             "notes": [],
@@ -4847,7 +4847,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": false,
@@ -4888,7 +4888,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 1.0,
             "notes": [],
@@ -4910,7 +4910,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": false,
@@ -4951,7 +4951,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 1.0,
             "notes": [],
@@ -4973,7 +4973,7 @@
           "evidence_refs": [
             "evidence:case_credit_001:authority_call",
             "evidence:case_credit_001:safe_account",
-            "evidence:case_logistics_001:screen_share"
+            "evidence:case_romance_001:future_commitment"
           ],
           "fork_point_type": "transfer_money",
           "irreversible": false,
@@ -5014,7 +5014,7 @@
             "evidence_hits": [
               "evidence:case_credit_001:authority_call",
               "evidence:case_credit_001:safe_account",
-              "evidence:case_logistics_001:screen_share"
+              "evidence:case_romance_001:future_commitment"
             ],
             "intervention_window": 1.0,
             "notes": [],
@@ -5320,12 +5320,12 @@
         },
         {
           "cialdini_principle": "commitment",
-          "description": "要求下载会议软件、共享屏幕或开启远程控制。",
-          "escalation_condition": "受害者不会操作退款流程时。",
-          "id": "case_logistics_001:screen_share",
+          "description": "把转账或投资包装为共同未来的一部分。",
+          "escalation_condition": "受害者开始承诺见面或长期关系时。",
+          "id": "case_romance_001:future_commitment",
           "intensity_level": 3,
-          "tactic_name": "远程协助接管设备",
-          "typical_dialogue": "你不会操作的话，我远程帮你点一下就行。"
+          "tactic_name": "共同未来承诺施压",
+          "typical_dialogue": "如果你愿意和我一起生活，就帮我渡过这个坎。"
         }
       ],
       "categories": [
@@ -5352,7 +5352,7 @@
       "environment_context": {
         "channel": "voice",
         "official_masking": false,
-        "scenario_type": "authority_impersonation",
+        "scenario_type": "fraud_im",
         "social_isolation": true,
         "time_pressure": false
       },
@@ -5374,9 +5374,9 @@
           "source": "threat_rag"
         },
         {
-          "detail": "你不会操作的话，我远程帮你点一下就行。",
-          "id": "evidence:case_logistics_001:screen_share",
-          "label": "远程协助接管设备",
+          "detail": "如果你愿意和我一起生活，就帮我渡过这个坎。",
+          "id": "evidence:case_romance_001:future_commitment",
+          "label": "共同未来承诺施压",
           "matched_terms": [],
           "score": 0.35,
           "source": "threat_rag"
@@ -5406,7 +5406,7 @@
           "metadata": {
             "channel": "voice",
             "official_masking": false,
-            "scenario_type": "authority_impersonation",
+            "scenario_type": "fraud_im",
             "social_isolation": true,
             "time_pressure": false
           },
@@ -5436,7 +5436,7 @@
           "metadata": {},
           "relation": "ESCALATES_TO",
           "source": "agent:adversary",
-          "target": "threat:case_logistics_001:screen_share",
+          "target": "threat:case_romance_001:future_commitment",
           "value": 0.62
         },
         {
@@ -5459,7 +5459,7 @@
           "label": "ESCALATES_TO",
           "metadata": {},
           "relation": "ESCALATES_TO",
-          "source": "evidence:case_logistics_001:screen_share",
+          "source": "evidence:case_romance_001:future_commitment",
           "target": "state:world",
           "value": 0.35
         },
@@ -5507,7 +5507,7 @@
           "label": "THREATENS_ASSET",
           "metadata": {},
           "relation": "THREATENS_ASSET",
-          "source": "threat:case_logistics_001:screen_share",
+          "source": "threat:case_romance_001:future_commitment",
           "target": "asset:social",
           "value": 0.72
         },
@@ -5515,7 +5515,7 @@
           "label": "ESCALATES_TO",
           "metadata": {},
           "relation": "ESCALATES_TO",
-          "source": "threat:case_logistics_001:screen_share",
+          "source": "threat:case_romance_001:future_commitment",
           "target": "fork:transfer_money",
           "value": 0.78
         }
@@ -5597,12 +5597,12 @@
         },
         {
           "category": "threat_template",
-          "description": "要求下载会议软件、共享屏幕或开启远程控制。",
-          "id": "threat:case_logistics_001:screen_share",
+          "description": "把转账或投资包装为共同未来的一部分。",
+          "id": "threat:case_romance_001:future_commitment",
           "metadata": {
             "principle": "commitment"
           },
-          "name": "远程协助接管设备",
+          "name": "共同未来承诺施压",
           "risk": 9.4,
           "symbolSize": 51.0,
           "value": 9.0
@@ -5629,10 +5629,10 @@
         },
         {
           "category": "evidence",
-          "description": "你不会操作的话，我远程帮你点一下就行。",
-          "id": "evidence:case_logistics_001:screen_share",
+          "description": "如果你愿意和我一起生活，就帮我渡过这个坎。",
+          "id": "evidence:case_romance_001:future_commitment",
           "metadata": {},
-          "name": "远程协助接管设备",
+          "name": "共同未来承诺施压",
           "risk": 3.5,
           "symbolSize": 38.2,
           "value": 3.5
@@ -5681,10 +5681,10 @@
           "principle": "scarcity"
         },
         {
-          "description": "要求下载会议软件、共享屏幕或开启远程控制。",
-          "id": "threat:case_logistics_001:screen_share",
+          "description": "把转账或投资包装为共同未来的一部分。",
+          "id": "threat:case_romance_001:future_commitment",
           "intensity": 3,
-          "label": "远程协助接管设备",
+          "label": "共同未来承诺施压",
           "principle": "commitment"
         }
       ],
@@ -5735,13 +5735,13 @@
         "CPA > 60%": "Phase-II benchmark hook required",
         "EAR > 65%": true,
         "EWT > 2 steps": false,
-        "End-to-end inference < 30s": true,
+        "End-to-end inference < 30s": false,
         "FPR < 15%": "Phase-II benchmark hook required",
         "FSA > 70%": "Phase-II benchmark hook required",
         "T0 latency < 500ms": true
       },
-      "end_to_end_ms": 1312.07,
-      "end_to_end_target_met": true,
+      "end_to_end_ms": 167162.03,
+      "end_to_end_target_met": false,
       "risk_breakdown": {
         "anomaly_flags": [],
         "attack_match": 0.89,
@@ -5764,7 +5764,7 @@
         "risk_level": "HIGH",
         "trajectory_gap": 0.774
       },
-      "t0_latency_ms": 0.029,
+      "t0_latency_ms": 0.023,
       "t0_target_met": true
     },
     "persona_state_vector": {
@@ -5910,7 +5910,7 @@
           "verification_habit": "未给出明确依据。"
         },
         "scarcity_sensitivity": 5.0,
-        "scenario_type": "authority_impersonation",
+        "scenario_type": "fraud_im",
         "social_proof_sensitivity": 5.0,
         "time_pressure": 5.0,
         "transaction_review": 5.0,
@@ -6067,7 +6067,7 @@
         "verification_habit": "未给出明确依据。"
       },
       "scarcity_sensitivity": 5.0,
-      "scenario_type": "authority_impersonation",
+      "scenario_type": "fraud_im",
       "social_proof_sensitivity": 5.0,
       "time_pressure": 5.0,
       "transaction_review": 5.0,
@@ -6103,12 +6103,12 @@
         },
         {
           "cialdini_principle": "commitment",
-          "description": "要求下载会议软件、共享屏幕或开启远程控制。",
-          "escalation_condition": "受害者不会操作退款流程时。",
-          "id": "case_logistics_001:screen_share",
+          "description": "把转账或投资包装为共同未来的一部分。",
+          "escalation_condition": "受害者开始承诺见面或长期关系时。",
+          "id": "case_romance_001:future_commitment",
           "intensity_level": 3,
-          "tactic_name": "远程协助接管设备",
-          "typical_dialogue": "你不会操作的话，我远程帮你点一下就行。"
+          "tactic_name": "共同未来承诺施压",
+          "typical_dialogue": "如果你愿意和我一起生活，就帮我渡过这个坎。"
         }
       ],
       "categories": [
@@ -6135,7 +6135,7 @@
       "environment_context": {
         "channel": "voice",
         "official_masking": false,
-        "scenario_type": "authority_impersonation",
+        "scenario_type": "fraud_im",
         "social_isolation": true,
         "time_pressure": false
       },
@@ -6157,9 +6157,9 @@
           "source": "threat_rag"
         },
         {
-          "detail": "你不会操作的话，我远程帮你点一下就行。",
-          "id": "evidence:case_logistics_001:screen_share",
-          "label": "远程协助接管设备",
+          "detail": "如果你愿意和我一起生活，就帮我渡过这个坎。",
+          "id": "evidence:case_romance_001:future_commitment",
+          "label": "共同未来承诺施压",
           "matched_terms": [],
           "score": 0.35,
           "source": "threat_rag"
@@ -6189,7 +6189,7 @@
           "metadata": {
             "channel": "voice",
             "official_masking": false,
-            "scenario_type": "authority_impersonation",
+            "scenario_type": "fraud_im",
             "social_isolation": true,
             "time_pressure": false
           },
@@ -6219,7 +6219,7 @@
           "metadata": {},
           "relation": "ESCALATES_TO",
           "source": "agent:adversary",
-          "target": "threat:case_logistics_001:screen_share",
+          "target": "threat:case_romance_001:future_commitment",
           "value": 0.62
         },
         {
@@ -6242,7 +6242,7 @@
           "label": "ESCALATES_TO",
           "metadata": {},
           "relation": "ESCALATES_TO",
-          "source": "evidence:case_logistics_001:screen_share",
+          "source": "evidence:case_romance_001:future_commitment",
           "target": "state:world",
           "value": 0.35
         },
@@ -6290,7 +6290,7 @@
           "label": "THREATENS_ASSET",
           "metadata": {},
           "relation": "THREATENS_ASSET",
-          "source": "threat:case_logistics_001:screen_share",
+          "source": "threat:case_romance_001:future_commitment",
           "target": "asset:social",
           "value": 0.72
         },
@@ -6298,7 +6298,7 @@
           "label": "ESCALATES_TO",
           "metadata": {},
           "relation": "ESCALATES_TO",
-          "source": "threat:case_logistics_001:screen_share",
+          "source": "threat:case_romance_001:future_commitment",
           "target": "fork:transfer_money",
           "value": 0.78
         }
@@ -6380,12 +6380,12 @@
         },
         {
           "category": "threat_template",
-          "description": "要求下载会议软件、共享屏幕或开启远程控制。",
-          "id": "threat:case_logistics_001:screen_share",
+          "description": "把转账或投资包装为共同未来的一部分。",
+          "id": "threat:case_romance_001:future_commitment",
           "metadata": {
             "principle": "commitment"
           },
-          "name": "远程协助接管设备",
+          "name": "共同未来承诺施压",
           "risk": 9.4,
           "symbolSize": 51.0,
           "value": 9.0
@@ -6412,10 +6412,10 @@
         },
         {
           "category": "evidence",
-          "description": "你不会操作的话，我远程帮你点一下就行。",
-          "id": "evidence:case_logistics_001:screen_share",
+          "description": "如果你愿意和我一起生活，就帮我渡过这个坎。",
+          "id": "evidence:case_romance_001:future_commitment",
           "metadata": {},
-          "name": "远程协助接管设备",
+          "name": "共同未来承诺施压",
           "risk": 3.5,
           "symbolSize": 38.2,
           "value": 3.5
@@ -6464,14 +6464,62 @@
           "principle": "scarcity"
         },
         {
-          "description": "要求下载会议软件、共享屏幕或开启远程控制。",
-          "id": "threat:case_logistics_001:screen_share",
+          "description": "把转账或投资包装为共同未来的一部分。",
+          "id": "threat:case_romance_001:future_commitment",
           "intensity": 3,
-          "label": "远程协助接管设备",
+          "label": "共同未来承诺施压",
           "principle": "commitment"
         }
       ],
       "warnings": []
+    },
+    "role_report": {
+      "markdown": "# 个人风险判断\n\n## 为什么这和你有关\n根据分析，你面临的对话具有典型的诈骗特征。攻击者可能利用权威身份、时间压力或稀缺性诱导你转账、提供验证码或共享屏幕。我们建议你仔细阅读以下建议，保护好你的资金和身份信息。\n\n## 你现在最应该做的三件事\n1. 暂停当前对话，不要继续提供任何信息\n2. 通过官方渠道（官方 APP、银行热线、110）核实对方身份\n3. 告知一位家人或朋友你遇到的情况，让他们帮你一起判断\n\n## 暂时不要做的三件事\n1. 不要向任何人透露短信验证码\n2. 不要下载来源不明的 APP 或开启屏幕共享\n3. 不要因为对方声称是'官方'就放弃独立核验\n\n## 可以直接复制的应对话术\n- \"我先核实一下你的身份，稍后回拨官方客服电话确认。\"\n- \"我需要和家人商量一下，现在不方便继续操作。\"\n- \"我不会在电话里提供银行卡信息和验证码，请通过官方渠道联系我。\"\n\n## 如果已经操作了怎么办\n如果你已经转账、提供了验证码或开启了屏幕共享，请立即拨打银行客服冻结账户，并拨打 110 报警。保留聊天记录、通话记录和转账凭证作为证据。\n",
+      "role": "individual",
+      "sections": [
+        {
+          "content": "根据分析，你面临的对话具有典型的诈骗特征。攻击者可能利用权威身份、时间压力或稀缺性诱导你转账、提供验证码或共享屏幕。我们建议你仔细阅读以下建议，保护好你的资金和身份信息。",
+          "heading": "为什么这和你有关"
+        },
+        {
+          "content": "1. 暂停当前对话，不要继续提供任何信息\n2. 通过官方渠道（官方 APP、银行热线、110）核实对方身份\n3. 告知一位家人或朋友你遇到的情况，让他们帮你一起判断",
+          "heading": "你现在最应该做的三件事"
+        },
+        {
+          "content": "1. 不要向任何人透露短信验证码\n2. 不要下载来源不明的 APP 或开启屏幕共享\n3. 不要因为对方声称是'官方'就放弃独立核验",
+          "heading": "暂时不要做的三件事"
+        },
+        {
+          "content": "- \"我先核实一下你的身份，稍后回拨官方客服电话确认。\"\n- \"我需要和家人商量一下，现在不方便继续操作。\"\n- \"我不会在电话里提供银行卡信息和验证码，请通过官方渠道联系我。\"",
+          "heading": "可以直接复制的应对话术"
+        },
+        {
+          "content": "如果你已经转账、提供了验证码或开启了屏幕共享，请立即拨打银行客服冻结账户，并拨打 110 报警。保留聊天记录、通话记录和转账凭证作为证据。",
+          "heading": "如果已经操作了怎么办"
+        }
+      ],
+      "structured": {
+        "avoid_actions": [
+          "不要向任何人透露短信验证码",
+          "不要下载来源不明的 APP 或开启屏幕共享",
+          "不要因为对方声称是'官方'就放弃独立核验"
+        ],
+        "copyable_responses": [
+          "我先核实一下你的身份，稍后回拨官方客服电话确认。",
+          "我需要和家人商量一下，现在不方便继续操作。",
+          "我不会在电话里提供银行卡信息和验证码，请通过官方渠道联系我。"
+        ],
+        "risk_summary": {
+          "final_risk": 55.0,
+          "level": "medium"
+        },
+        "top_actions": [
+          "暂停当前对话，不要继续提供任何信息",
+          "通过官方渠道（官方 APP、银行热线、110）核实对方身份",
+          "告知一位家人或朋友你遇到的情况，让他们帮你一起判断"
+        ]
+      },
+      "title": "个人风险判断 — 基于 CogSec 分析"
     },
     "sanitization": {
       "entities": [],
@@ -6481,6 +6529,55 @@
       "sanitized_text": "来电者自称公安机关，称账户涉嫌洗钱，要求全程保密并把资金转入安全账户接受核查。",
       "storage_policy": "session_only",
       "used_presidio": false
+    },
+    "scenario_extension": {
+      "detection": {
+        "canonical": "fraud_im",
+        "confidence": 1.0,
+        "matched_signals": [],
+        "scenario_context": {
+          "canonical": "fraud_im",
+          "confidence": 1.0,
+          "matched_signals": [],
+          "persona_context": "[fraud_im] Persona prompt is served by CognitiveProfileExtractor.EXTRACTION_PROMPT. No duplicate is maintained here.",
+          "report_sections": [
+            "executive_summary",
+            "digital_twin_profile",
+            "attack_strategy_chain",
+            "branch_contrast",
+            "risk_breakdown",
+            "intervention_prescriptions",
+            "recommendations"
+          ],
+          "risk_dimensions": [
+            "cognitive_health_score",
+            "asset_safety_score",
+            "social_support_score",
+            "emotion_escalation_score"
+          ]
+        }
+      }
+    },
+    "scenario_metadata": {
+      "canonical": "fraud_im",
+      "recognised": true,
+      "report_sections": [
+        "executive_summary",
+        "digital_twin_profile",
+        "attack_strategy_chain",
+        "branch_contrast",
+        "risk_breakdown",
+        "intervention_prescriptions",
+        "recommendations"
+      ],
+      "resolved_from": "authority_impersonation",
+      "risk_dimensions": [
+        "cognitive_health_score",
+        "asset_safety_score",
+        "social_support_score",
+        "emotion_escalation_score"
+      ],
+      "user_role": "individual"
     },
     "strategies": [
       {
@@ -6503,12 +6600,12 @@
       },
       {
         "cialdini_principle": "commitment",
-        "description": "要求下载会议软件、共享屏幕或开启远程控制。",
-        "escalation_condition": "受害者不会操作退款流程时。",
-        "id": "case_logistics_001:screen_share",
+        "description": "把转账或投资包装为共同未来的一部分。",
+        "escalation_condition": "受害者开始承诺见面或长期关系时。",
+        "id": "case_romance_001:future_commitment",
         "intensity_level": 3,
-        "tactic_name": "远程协助接管设备",
-        "typical_dialogue": "你不会操作的话，我远程帮你点一下就行。"
+        "tactic_name": "共同未来承诺施压",
+        "typical_dialogue": "如果你愿意和我一起生活，就帮我渡过这个坎。"
       }
     ],
     "t0_fast_response": {
@@ -6526,18 +6623,18 @@
           ]
         }
       ],
-      "latency_ms": 0.029,
+      "latency_ms": 0.023,
       "summary": "命中 1 条红旗片段，规则: police_secrecy_isolation。",
       "target_met": true
     },
     "world_state_snapshot": {
-      "action": "Input sanitized and mapped to authority_impersonation scene",
+      "action": "Input sanitized and mapped to fraud_im scene",
       "asset_exposure": 0.08,
       "cognitive_mode": "SYSTEM_2",
       "evidence_hits": [
         "征信中心权威施压",
         "安全账户限时转移",
-        "远程协助接管设备"
+        "共同未来承诺施压"
       ],
       "intervention_window": 0.788,
       "notes": [

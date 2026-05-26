@@ -115,23 +115,18 @@ class LocalGemmaClient:
                 "pretrained_model_name_or_path": self.model_path,
                 "local_files_only": True,
                 "low_cpu_mem_usage": True,
-                "dtype": torch_dtype,
+                "torch_dtype": torch_dtype,
             }
 
             device_pref = self.device_preference.lower().strip()
-            if device_pref == "cuda" and torch.cuda.is_available():
-                load_kwargs["device_map"] = "auto"
-            elif device_pref == "cuda":
-                logger.warning("请求使用 CUDA，但当前 torch 未检测到 GPU，回退到 CPU。")
-                load_kwargs["device_map"] = "cpu"
-            elif device_pref == "cpu":
-                load_kwargs["device_map"] = "cpu"
+            use_cuda = torch.cuda.is_available()
+            if use_cuda and device_pref != "cpu":
+                # 强制全部权重加载到 GPU 0，避免 accelerate 自动 offload 到 CPU
+                load_kwargs["device_map"] = {"": 0}
             else:
-                load_kwargs["device_map"] = "auto" if torch.cuda.is_available() else "cpu"
-
-            if offload_dir is not None:
-                load_kwargs["offload_folder"] = str(offload_dir)
-                load_kwargs["offload_state_dict"] = True
+                if device_pref == "cuda":
+                    logger.warning("请求使用 CUDA，但当前 torch 未检测到 GPU，回退到 CPU。")
+                load_kwargs["device_map"] = "cpu"
 
             attn_implementation = self._resolve_attn_implementation()
             if attn_implementation:

@@ -50,6 +50,7 @@ def main() -> int:
     data = result.get("data") or {}
     profile = data.get("profile") or data.get("cognitive_profile") or {}
     metrics = data.get("metrics") or data.get("risk_evaluation") or {}
+    risk_breakdown = metrics.get("risk_breakdown") or {}
     t0 = data.get("t0_fast_response") or data.get("t0_response") or {}
     report = data.get("counterfactual_report") or {}
     score_comparison = report.get("score_comparison") or {}
@@ -58,13 +59,16 @@ def main() -> int:
         "success": result.get("success"),
         "scenario_type": profile.get("scenario_type", ""),
         "profile_score": first_number(profile.get("overall_vulnerability_score")),
-        "risk_level": metrics.get("risk_level", ""),
-        "final_risk": first_number(metrics.get("final_risk"), metrics.get("risk_score")),
-        "t0_action": t0.get("immediate_action", "") or t0.get("recommended_action", ""),
+        "risk_level": risk_breakdown.get("risk_level", ""),
+        "final_risk": first_number(risk_breakdown.get("final_risk"), metrics.get("final_risk")),
+        "t0_alert": t0.get("alert", ""),
+        "t0_hits": len(t0.get("hits", [])),
         "trajectory_gap": first_number(
+            risk_breakdown.get("trajectory_gap"),
             score_comparison.get("trajectory_gap"),
             report.get("trajectory_gap"),
         ),
+        "end_to_end_ms": first_number(metrics.get("end_to_end_ms")),
         "output": str(args.output),
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))

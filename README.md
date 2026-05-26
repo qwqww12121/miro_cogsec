@@ -77,16 +77,32 @@ tests/
 ### 1. 环境要求
 
 - Node.js 18+
-- Python 3.11 或 3.12
-- uv
+- Python 3.12（推荐使用 conda 环境）
+- Conda（Anaconda / Miniconda）
 
-### 2. 配置环境变量
+### 2. 创建 Python 环境并安装依赖
 
 ```bash
-cp .env.example .env
+# 创建并激活 conda 环境
+conda create -n ciscn python=3.12 -y
+conda activate ciscn
+
+# 安装 PyTorch（有 NVIDIA GPU 时安装 CUDA 版）
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
+# 安装后端依赖（跳过不兼容 Python 3.12 的 camel-oasis）
+pip install flask flask-cors openai "zep-cloud==3.13.0" PyMuPDF charset-normalizer \
+    chardet python-dotenv pydantic "chromadb>=0.5.5" presidio-analyzer \
+    presidio-anonymizer transformers accelerate huggingface_hub
+
+# 安装前端依赖
+npm install
+npm install --prefix frontend
 ```
 
-最少需要配置：
+### 3. 配置环境变量
+
+复制 `.env.example` 为 `.env` 并填写：
 
 ```env
 LLM_API_KEY=your_api_key
@@ -95,23 +111,25 @@ LLM_MODEL_NAME=qwen-plus
 ZEP_API_KEY=your_zep_api_key
 ```
 
-未配置 Zep 时系统仍可运行，传播仿真和 Zep 图谱功能降级跳过。未配置 LLM 时认知画像回退到启发式模式。
+未配置 Zep 时系统仍可运行，传播仿真和 Zep 图谱功能降级跳过。
 
-### 3. 安装依赖
+### 4. 本地 Gemma 模型（可选）
 
-```bash
-npm run setup:all
-```
-
-或分步安装：
+若使用本地 Gemma 替代云端 LLM，需先在 HuggingFace 申请访问权限，然后：
 
 ```bash
-npm install
-npm install --prefix frontend
-cd backend && uv sync
+hf auth login
+hf download google/gemma-4-E2B-it \
+  --local-dir models/google--gemma-4-E2B-it
 ```
 
-### 4. 启动
+在 `.env` 中启用：
+
+```env
+COGSEC_USE_LOCAL_GEMMA=true
+```
+
+### 5. 启动
 
 ```bash
 npm run dev
