@@ -90,26 +90,42 @@ class EventPropagationScenarioSpec(ScenarioSpec):
         )
 
     def run_propagation(self, ctx: ScenarioContext, quick_mode: bool = True) -> dict:
+        import os
         from ...modules.propagation import (
+            OasisPropagationAdapter,
             build_agents,
             build_topology,
             run_forked_propagation,
         )
 
         event = self.build_propagation_event(ctx)
-        n_agents = 20 if quick_mode else 60
-        ticks = 10 if quick_mode else 30
+        n_agents = 12 if quick_mode else 60
+        ticks = 5 if quick_mode else 20
         agents = build_agents(self.name, n_agents=n_agents)
-        adjacency = build_topology(agents, topology_type="scale_free_like")
-        intervention_tick = max(2, ticks // 2) if quick_mode else 10
-        result = run_forked_propagation(
-            event=event,
-            agents=agents,
-            adjacency=adjacency,
-            ticks=ticks,
-            intervention_tick=intervention_tick,
-            strategy_type="remove_key_node",
-        )
+        intervention_tick = max(2, ticks // 3)
+
+        oasis = OasisPropagationAdapter()
+        if oasis.is_available():
+            result = oasis.run(
+                event=event,
+                agents=agents,
+                scenario_type=self.name,
+                n_ticks=ticks,
+                intervention_tick=intervention_tick,
+                llm_api_key=os.environ.get("LLM_API_KEY"),
+                llm_base_url=os.environ.get("LLM_BASE_URL"),
+                llm_model_name=os.environ.get("LLM_MODEL_NAME"),
+            )
+        else:
+            adjacency = build_topology(agents, topology_type="scale_free_like")
+            result = run_forked_propagation(
+                event=event,
+                agents=agents,
+                adjacency=adjacency,
+                ticks=ticks,
+                intervention_tick=intervention_tick,
+                strategy_type="remove_key_node",
+            )
         return result.to_dict()
 
 
