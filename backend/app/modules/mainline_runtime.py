@@ -325,7 +325,7 @@ class MiroFishRuntime:
             asset_exposure = _clamp(asset_exposure + 0.12, 0, 1)
         intervention_window = _clamp(previous.intervention_window + window_delta, 0, 1)
         score_jump = abs(posterior_risk - previous.posterior_risk) * 100
-        audit_flag = score_jump > 40
+        audit_flag = score_jump > 20
         notes = []
         if audit_flag:
             notes.append("score jump > 40 -> escalated to Audit Agent")

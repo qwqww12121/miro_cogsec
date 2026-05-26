@@ -5,7 +5,7 @@ from modules.t0_fast_responder import T0FastResponder
 
 def test_t0_fast_responder_detects_required_patterns():
     responder = T0FastResponder()
-    text = "对方说你要共享屏幕并提供银行卡验证码，还要转到安全账户，且不要告诉家人。"
+    text = "对方说你要共享屏幕并提供银行卡验证码，还要转账到安全账户，且不要告诉家人。"
     result = responder.scan(text)
 
     assert result["alert"] is True
