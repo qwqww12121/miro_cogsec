@@ -1,174 +1,229 @@
 # Miro-CogSec Benchmark v0.1
 
-这个文件夹是 Miro-CogSec 的小样本 benchmark 管线。v0.1 先故意做小：20 条公开来源支撑的样本、一套稳定的 CogSec JSONL schema、第一层模型标注接口、第二层模型复核接口、Miro-CogSec 运行输出、评分脚本，以及给人工审核看的 Markdown 报告。
+本目录用于维护 Miro-CogSec 的小规模 benchmark。v0.1 覆盖三个后端场景：
 
-当前版本不是简单“诈骗/非诈骗”分类库，而是图谱支撑型小样本库。每条样本都应尽量包含：
+| 场景 | 样本数 | 当前定位 |
+|---|---:|---|
+| `fraud_im` | 20 | 主评测集 |
+| `public_opinion` | 5 | seed benchmark，用于验证舆情场景 schema、baseline 和后端输出对齐 |
+| `event_propagation` | 5 | seed benchmark，用于验证事件传播场景 schema、baseline 和后端输出对齐 |
+
+`public_opinion` 和 `event_propagation` 当前不是最终大规模评测集，主要用于先把字段、评分和实验流程跑通。
+
+## 当前结论
+
+### 数据层
+
+三类 gold 数据和 AQS 已经准备好：
+
+- `fraud_im`：20 条 `gold_reviewed`，AQS = 1.0
+- `public_opinion`：5 条 `gold_reviewed`，AQS = 1.0
+- `event_propagation`：5 条 `gold_reviewed`，AQS = 1.0
+
+### LLM-only baseline
+
+已使用 DeepSeek 通过 OpenAI-compatible API 跑完三类 LLM-only baseline。该 baseline 不使用 Miro-CogSec 后端模块、RAG、传播仿真或 runtime 输出，只测试普通 LLM 直接生成结构化 prediction 的能力。
+
+| 场景 | 样本数 | 格式通过率 | schema 完整率 | RES |
+|---|---:|---:|---:|---:|
+| `fraud_im` | 20 | 100.0 | 100.0 | 0.789 |
+| `public_opinion` | 5 | 100.0 | 100.0 | 0.399 |
+| `event_propagation` | 5 | 100.0 | 100.0 | 0.701 |
+
+主要观察：
+
+| 场景 | 表现较好 | 表现较弱 |
+|---|---|---|
+| `fraud_im` | FPA=100.0，RCA=97.5，EAR=92.8，ATA=90.8 | IWA=65.0 |
+| `public_opinion` | RCA=80.0，EAS=80.0，EAR=70.1 | IWA=4.2，UGS=21.2，NSS=23.5，OGS=35.5 |
+| `event_propagation` | RCA=100.0，CWS=100.0，OVS=89.9，EAR=84.8，ANS=81.7 | CAS=20.0，PCS=28.7 |
+
+baseline 输出文件位于：
 
 ```text
-场景框架
-  -> 证据包
-  -> 攻击策略链
-  -> 认知压力候选
-  -> 资产目标
-  -> Fork 节点
-  -> A/B 反事实预期
-  -> 不确定性说明
+benchmark/outputs/llm_baseline/
 ```
 
-## 设计原则
+这些文件是本地生成物，默认不作为稳定 benchmark 数据提交；稳定结论以本 README 和报告中的汇总分数为准。
 
-这个 benchmark 不走手写特征工程路线。公开数据集负责提供真实或公开来源支撑的样本底座；强闭源模型负责把样本转换成 CogSec 图谱支撑答案；第二个模型组合或人工负责审查第一层转换是否可靠。最终冻结下来的 JSONL 才是 v0.1 benchmark。
+## 当前问题
 
-## 目录结构
+### 1. 传播类 runtime 暂时不能算正式 RES
 
-- `data/raw_seed_v0.1.jsonl`：清洗、去重、抽样后的公开来源种子样本。
-- `data/cogsec_v0.1.jsonl`：第一层模型转换后的 20 条 CogSec 图谱支撑答案。
-- `data/review_request_v0.1.jsonl`：给第二层模型审查用的标准输入。
-- `data/review_stub_v0.1.jsonl`：空白二审结果模板。
-- `prompts/stage1_cogsec_annotator.md`：第一层模型英文接口 prompt，可给 GPT-5.5 或同等级模型使用。
-- `prompts/stage1_cogsec_annotator.zh-CN.md`：第一层接口的中文翻译，方便人工理解。
-- `prompts/stage2_cogsec_reviewer.md`：第二层模型英文审查 prompt，可给 ClaudeCode + DeepSeek 等组合使用。
-- `prompts/stage2_cogsec_reviewer.zh-CN.md`：第二层接口的中文翻译。
-- `schemas/*.schema.json`：每个阶段的机器可读 JSON schema。
-- `reports/human_review_v0.1.md`：人工审核报告，每条样本分三块：第一层抽取结果、第二层审查意见、人工审核留白。
-- `outputs/`：本地运行 Miro-CogSec 后生成的预测结果和评分结果。
-- `cogsec_benchmark.py`：统一入口脚本，负责校验、生成二审输入、生成报告、运行 runtime、评分。
+DeepSeek API 已接通，两个传播类场景也能正确路由：
 
-## 流程
+- `public_opinion`：`scenario_match=100.0`
+- `event_propagation`：`scenario_match=100.0`
+
+但 `public_opinion` 和 `event_propagation` 的 runtime 输出目前仍偏诈骗主链字段，例如：
 
 ```text
-公开数据集
-  -> 清洗 / 去重 / 抽样
-  -> 第一层模型：转换成 CogSec 图谱支撑 JSONL
-  -> 格式校验
-  -> 标注质量评分 (AQS)
-  -> 第二层模型：审查 / 复核 / 给出修订建议
-  -> 可选人工审核
-  -> 固定为 benchmark v0.1
-  -> 跑 Miro-CogSec
-  -> 评测指标计算 (RES)
+predicted_fork_type
+risk_bin
+trajectory_gap
+evidence_text
 ```
 
-### 两层评分
+它们还没有稳定输出 benchmark 需要的场景化字段，例如：
 
-- **AQS (Annotation Quality Score)** — 不依赖 runtime，独立评估标注本身的质量。
-- **RES (Runtime Evaluation Score)** — 对比 Miro-CogSec 运行时输出与 benchmark 标准答案。
+```text
+public_opinion:
+narrative_threads
+emotion_signal
+uncertainty_points
+official_response_gap
+
+event_propagation:
+origin_node
+amplifier_nodes
+propagation_path
+distortion_points
+containment_window
+```
+
+因此，传播类 runtime 还需要后端输出字段对齐，或者 benchmark 侧 adapter 从后端原始输出中抽取这些字段。
+
+### 2. OASIS 传播扩展在本地 Windows 上失败
+
+当前本地 smoke test 中，传播扩展 `scenario_extension.propagation` 没有稳定产出，报错为：
+
+```text
+[WinError 32] 另一个程序正在使用此文件，进程无法访问 branch_a.db
+```
+
+这看起来是 OASIS 临时 SQLite 数据库文件锁问题。该问题属于后端传播仿真集成问题，不是 benchmark 数据或 DeepSeek key 的问题。
+
+### 3. ablation 需要后端提供正式开关
+
+传播类场景最重要的消融实验是：
+
+```text
+Miro-CogSec without propagation
+vs
+Miro-CogSec with propagation
+```
+
+但当前后端还没有正式、稳定的 benchmark 开关，例如：
+
+```text
+enable_propagation=false
+enable_propagation=true
+```
+
+现在本地出现的 `propagation=False` 是 OASIS 报错导致的结果，不能作为正式 ablation。后续建议后端至少提供 `enable_propagation=false/true`，之后再考虑：
+
+```text
+enable_cognitive_profile=false/true
+enable_fork_ab=false/true
+```
+
+## 建议实验顺序
+
+1. **AQS**：先证明 gold 标注完整、可追溯。
+2. **LLM-only baseline**：已完成，用 DeepSeek 直接输出 prediction，对比 gold answer。
+3. **Miro-CogSec fraud runtime**：优先跑完整 `fraud_im` runtime baseline。
+4. **传播类字段对齐**：等后端稳定输出 `scenario_extension.propagation` 或场景化字段后，再写 adapter。
+5. **传播类 runtime RES**：字段对齐后，再跑 `public_opinion` 和 `event_propagation` 的正式 runtime 评分。
+6. **Ablation**：等后端提供开关后，比较 with/without propagation。
+
+详细字段对齐计划见：
+
+```text
+benchmark/reports/runtime_alignment_todo.md
+```
+
+## 关键文件
+
+| 文件 | 说明 |
+|---|---|
+| `benchmark/data/cogsec_v0.1.jsonl` | `fraud_im` 20 条 gold samples |
+| `benchmark/data/public_opinion_v0.1.jsonl` | `public_opinion` 5 条 seed gold samples |
+| `benchmark/data/event_propagation_v0.1.jsonl` | `event_propagation` 5 条 seed gold samples |
+| `benchmark/data/llm_baseline_input_fraud_im_v0.1.jsonl` | `fraud_im` LLM-only answer-free input |
+| `benchmark/data/llm_baseline_input_public_opinion_v0.1.jsonl` | `public_opinion` LLM-only answer-free input |
+| `benchmark/data/llm_baseline_input_event_propagation_v0.1.jsonl` | `event_propagation` LLM-only answer-free input |
+| `benchmark/prompts/llm_baseline_fraud_im.md` | `fraud_im` LLM-only prompt |
+| `benchmark/prompts/llm_baseline_public_opinion.md` | `public_opinion` LLM-only prompt |
+| `benchmark/prompts/llm_baseline_event_propagation.md` | `event_propagation` LLM-only prompt |
+| `benchmark/reports/benchmark_v0.1_report.md` | 三场景 benchmark 汇总报告 |
+| `benchmark/reports/fraud_im_benchmark_v0.1.md` | `fraud_im` 主评测报告 |
+| `benchmark/reports/runtime_alignment_todo.md` | 后端输出字段对齐计划 |
+| `benchmark/cogsec_benchmark.py` | 校验、AQS、baseline 评分、runtime 评分入口 |
+| `scripts/run_llm_baseline.py` | LLM-only baseline runner |
+| `scripts/run_scenario_api_benchmark.py` | 三场景后端 API smoke runner |
 
 ## 常用命令
 
-校验原始样本和第一层标注：
+### 数据校验
 
-```bash
-python benchmark/cogsec_benchmark.py validate
+```powershell
+py benchmark\cogsec_benchmark.py validate
 ```
 
-标注质量评分（ECR / FVS / WCS / TRS / RFS → AQI），不依赖 runtime：
+### fraud_im AQS
 
-```bash
-python benchmark/cogsec_benchmark.py aqs
+```powershell
+py benchmark\cogsec_benchmark.py aqs
 ```
 
-把轻量第一层标注升级/覆盖为图谱支撑标注：
+### 传播类 AQS
 
-```bash
-python benchmark/cogsec_benchmark.py enrich
+```powershell
+py benchmark\cogsec_benchmark.py scenario-aqs --input benchmark\data\public_opinion_v0.1.jsonl --scenario-type public_opinion --output benchmark\outputs\public_opinion_aqs_v0.1.json
+py benchmark\cogsec_benchmark.py scenario-aqs --input benchmark\data\event_propagation_v0.1.jsonl --scenario-type event_propagation --output benchmark\outputs\event_propagation_aqs_v0.1.json
 ```
 
-重新生成第二层审查输入：
+### 跑 LLM-only baseline
 
-```bash
-python benchmark/cogsec_benchmark.py make-review-input
+需要先配置 OpenAI-compatible 环境变量，例如 DeepSeek：
+
+```powershell
+$env:LLM_API_KEY="你的 key"
+$env:LLM_BASE_URL="https://api.deepseek.com"
+$env:LLM_MODEL_NAME="deepseek-chat"
 ```
 
-重新生成人工审核 Markdown 报告：
+运行 baseline：
 
-```bash
-python benchmark/cogsec_benchmark.py report
+```powershell
+C:\Users\19579\.conda\envs\miro-cogsec\python.exe scripts\run_llm_baseline.py --scenario fraud_im --retries 5 --retry-sleep 3
+C:\Users\19579\.conda\envs\miro-cogsec\python.exe scripts\run_llm_baseline.py --scenario public_opinion --retries 5 --retry-sleep 3
+C:\Users\19579\.conda\envs\miro-cogsec\python.exe scripts\run_llm_baseline.py --scenario event_propagation --retries 5 --retry-sleep 3
 ```
 
-在 20 条样本上运行本地 Miro-CogSec：
+### 验证 LLM-only baseline 输出
 
-```bash
-python benchmark/cogsec_benchmark.py run
+```powershell
+py benchmark\cogsec_benchmark.py validate-llm-baseline --scenario-type fraud_im --input benchmark\data\llm_baseline_input_fraud_im_v0.1.jsonl --output benchmark\outputs\llm_baseline\fraud_im_llm_baseline_v0.1.jsonl
+py benchmark\cogsec_benchmark.py validate-llm-baseline --scenario-type public_opinion --input benchmark\data\llm_baseline_input_public_opinion_v0.1.jsonl --output benchmark\outputs\llm_baseline\public_opinion_llm_baseline_v0.1.jsonl
+py benchmark\cogsec_benchmark.py validate-llm-baseline --scenario-type event_propagation --input benchmark\data\llm_baseline_input_event_propagation_v0.1.jsonl --output benchmark\outputs\llm_baseline\event_propagation_llm_baseline_v0.1.jsonl
 ```
 
-对运行输出做全维度评测（FPA / ATA / CPA / IWA / RCA / EAR → RES）：
+### 评分 LLM-only baseline
 
-```bash
-python benchmark/cogsec_benchmark.py evaluate
+```powershell
+py benchmark\cogsec_benchmark.py score-llm-baseline --scenario-type fraud_im --annotated benchmark\data\cogsec_v0.1.jsonl --predictions benchmark\outputs\llm_baseline\fraud_im_llm_baseline_v0.1.jsonl --output benchmark\outputs\llm_baseline\fraud_im_llm_baseline_metrics_v0.1.json
+py benchmark\cogsec_benchmark.py score-llm-baseline --scenario-type public_opinion --annotated benchmark\data\public_opinion_v0.1.jsonl --predictions benchmark\outputs\llm_baseline\public_opinion_llm_baseline_v0.1.jsonl --output benchmark\outputs\llm_baseline\public_opinion_llm_baseline_metrics_v0.1.json
+py benchmark\cogsec_benchmark.py score-llm-baseline --scenario-type event_propagation --annotated benchmark\data\event_propagation_v0.1.jsonl --predictions benchmark\outputs\llm_baseline\event_propagation_llm_baseline_v0.1.jsonl --output benchmark\outputs\llm_baseline\event_propagation_llm_baseline_metrics_v0.1.json
 ```
 
-（`score` 是 `evaluate` 的别名，保持向后兼容。）
+### 三场景后端 smoke test
 
-运行不依赖 Miro-CogSec runtime 的完整本地流程（validate + aqs + review-input + report）：
-
-```bash
-python benchmark/cogsec_benchmark.py all-local
+```powershell
+C:\Users\19579\.conda\envs\miro-cogsec\python.exe scripts\run_scenario_api_benchmark.py --scenario public_opinion --limit 1 --disable-chroma --no-local-gemma
+C:\Users\19579\.conda\envs\miro-cogsec\python.exe scripts\run_scenario_api_benchmark.py --scenario event_propagation --limit 1 --disable-chroma --no-local-gemma
 ```
 
-加上 runtime 运行和评测：
+当前该 smoke test 可以验证场景路由，但传播类正式 runtime 评分仍受 OASIS 和字段对齐问题阻塞。
 
-```bash
-python benchmark/cogsec_benchmark.py all-local --with-runtime
-```
+## 数据来源
 
-## 评测指标
+v0.1 样本来自公开数据集或公开分类体系，并经过规范化处理，不直接复制长篇原始记录。
 
-### AQS: Annotation Quality Score（标注质量，不依赖 runtime）
+| 场景 | 来源 |
+|---|---|
+| `fraud_im` | ChiFraud 17，TeleAntiFraud 2，NIST Phish Scale 1 |
+| `public_opinion` | PHEME 3，CoAID 1，FakeNewsNet 1 |
+| `event_propagation` | PHEME 2，CrisisLexT26 2，FakeNewsNet 1 |
 
-| 指标 | 全称 | 含义 | 目标 |
-|------|------|------|------|
-| ECR | Evidence Coverage Rate | evidence_pack 中 span 命中原文、ID 格式正确的比例 | > 0.95 |
-| FVS | Fork Validity Score | fork_points.type 属于 benchmark schema，且 runtime_alignment 明确标出 direct / nearest / unsupported | 1.00 |
-| WCS | Window Consistency Score | 干预窗口关闭在不可逆节点之前的案例比例 | 1.00 |
-| TRS | Traceability Score | evidence_refs 指向有效 evidence_pack ID 的比例 | 1.00 |
-| RFS | Rich Field Score | 所有 rich fields 已填写且结构完整的比例 | 1.00 |
-| AQI | Annotation Quality Index | ECR×0.25 + FVS×0.25 + WCS×0.15 + TRS×0.20 + RFS×0.15 | > 0.90 |
-
-### RES: Runtime Evaluation Score（运行时评测）
-
-| 指标 | 全称 | 含义 | 目标 |
-|------|------|------|------|
-| FPA | Fork Point Accuracy | runtime 预测的 Fork 二元类别是否与 benchmark 标准答案一致 | > 0.70 |
-| ATA | Asset Target Accuracy | 预测的资产目标类型与标准答案的重叠率 | > 0.60 |
-| CPA | Counterfactual Path Accuracy | 预测的 trajectory_gap 与标准答案差值 ≤ 0.20 的比例 | > 0.60 |
-| IWA | Intervention Window Accuracy | 预测的干预时机是否在标准答案窗口内 | > 0.65 |
-| RCA | Risk Calibration Accuracy | 预测的 risk bin 与标准答案一致的比率 | > 0.65 |
-| EAR | Evidence Attribution Rate | 预测输出的关键词与标准答案 evidence_keywords 的重叠率 | > 0.65 |
-| RES | Runtime Evaluation Score | FPA×0.20 + ATA×0.18 + CPA×0.18 + IWA×0.14 + RCA×0.15 + EAR×0.15 | > 0.65 |
-
-## 评分文件
-
-- `outputs/aqs_v0.1.json`：标注质量评分输出（`aqs` 命令）
-- `outputs/run_v0.1.jsonl`：运行时预测输出（`run` 命令）
-- `outputs/metrics_v0.1.json`：运行时评测输出（`evaluate` 命令）
-
-## 两个模型接口
-
-第一层标注接口：
-
-- 输入：`data/raw_seed_v0.1.jsonl`
-- 英文 prompt：`prompts/stage1_cogsec_annotator.md`
-- 中文翻译：`prompts/stage1_cogsec_annotator.zh-CN.md`
-- 输出：`data/cogsec_v0.1.jsonl`
-- 约定：输入一行，输出一行 CogSec JSON。
-
-第二层审查接口：
-
-- 输入：`data/review_request_v0.1.jsonl`
-- 英文 prompt：`prompts/stage2_cogsec_reviewer.md`
-- 中文翻译：`prompts/stage2_cogsec_reviewer.zh-CN.md`
-- 输出：`data/review_v0.1.jsonl`
-- 约定：一条第一层标注对应一条审查 JSON。
-
-## 来源说明
-
-v0.1 的样本来自公开数据或公开分类体系，并针对 GitHub 放置做了规范化处理。样本保留数据集名称、标签、许可证说明和 URL，同时移除了直接联系方式，避免长篇复制原始记录。
-
-主要公开来源：
-
-- ChiFraud: https://github.com/xuemingxxx/ChiFraud
-- TeleAntiFraud: https://github.com/JimmyMa99/TeleAntiFraud
-- NIST Phish Scale User Guide: https://www.nist.gov/publications/nist-phish-scale-user-guide
-
-注意：CogSec 标签不是原始数据集自带标签，而是第一层模型转换出的 benchmark 标准答案。因此必须保留模型元数据、prompt 版本和二审记录，保证后续可追溯、可复核。
+CogSec 专用标签不是原始数据集自带字段，而是 benchmark 人工规范化和复核后的 gold answer。
