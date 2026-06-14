@@ -20,6 +20,69 @@ except Exception:  # pragma: no cover
     embedding_functions = None
 
 
+# Hardcoded strategy templates for non-fraud scenarios (no case store entries exist for these)
+_PROPAGATION_STRATEGY_TEMPLATES: Dict[str, List[Dict[str, Any]]] = {
+    "event_propagation": [
+        {
+            "id": "rumor_cascade",
+            "cialdini_principle": "social_proof",
+            "tactic_name": "谣言裂变式传播",
+            "description": "利用信息不对称，借助关键节点账号放大未经核实的信息，形成滚雪球效应。",
+            "typical_dialogue": "这条消息已经好几个大V转发了，应该是真的，快扩散。",
+            "escalation_condition": "传播覆盖率超过 30% 且头部节点介入时升级。",
+            "intensity_level": 3,
+        },
+        {
+            "id": "emotional_amplification",
+            "cialdini_principle": "liking",
+            "tactic_name": "情绪化渲染放大",
+            "description": "通过极端化表述激发群体愤怒或恐惧，使受众跳过理性判断直接转发。",
+            "typical_dialogue": "太可怕了！这件事不能就这么算了，大家一起扩散！",
+            "escalation_condition": "情绪值超过阈值时触发二次传播高峰。",
+            "intensity_level": 2,
+        },
+        {
+            "id": "authority_hijack",
+            "cialdini_principle": "authority",
+            "tactic_name": "权威账号借势传播",
+            "description": "借助高粉丝量账号或疑似官方账号转发，为不实信息提供可信度背书。",
+            "typical_dialogue": "某知名媒体账号已转发此消息，来源应该可靠。",
+            "escalation_condition": "官方账号或媒体账号介入后传播速度激增。",
+            "intensity_level": 2,
+        },
+    ],
+    "public_opinion": [
+        {
+            "id": "echo_chamber_polarization",
+            "cialdini_principle": "social_proof",
+            "tactic_name": "信息茧房极化",
+            "description": "在特定圈层内反复强化单一观点，使群体认知逐步偏移，排斥异见。",
+            "typical_dialogue": "这个圈子里的人都这么认为，反对的人才是异类。",
+            "escalation_condition": "回声室效应形成闭环后触发群体极化。",
+            "intensity_level": 3,
+        },
+        {
+            "id": "emotional_resonance_trigger",
+            "cialdini_principle": "liking",
+            "tactic_name": "情感共鸣激活",
+            "description": "挖掘受众情绪触发点，以高情绪价值内容引发共鸣与自发转发。",
+            "typical_dialogue": "这件事戳到我了，必须让更多人知道。",
+            "escalation_condition": "情绪共鸣超过传播临界值时形成自发传播链。",
+            "intensity_level": 2,
+        },
+        {
+            "id": "trending_topic_hijack",
+            "cialdini_principle": "authority",
+            "tactic_name": "热点借势操控",
+            "description": "借助热点事件嫁接议题，快速渗透已有流量的讨论圈层，扩大影响力。",
+            "typical_dialogue": "趁着这个热点，把我们的观点夹带进去推一推。",
+            "escalation_condition": "热点话题热度超过阈值时启动借势操控。",
+            "intensity_level": 2,
+        },
+    ],
+}
+
+
 def _tokenize(text: str) -> List[str]:
     return [token for token in re.split(r"[^\w\u4e00-\u9fff]+", (text or "").lower()) if token]
 
@@ -176,6 +239,12 @@ class ThreatKnowledgeRAG:
         n_results: int = 3,
     ) -> List[AttackStrategy]:
         """按场景与受害者画像检索最相关的攻击策略。"""
+        # Non-fraud scenarios have no entries in the case store; use hardcoded templates
+        # to avoid returning semantically similar but wrong-category fraud strategies.
+        if scenario_type in _PROPAGATION_STRATEGY_TEMPLATES:
+            templates = _PROPAGATION_STRATEGY_TEMPLATES[scenario_type]
+            return [AttackStrategy.from_dict(t) for t in templates[:n_results]]
+
         if not self.case_store:
             return []
 
@@ -333,11 +402,19 @@ class ThreatKnowledgeRAG:
 
     def _retrieve_case_ids(self, query: str, scenario_type: str, n_results: int) -> List[str]:
         if self.collection is not None:
-            result = self.collection.query(query_texts=[query], n_results=min(n_results, len(self.case_store)))
+            # Fetch extra results so we can post-filter by category
+            fetch_n = min(max(n_results * 2, 6), max(1, len(self.case_store)))
+            result = self.collection.query(query_texts=[query], n_results=fetch_n)
             metadatas = result.get("metadatas", [[]])
             case_ids = [item.get("case_id") for item in metadatas[0] if item.get("case_id")]
             if case_ids:
-                return case_ids
+                # Prefer cases whose category matches the requested scenario type
+                matched = [
+                    cid for cid in case_ids
+                    if cid in self.case_store
+                    and self._category_score(self.case_store[cid].category, scenario_type) >= 0.8
+                ]
+                return (matched if matched else case_ids)[:n_results]
 
         ranked = sorted(
             self.case_store.values(),
@@ -345,6 +422,23 @@ class ThreatKnowledgeRAG:
             reverse=True,
         )
         return [case.id for case in ranked[:n_results]]
+
+    def _category_score(self, case_category: str, scenario_type: str) -> float:
+        """Return match score [0,1] between a case's category and the requested scenario_type."""
+        if not scenario_type:
+            return 1.0
+        if case_category == scenario_type:
+            return 1.0
+        # Canonical fraud_im maps to all fraud sub-types except romance
+        _FRAUD_IM_CATEGORIES: frozenset = frozenset([
+            "虚假征信类", "刷单返利类", "虚假网络投资理财类",
+            "冒充电商物流客服类", "冒充公检法及政府机关类",
+            "冒充领导熟人类", "虚假贷款代办信用卡类",
+            "机票退改签类", "网络游戏产品虚假交易类",
+        ])
+        if scenario_type == "fraud_im" and case_category in _FRAUD_IM_CATEGORIES:
+            return 0.85
+        return SequenceMatcher(None, scenario_type, case_category).ratio()
 
     def _build_query(self, scenario_type: str, cognitive_profile: Any) -> str:
         query_parts = [f"Fraud type: {scenario_type or 'unknown'}"]

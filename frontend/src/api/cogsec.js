@@ -1,18 +1,15 @@
-import service, { requestWithRetry } from './index'
+import client from './client'
 
 /**
- * 直接提交场景文本执行 CogSec 分析
- * @param {Object} data - { scenario, questionnaire?, scenario_type? }
+ * 调用后端 CogSec 分析接口
+ * 后端：POST /api/cogsec/analyze
+ * body: { scenario: string, questionnaire?: object, scenario_type?: string }
+ * 返回：CogSecAnalysisResult（profile / strategies / graph / counterfactual_report / metrics ...）
  */
-export const analyzeCogSec = (data) => {
-  return requestWithRetry(() => service.post('/api/cogsec/analyze', data), 2, 800)
-}
-
-/**
- * 根据现有 reportId 获取 CogSec 分析结果
- * @param {string} reportId
- * @param {Object} params - 可选查询参数
- */
-export const getCogSecByReport = (reportId, params = {}) => {
-  return requestWithRetry(() => service.get(`/api/cogsec/report/${reportId}`, { params }), 2, 800)
+export async function analyzeCogSec(payload) {
+  const resp = await client.post('/api/cogsec/analyze', payload)
+  if (resp?.data?.success === false) {
+    throw new Error(resp.data.error || '分析失败')
+  }
+  return resp.data?.data ?? resp.data
 }

@@ -22,7 +22,6 @@ from .metrics import compute_key_nodes, summarize_trace
 
 try:
     from camel.models import OpenAICompatibleModel
-    from camel.types import ModelType
     from oasis import generate_twitter_agent_graph, DefaultPlatformType
     from oasis.environment.env import OasisEnv
     from oasis.environment.env_action import LLMAction, ManualAction
@@ -106,7 +105,7 @@ class OasisPropagationAdapter:
     ) -> ForkedPropagationResult:
         model = self._build_model(llm_api_key, llm_base_url, llm_model_name)
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
             csv_path = os.path.join(tmpdir, "agents.csv")
             self._write_agent_csv(agents, csv_path)
 
@@ -171,12 +170,12 @@ class OasisPropagationAdapter:
 
         env = OasisEnv(
             agent_graph=agent_graph,
-            platform=DefaultPlatformType.TWITTER,
+            platform=DefaultPlatformType.REDDIT,
             database_path=db_path,
         )
         await env.reset()
 
-        all_agents = list(agent_graph.get_agents())
+        all_agents = [agent for _, agent in agent_graph.get_agents()]
 
         # 种子帖：第0个 Agent 发布初始信息
         seed_actions: Dict[Any, Any] = {
@@ -201,6 +200,16 @@ class OasisPropagationAdapter:
                     action_type=AT.CREATE_POST,
                     action_args={"content": clarification},
                 )
+
+            # Branch B：干预后模拟平台限流——对高易感性 agent 强制静默
+            # （高易感性 agent 被官方澄清影响后停止二次传播）
+            if intervention_tick is not None and tick > intervention_tick:
+                for i, pa in enumerate(agents):
+                    if pa.susceptibility > 0.60 and i < len(all_agents):
+                        step_actions[all_agents[i]] = ManualAction(
+                            action_type=AT.DO_NOTHING,
+                            action_args={},
+                        )
 
             await env.step(step_actions)
 
@@ -238,8 +247,7 @@ class OasisPropagationAdapter:
 
         conn.close()
 
-        # 统计传播覆盖
-        covered_users: set = set()
+        # 统计传播覆盖（每 tick 的活跃传播者比例，非累计）
         actions: List[PropagationAction] = []
         coverage_curve: List[Dict] = []
         emotion_curve: List[Dict] = []
@@ -252,37 +260,48 @@ class OasisPropagationAdapter:
             "do_nothing": "idle",
         }
 
-        tick_buckets: Dict[int, list] = {i: [] for i in range(n_ticks + 1)}
-        for row in trace_rows:
-            action_name = str(row["action"]).lower()
-            if action_name in ("sign_up", "signup"):
-                continue
-            t = min(int(row["created_at"]) if str(row["created_at"]).isdigit() else 0, n_ticks)
+        # Filter out sign_up rows first, then distribute by row order across ticks.
+        # created_at is a datetime string (not an int), so we cannot parse it as a tick index.
+        filtered_rows = [
+            row for row in trace_rows
+            if str(row["action"]).lower() not in ("sign_up", "signup")
+        ]
+        n_rows = len(filtered_rows)
+
+        tick_buckets: Dict[int, list] = {i: [] for i in range(n_ticks)}
+        for row_idx, row in enumerate(filtered_rows):
+            t = min(row_idx * n_ticks // max(1, n_rows), n_ticks - 1)
             tick_buckets[t].append(row)
 
         for tick, rows in tick_buckets.items():
+            tick_spreaders: set = set()  # 本 tick 内主动传播的 agent（不跨 tick 累计）
             for row in rows:
                 uid = int(row["user_id"])
-                covered_users.add(uid)
+                action_name = str(row["action"]).lower()
+                if action_name in ("create_post", "repost"):
+                    tick_spreaders.add(uid)
                 pa = agents[uid] if uid < len(agents) else None
                 actions.append(PropagationAction(
                     tick=tick,
-                    source_agent_id=str(uid),
+                    source_agent_id=f"agent_{uid:04d}",  # match PropagationAgent.agent_id format
                     target_agent_id="broadcast",
-                    action_type=action_type_map.get(str(row["action"]).lower(), "act"),
+                    action_type=action_type_map.get(action_name, "act"),
                     content_summary=str(row["info"])[:80],
                     influence_delta=pa.influence * 0.1 if pa else 0.05,
                     risk_delta=0.05,
                 ))
+            panic_val = round(min(1.0, 0.3 + tick * 0.08), 3)
+            trust_val = round(max(0.0, 0.7 - tick * 0.05), 3)
             coverage_curve.append({
                 "tick": tick,
-                "coverage": len(covered_users) / max(1, len(agents)),
-                "new_spreads": len([r for r in rows if str(r["action"]).lower() in ("create_post", "repost")]),
+                "coverage": len(tick_spreaders) / max(1, len(agents)),
+                "new_spreads": len(tick_spreaders),
             })
             emotion_curve.append({
                 "tick": tick,
-                "panic": min(1.0, 0.3 + tick * 0.08),
-                "trust": max(0.0, 0.7 - tick * 0.05),
+                "panic": panic_val,
+                "trust": trust_val,
+                "risk": panic_val,  # risk correlates with panic intensity for summarize_trace
             })
 
         key_nodes = compute_key_nodes(agents, {}, actions)
@@ -346,15 +365,14 @@ class OasisPropagationAdapter:
     ) -> Any:
         """构造 camel-ai OpenAI 兼容模型后端。"""
         from camel.models import OpenAICompatibleModel
-        from camel.types import ModelType
 
         _api_key = api_key or os.environ.get("LLM_API_KEY", "")
         _base_url = base_url or os.environ.get("LLM_BASE_URL", "https://api.openai.com/v1")
         _model_name = model_name or os.environ.get("LLM_MODEL_NAME", "gpt-4o-mini")
 
         return OpenAICompatibleModel(
-            model_type=ModelType.GPT_4O_MINI,
+            model_type=_model_name,
             api_key=_api_key,
             url=_base_url,
-            model_config_dict={"model": _model_name, "temperature": 0.7},
+            model_config_dict={"temperature": 0.7},
         )

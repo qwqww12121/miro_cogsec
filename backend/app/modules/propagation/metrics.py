@@ -18,7 +18,8 @@ def compute_key_nodes(
     score = 0.45 * norm_out_degree + 0.35 * norm_action_count + 0.20 * influence
     """
     n = max(1, len(agents))
-    max_deg = max((len(adjacency.get(a.agent_id, [])) for a in agents), default=1)
+    raw_max_deg = max((len(adjacency.get(a.agent_id, [])) for a in agents), default=0)
+    max_deg = max(raw_max_deg, 1)  # guard against empty adjacency → division by zero
     action_counts: dict[str, int] = {}
     for act in actions:
         action_counts[act.source_agent_id] = action_counts.get(act.source_agent_id, 0) + 1

@@ -112,9 +112,17 @@ class CogSecService:
             scenario_type=canonical,
         )
         persona_state_vector = profile.to_persona_state_vector()
+        # If user supplied a specific Chinese sub-category (e.g. "虚假征信类"), use it
+        # directly for RAG retrieval so we only match cases of that exact sub-type.
+        # Fall back to the canonical type when no sub-category was declared.
+        rag_scenario_type = (
+            scenario_type
+            if scenario_type and scenario_type != canonical
+            else profile.scenario_type
+        )
         risk_graph_bundle = self.threat_rag.build_risk_graph_bundle(
             scenario_text=sanitization_result.sanitized_text or scenario_text,
-            scenario_type=profile.scenario_type,
+            scenario_type=rag_scenario_type,
             cognitive_profile=profile,
             persona_state_vector=persona_state_vector,
             n_results=3,
