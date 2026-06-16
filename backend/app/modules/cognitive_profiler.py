@@ -422,6 +422,8 @@ class CognitiveProfileExtractor:
         if questionnaire:
             self._apply_questionnaire(profile, questionnaire)
 
+        self._apply_victim_context(profile, cleaned_scenario)
+
         return profile
 
     def extract_persona_state_vector(
@@ -573,6 +575,57 @@ class CognitiveProfileExtractor:
             "confidence": confidence,
             "reasoning": reasoning,
         }
+
+    def _apply_victim_context(self, profile: CognitiveProfile, scenario: str) -> None:
+        """从 [受害人背景] 段落提取关键词，直接覆盖保护维度与部分易感维度。
+
+        LLM 倾向于忽略受害人背景对保护维度的影响（如"独居"→help_seeking 低，
+        "缺少反诈科普"→verification_habit 低），此方法作为最终兜底修正。
+        """
+        # 提取 [受害人背景] 段落
+        m = re.search(r"\[受害人背景\](.+?)(?:\[|$)", scenario, re.DOTALL)
+        if not m:
+            return
+        ctx = m.group(1).strip()
+
+        def _set(key: str, val: float, reason: str) -> None:
+            # 只在比当前值更有说服力时覆盖（不盲目拉低已有良好评分）
+            current = getattr(profile, key, 5.0)
+            if abs(current - val) > 1.0:  # 差距超过 1 才覆盖，避免无谓扰动
+                setattr(profile, key, self._clip(val, 0.0, 10.0))
+                profile.confidence_scores[key] = 0.85
+                profile.reasoning[key] = f"受害人背景推断: {reason}"
+
+        # ── 保护因子：缺乏反诈教育 ──────────────────────────────────
+        if any(kw in ctx for kw in ["缺少反诈", "缺乏反诈", "没有反诈", "反诈科普", "缺乏防范", "没有防范"]):
+            _set("verification_habit", 2.0, "缺乏反诈意识，不主动核验信息")
+            _set("prior_experience", 2.0, "无反诈科普背景，缺乏识骗经验")
+            _set("link_check_ability", 2.5, "反诈素养低，难以辨别链接/来源")
+            # 同时推高易感维度：不了解骗局则更易信任权威
+            _set("authority_compliance", 7.5, "缺乏反诈知识使其对权威话术顺从")
+            _set("trust_threshold", 7.0, "缺乏防范意识导致信任阈值偏低")
+
+        # ── 保护因子：独居 ────────────────────────────────────────────
+        if any(kw in ctx for kw in ["独居", "独自生活", "一个人住", "空巢"]):
+            _set("help_seeking", 2.0, "独居缺乏可商量的家人/朋友")
+
+        # ── 保护因子：年龄（数字+岁） ─────────────────────────────────
+        age_m = re.search(r"(\d{2})\s*岁", ctx)
+        if age_m:
+            age = int(age_m.group(1))
+            if age >= 60:
+                _set("link_check_ability", 2.0, f"{age}岁，数字技能偏弱")
+                _set("transaction_review", 2.5, f"{age}岁，转账前核对习惯差")
+                _set("authority_compliance", 8.0, f"{age}岁，对权威/客服高度顺从")
+            elif age >= 50:
+                _set("link_check_ability", 3.0, f"{age}岁，数字技能一般")
+                _set("transaction_review", 3.0, f"{age}岁，转账复核意识弱")
+                _set("authority_compliance", 7.0, f"{age}岁，较易信任权威")
+
+        # ── 易感维度：恐惧 / 焦虑背景 ────────────────────────────────
+        if any(kw in ctx for kw in ["焦虑", "恐惧", "害怕", "担心", "不安"]):
+            _set("emotional_volatility", 7.5, "受害人背景描述含情绪脆弱信号")
+            _set("loss_aversion_threshold", 7.5, "高焦虑状态放大损失厌恶")
 
     def _apply_questionnaire(self, profile: CognitiveProfile, questionnaire: Dict[str, Any]) -> None:
         """用问卷结果覆盖画像维度。"""

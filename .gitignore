@@ -61,6 +61,10 @@ data/chroma_db/
 data/**/*.sqlite
 data/**/*.db
 data/**/*.parquet
+backend/data/
+
+# Gemma offload 缓存
+backend/.cache/
 
 # 本地模型权重
 models/

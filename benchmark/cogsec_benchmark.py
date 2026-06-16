@@ -13,6 +13,7 @@ import json
 import statistics
 import sys
 import time
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -27,6 +28,9 @@ REVIEW_PATH = BENCHMARK_ROOT / "data" / "review_v0.1.jsonl"
 RUN_OUTPUT_PATH = BENCHMARK_ROOT / "outputs" / "run_v0.1.jsonl"
 METRICS_PATH = BENCHMARK_ROOT / "outputs" / "metrics_v0.1.json"
 REPORT_PATH = BENCHMARK_ROOT / "reports" / "human_review_v0.1.md"
+PUBLIC_OPINION_PATH = BENCHMARK_ROOT / "data" / "public_opinion_v0.1.jsonl"
+EVENT_PROPAGATION_PATH = BENCHMARK_ROOT / "data" / "event_propagation_v0.1.jsonl"
+LLM_BASELINE_OUTPUT_ROOT = BENCHMARK_ROOT / "outputs" / "llm_baseline"
 
 REQUIRED_ANSWER_FIELDS = {
     "is_fraud",
@@ -1167,6 +1171,838 @@ def score_annotation_quality(args: argparse.Namespace) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Scenario-extension scoring: public_opinion / event_propagation AQS
+# ---------------------------------------------------------------------------
+
+SCENARIO_REQUIRED_FIELDS: Dict[str, List[str]] = {
+    "public_opinion": [
+        "event_summary",
+        "narrative_threads",
+        "emotion_signal",
+        "uncertainty_points",
+        "official_response_gap",
+        "propagation_risk_level",
+        "best_intervention_window",
+        "expected_intervention_action",
+        "expected_safe_public_action",
+        "evidence_spans",
+        "evidence_pack",
+    ],
+    "event_propagation": [
+        "event_summary",
+        "origin_node",
+        "amplifier_nodes",
+        "propagation_path",
+        "distortion_points",
+        "coverage_risk",
+        "containment_window",
+        "expected_containment_action",
+        "evidence_spans",
+        "evidence_pack",
+    ],
+}
+
+
+def _truthy_field(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, dict)):
+        return len(value) > 0
+    return True
+
+
+def _walk_evidence_refs(value: Any) -> Iterable[str]:
+    if isinstance(value, dict):
+        refs = value.get("evidence_refs")
+        if isinstance(refs, list):
+            for ref in refs:
+                if isinstance(ref, str):
+                    yield ref
+        for child in value.values():
+            yield from _walk_evidence_refs(child)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _walk_evidence_refs(item)
+
+
+def _mean(values: Iterable[float]) -> float:
+    values = list(values)
+    return round(sum(values) / max(1, len(values)), 3)
+
+
+def compute_scenario_annotation_quality(rows: List[Dict[str, Any]], scenario_type: Optional[str] = None) -> Dict[str, Any]:
+    """Score seed gold annotations for non-fraud scenario extensions."""
+    per_case: List[Dict[str, Any]] = []
+    for row in rows:
+        cid = row.get("id", "unknown")
+        scenario = scenario_type or row.get("scenario_type") or row.get("source", {}).get("scenario_type")
+        answer = row.get("answer", {}) if isinstance(row.get("answer"), dict) else {}
+        text = row.get("input", {}).get("text", "")
+        annotation = row.get("annotation", {}) if isinstance(row.get("annotation"), dict) else {}
+
+        required = SCENARIO_REQUIRED_FIELDS.get(str(scenario), [])
+        present = 0
+        for key in required:
+            if _truthy_field(answer.get(key)):
+                present += 1
+            elif scenario == "event_propagation" and key == "distortion_points" and answer.get("coverage_risk") == "low":
+                present += 1
+        rfs = round(present / max(1, len(required)), 3)
+
+        evidence_pack = answer.get("evidence_pack", []) if isinstance(answer.get("evidence_pack"), list) else []
+        evidence_items = []
+        for ev in evidence_pack:
+            if not isinstance(ev, dict):
+                continue
+            evidence_items.append(
+                {
+                    "span_ok": isinstance(ev.get("span"), str) and ev["span"] in text,
+                    "id_ok": isinstance(ev.get("id"), str) and ev["id"].startswith("ev:"),
+                    "supports_ok": isinstance(ev.get("supports"), list) and bool(ev.get("supports")),
+                }
+            )
+        ecr = round(
+            sum(1 for item in evidence_items if item["span_ok"] and item["id_ok"] and item["supports_ok"])
+            / max(1, len(evidence_items)),
+            3,
+        )
+
+        evidence_spans = answer.get("evidence_spans", []) if isinstance(answer.get("evidence_spans"), list) else []
+        span_coverage = round(
+            sum(1 for span in evidence_spans if isinstance(span, str) and span in text)
+            / max(1, len(evidence_spans)),
+            3,
+        )
+
+        ev_ids = {ev.get("id") for ev in evidence_pack if isinstance(ev, dict) and ev.get("id")}
+        refs = list(_walk_evidence_refs(answer))
+        trs = round(sum(1 for ref in refs if ref in ev_ids) / max(1, len(refs)), 3)
+
+        review_status = annotation.get("review_status")
+        review_status_ok = review_status in {"silver_pending_review", "gold_reviewed"}
+        gold_reviewed = review_status == "gold_reviewed"
+        rss = 1.0 if review_status_ok else 0.0
+
+        metrics: Dict[str, float] = {
+            "ECR": ecr,
+            "SCS": span_coverage,
+            "TRS": trs,
+            "RFS": rfs,
+            "RSS": rss,
+        }
+
+        if scenario == "public_opinion":
+            narrative_threads = answer.get("narrative_threads", [])
+            uncertainty_points = answer.get("uncertainty_points", [])
+            emotion_signal = answer.get("emotion_signal", {})
+            intervention = answer.get("expected_intervention_action", "")
+            safe_action = answer.get("expected_safe_public_action", "")
+            official_gap = answer.get("official_response_gap", {})
+
+            metrics.update(
+                {
+                    "NCS": 1.0 if isinstance(narrative_threads, list) and bool(narrative_threads) else 0.0,
+                    "EAS": 1.0 if isinstance(emotion_signal, dict) and _truthy_field(emotion_signal.get("dominant_emotion")) and _truthy_field(emotion_signal.get("amplification_level")) else 0.0,
+                    "UGS": 1.0 if isinstance(uncertainty_points, list) and bool(uncertainty_points) else 0.0,
+                    "OGS": 1.0 if isinstance(official_gap, dict) and _truthy_field(official_gap.get("status")) else 0.0,
+                    "IAS": 1.0 if _truthy_field(intervention) and _truthy_field(safe_action) else 0.0,
+                }
+            )
+            aqi_keys = ["ECR", "SCS", "TRS", "RFS", "RSS", "NCS", "EAS", "UGS", "OGS", "IAS"]
+        elif scenario == "event_propagation":
+            origin = answer.get("origin_node", {})
+            amplifiers = answer.get("amplifier_nodes", [])
+            path = answer.get("propagation_path", [])
+            distortions = answer.get("distortion_points", [])
+            containment = answer.get("containment_window", {})
+            action = answer.get("expected_containment_action", "")
+            low_risk = answer.get("coverage_risk") == "low"
+
+            metrics.update(
+                {
+                    "OVS": 1.0 if isinstance(origin, dict) and _truthy_field(origin.get("id")) else 0.0,
+                    "ANS": 1.0 if isinstance(amplifiers, list) and bool(amplifiers) else 0.0,
+                    "PCS": 1.0 if isinstance(path, list) and len(path) >= 2 else 0.0,
+                    "DCS": 1.0 if low_risk or (isinstance(distortions, list) and bool(distortions)) else 0.0,
+                    "CWS": 1.0 if isinstance(containment, dict) and _truthy_field(containment.get("label")) and _truthy_field(action) else 0.0,
+                }
+            )
+            aqi_keys = ["ECR", "SCS", "TRS", "RFS", "RSS", "OVS", "ANS", "PCS", "DCS", "CWS"]
+        else:
+            aqi_keys = ["ECR", "SCS", "TRS", "RFS", "RSS"]
+
+        annotation_quality = _mean(metrics[key] for key in aqi_keys)
+        per_case.append(
+            {
+                "id": cid,
+                "scenario_type": scenario,
+                **metrics,
+                "annotation_quality": annotation_quality,
+                "evidence_count": len(evidence_items),
+                "evidence_ref_count": len(refs),
+                "review_status": review_status or "unknown",
+                "gold_reviewed": gold_reviewed,
+                "source_dataset": row.get("source", {}).get("dataset", "unknown"),
+                "source_license": row.get("source", {}).get("license", "unknown"),
+            }
+        )
+
+    metric_names = sorted({key for item in per_case for key, value in item.items() if isinstance(value, float) and key != "annotation_quality"})
+    return {
+        "layer": "scenario_annotation_quality",
+        "benchmark_version": "v0.1",
+        "scenario_type": scenario_type or "mixed",
+        "case_count": len(per_case),
+        **{name: _mean(item.get(name, 0.0) for item in per_case) for name in metric_names},
+        "AQI": _mean(item["annotation_quality"] for item in per_case),
+        "per_case": per_case,
+    }
+
+
+def score_scenario_annotation_quality(args: argparse.Namespace) -> int:
+    rows = load_jsonl(args.input)
+    metrics = compute_scenario_annotation_quality(rows, args.scenario_type)
+    write_json(args.output, metrics)
+    summary = {k: v for k, v in metrics.items() if k != "per_case"}
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    print(f"scenario annotation quality: {args.output}")
+    return 0
+
+
+def make_baseline_input(args: argparse.Namespace) -> int:
+    """Create answer-free JSONL for LLM-only baseline prompting."""
+    rows = load_jsonl(args.input)
+    outputs: List[Dict[str, Any]] = []
+    for row in rows:
+        item = {
+            "id": row.get("id"),
+            "source": row.get("source", {}),
+            "input": row.get("input", {}),
+        }
+        scenario_type = args.scenario_type or row.get("scenario_type")
+        if scenario_type:
+            item["scenario_type"] = scenario_type
+        outputs.append(item)
+    write_jsonl(args.output, outputs)
+    print(f"baseline input: {args.output} ({len(outputs)} rows)")
+    return 0
+
+
+LLM_BASELINE_REQUIRED_PREDICTION_FIELDS: Dict[str, List[str]] = {
+    "fraud_im": [
+        "is_fraud",
+        "fraud_type",
+        "risk_level",
+        "attack_stage",
+        "asset_targets",
+        "fork_points",
+        "intervention_window",
+        "expected_warning",
+        "expected_safe_action",
+        "counterfactual_paths",
+        "evidence_spans",
+        "confidence",
+    ],
+    "public_opinion": [
+        "event_summary",
+        "narrative_threads",
+        "emotion_signal",
+        "uncertainty_points",
+        "official_response_gap",
+        "propagation_risk_level",
+        "best_intervention_window",
+        "expected_intervention_action",
+        "expected_safe_public_action",
+        "evidence_spans",
+        "confidence",
+    ],
+    "event_propagation": [
+        "event_summary",
+        "origin_node",
+        "amplifier_nodes",
+        "propagation_path",
+        "distortion_points",
+        "coverage_risk",
+        "containment_window",
+        "expected_containment_action",
+        "evidence_spans",
+        "confidence",
+    ],
+}
+
+
+def validate_llm_baseline(args: argparse.Namespace) -> int:
+    """Validate LLM-only baseline JSONL format before scoring."""
+    input_rows = load_jsonl(args.input)
+    output_rows = load_jsonl(args.output)
+    expected_ids = [row.get("id") for row in input_rows]
+    output_by_id = {row.get("id"): row for row in output_rows if row.get("id")}
+    required = LLM_BASELINE_REQUIRED_PREDICTION_FIELDS.get(args.scenario_type, [])
+
+    errors: List[str] = []
+    if len(output_rows) != len(input_rows):
+        errors.append(f"row count mismatch: input={len(input_rows)} output={len(output_rows)}")
+
+    for expected_id in expected_ids:
+        row = output_by_id.get(expected_id)
+        if row is None:
+            errors.append(f"{expected_id}: missing output row")
+            continue
+        if row.get("scenario_type") != args.scenario_type:
+            errors.append(f"{expected_id}: scenario_type={row.get('scenario_type')!r}, expected {args.scenario_type!r}")
+        prediction = row.get("prediction")
+        if not isinstance(prediction, dict):
+            errors.append(f"{expected_id}: prediction must be an object")
+            continue
+        missing = [key for key in required if key not in prediction]
+        if missing:
+            errors.append(f"{expected_id}: missing prediction fields {missing}")
+        if "answer" in row:
+            errors.append(f"{expected_id}: output row must not contain gold answer")
+
+    extra_ids = sorted(set(output_by_id) - set(expected_ids))
+    for extra_id in extra_ids:
+        errors.append(f"{extra_id}: unexpected output id")
+
+    if errors:
+        print("FAIL llm baseline validation")
+        for error in errors:
+            print(f"- {error}")
+        return 1
+
+    print(
+        json.dumps(
+            {
+                "status": "PASS",
+                "scenario_type": args.scenario_type,
+                "case_count": len(input_rows),
+                "required_prediction_fields": required,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+    return 0
+
+
+def _as_list(value: Any) -> List[Any]:
+    if isinstance(value, list):
+        return value
+    if value is None:
+        return []
+    return [value]
+
+
+def _stringify(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return normalize_space(value)
+    return normalize_space(json.dumps(value, ensure_ascii=False, sort_keys=True))
+
+
+def _sequence_similarity(left: Any, right: Any) -> float:
+    left_text = _stringify(left)
+    right_text = _stringify(right)
+    if not left_text and not right_text:
+        return 1.0
+    if not left_text or not right_text:
+        return 0.0
+    if left_text in right_text or right_text in left_text:
+        return 1.0
+    return round(SequenceMatcher(None, left_text, right_text).ratio(), 3)
+
+
+def _text_collection_similarity(expected: Iterable[Any], predicted: Iterable[Any]) -> float:
+    expected_items = [_stringify(item) for item in expected if _stringify(item)]
+    predicted_items = [_stringify(item) for item in predicted if _stringify(item)]
+    if not expected_items and not predicted_items:
+        return 1.0
+    if not expected_items or not predicted_items:
+        return 0.0
+    scores = []
+    for expected in expected_items:
+        scores.append(max(_sequence_similarity(expected, predicted) for predicted in predicted_items))
+    return round(sum(scores) / max(1, len(scores)), 3)
+
+
+def _field_texts(items: Iterable[Any], keys: Iterable[str]) -> List[str]:
+    texts: List[str] = []
+    for item in items:
+        if isinstance(item, dict):
+            parts = [_stringify(item.get(key)) for key in keys if _stringify(item.get(key))]
+            if parts:
+                texts.append(" ".join(parts))
+        else:
+            text = _stringify(item)
+            if text:
+                texts.append(text)
+    return texts
+
+
+def _risk_score_match(expected: Any, predicted: Any) -> float:
+    expected_bin = risk_bin(str(expected or "low"))
+    predicted_bin = risk_bin(str(predicted or "low"))
+    if expected_bin == predicted_bin:
+        return 1.0
+    adjacent = {
+        ("low", "medium"),
+        ("medium", "low"),
+        ("medium", "high"),
+        ("high", "medium"),
+    }
+    return 0.5 if (expected_bin, predicted_bin) in adjacent else 0.0
+
+
+def _evidence_span_score(answer: Dict[str, Any], prediction: Dict[str, Any], text: str) -> float:
+    expected = [str(item) for item in _as_list(answer.get("evidence_spans")) if isinstance(item, str)]
+    predicted = [str(item) for item in _as_list(prediction.get("evidence_spans")) if isinstance(item, str)]
+    if not expected:
+        expected = [
+            str(item.get("span"))
+            for item in _as_list(answer.get("evidence_pack"))
+            if isinstance(item, dict) and item.get("span")
+        ]
+    if not expected and not predicted:
+        return 1.0
+    if not predicted:
+        return 0.0
+    grounded_predicted = [span for span in predicted if span in text]
+    grounding = len(grounded_predicted) / max(1, len(predicted))
+    coverage = _text_collection_similarity(expected, predicted)
+    return round(coverage * 0.7 + grounding * 0.3, 3)
+
+
+def _numeric_window_score(expected: Dict[str, Any], predicted: Dict[str, Any], start_key: str, end_key: str) -> float:
+    if not isinstance(expected, dict) or not isinstance(predicted, dict):
+        return 0.0
+    try:
+        expected_start = int(expected.get(start_key, 0))
+        expected_end = int(expected.get(end_key, expected_start))
+        predicted_start = int(predicted.get(start_key, 0))
+        predicted_end = int(predicted.get(end_key, predicted_start))
+    except (TypeError, ValueError):
+        return 0.0
+    if predicted_start <= expected_end and predicted_end >= expected_start:
+        return 1.0
+    if abs(predicted_start - expected_start) <= 1 or abs(predicted_end - expected_end) <= 1:
+        return 0.5
+    return 0.0
+
+
+def _stage_window_score(expected: Dict[str, Any], predicted: Dict[str, Any]) -> float:
+    if not isinstance(expected, dict) or not isinstance(predicted, dict):
+        return 0.0
+    scores = [
+        _sequence_similarity(expected.get("open_stage"), predicted.get("open_stage")),
+        _sequence_similarity(expected.get("close_stage"), predicted.get("close_stage")),
+        _sequence_similarity(expected.get("label"), predicted.get("label")),
+    ]
+    return round(sum(scores) / max(1, len(scores)), 3)
+
+
+def _score_fraud_prediction(truth: Dict[str, Any], prediction: Dict[str, Any]) -> Dict[str, Any]:
+    answer = truth.get("answer", {}) if isinstance(truth.get("answer"), dict) else {}
+    text = truth.get("input", {}).get("text", "")
+    expected_fork = (
+        answer.get("fork_points", [{}])[0].get("type")
+        if isinstance(answer.get("fork_points"), list) and answer.get("fork_points")
+        else answer.get("expected_fork", "no_fork_needed")
+    )
+    predicted_fork = (
+        prediction.get("fork_points", [{}])[0].get("type")
+        if isinstance(prediction.get("fork_points"), list) and prediction.get("fork_points")
+        else "missing"
+    )
+    fpa = 1.0 if (expected_fork in FORK_FAMILY_BINARY) == (predicted_fork in FORK_FAMILY_BINARY) else 0.0
+
+    expected_assets = [
+        item.get("type") for item in _as_list(answer.get("asset_targets"))
+        if isinstance(item, dict) and item.get("type")
+    ]
+    predicted_assets = [
+        item.get("type") for item in _as_list(prediction.get("asset_targets"))
+        if isinstance(item, dict) and item.get("type")
+    ]
+    expected_set = set(expected_assets)
+    predicted_set = set(predicted_assets)
+    ata = round(len(expected_set & predicted_set) / max(1, len(expected_set)), 3) if expected_set else 1.0
+    rca = _risk_score_match(answer.get("risk_level"), prediction.get("risk_level"))
+    iwa = _numeric_window_score(
+        answer.get("intervention_window", {}),
+        prediction.get("intervention_window", {}),
+        "start_turn",
+        "end_turn",
+    )
+    ear = _evidence_span_score(answer, prediction, text)
+    action_score = _sequence_similarity(answer.get("expected_safe_action"), prediction.get("expected_safe_action"))
+    warning_score = _sequence_similarity(answer.get("expected_warning"), prediction.get("expected_warning"))
+    res = round(fpa * 0.20 + ata * 0.16 + rca * 0.16 + iwa * 0.14 + ear * 0.18 + action_score * 0.10 + warning_score * 0.06, 3)
+    return {
+        "FPA": fpa,
+        "ATA": ata,
+        "RCA": rca,
+        "IWA": iwa,
+        "EAR": ear,
+        "ASA": action_score,
+        "WSA": warning_score,
+        "RES": res,
+        "expected_fork": expected_fork,
+        "predicted_fork": predicted_fork,
+        "expected_risk": risk_bin(str(answer.get("risk_level", "low"))),
+        "predicted_risk": risk_bin(str(prediction.get("risk_level", "low"))),
+        "expected_assets": expected_assets,
+        "predicted_assets": predicted_assets,
+    }
+
+
+def _score_public_opinion_prediction(truth: Dict[str, Any], prediction: Dict[str, Any]) -> Dict[str, Any]:
+    answer = truth.get("answer", {}) if isinstance(truth.get("answer"), dict) else {}
+    text = truth.get("input", {}).get("text", "")
+    nss = _text_collection_similarity(
+        _field_texts(_as_list(answer.get("narrative_threads")), ["claim", "risk"]),
+        _field_texts(_as_list(prediction.get("narrative_threads")), ["claim", "risk"]),
+    )
+    eas_emotion = 1.0 if (answer.get("emotion_signal", {}) or {}).get("dominant_emotion") == (prediction.get("emotion_signal", {}) or {}).get("dominant_emotion") else 0.0
+    eas_level = 1.0 if (answer.get("emotion_signal", {}) or {}).get("amplification_level") == (prediction.get("emotion_signal", {}) or {}).get("amplification_level") else 0.0
+    eas = round(eas_emotion * 0.55 + eas_level * 0.45, 3)
+    ugs = _text_collection_similarity(
+        _field_texts(_as_list(answer.get("uncertainty_points")), ["description"]),
+        _field_texts(_as_list(prediction.get("uncertainty_points")), ["description"]),
+    )
+    ogs_status = 1.0 if (answer.get("official_response_gap", {}) or {}).get("status") == (prediction.get("official_response_gap", {}) or {}).get("status") else 0.0
+    ogs_desc = _sequence_similarity(
+        (answer.get("official_response_gap", {}) or {}).get("description"),
+        (prediction.get("official_response_gap", {}) or {}).get("description"),
+    )
+    ogs = round(ogs_status * 0.6 + ogs_desc * 0.4, 3)
+    rca = _risk_score_match(answer.get("propagation_risk_level"), prediction.get("propagation_risk_level"))
+    iwa = _stage_window_score(answer.get("best_intervention_window", {}), prediction.get("best_intervention_window", {}))
+    ias = _sequence_similarity(answer.get("expected_intervention_action"), prediction.get("expected_intervention_action"))
+    sps = _sequence_similarity(answer.get("expected_safe_public_action"), prediction.get("expected_safe_public_action"))
+    ear = _evidence_span_score(answer, prediction, text)
+    res = round(nss * 0.16 + eas * 0.12 + ugs * 0.14 + ogs * 0.12 + rca * 0.12 + iwa * 0.10 + ias * 0.10 + sps * 0.06 + ear * 0.08, 3)
+    return {
+        "NSS": nss,
+        "EAS": eas,
+        "UGS": ugs,
+        "OGS": ogs,
+        "RCA": rca,
+        "IWA": iwa,
+        "IAS": ias,
+        "SPS": sps,
+        "EAR": ear,
+        "RES": res,
+        "expected_risk": risk_bin(str(answer.get("propagation_risk_level", "low"))),
+        "predicted_risk": risk_bin(str(prediction.get("propagation_risk_level", "low"))),
+    }
+
+
+def _score_event_propagation_prediction(truth: Dict[str, Any], prediction: Dict[str, Any]) -> Dict[str, Any]:
+    answer = truth.get("answer", {}) if isinstance(truth.get("answer"), dict) else {}
+    text = truth.get("input", {}).get("text", "")
+    ovs_type = 1.0 if (answer.get("origin_node", {}) or {}).get("type") == (prediction.get("origin_node", {}) or {}).get("type") else 0.0
+    ovs_desc = _sequence_similarity(
+        (answer.get("origin_node", {}) or {}).get("description"),
+        (prediction.get("origin_node", {}) or {}).get("description"),
+    )
+    ovs = round(ovs_type * 0.6 + ovs_desc * 0.4, 3)
+    ans = _text_collection_similarity(
+        _field_texts(_as_list(answer.get("amplifier_nodes")), ["type", "description"]),
+        _field_texts(_as_list(prediction.get("amplifier_nodes")), ["type", "description"]),
+    )
+    pcs = _text_collection_similarity(
+        _field_texts(_as_list(answer.get("propagation_path")), ["node", "action", "risk_state"]),
+        _field_texts(_as_list(prediction.get("propagation_path")), ["node", "action", "risk_state"]),
+    )
+    dcs = _text_collection_similarity(
+        _field_texts(_as_list(answer.get("distortion_points")), ["description"]),
+        _field_texts(_as_list(prediction.get("distortion_points")), ["description"]),
+    )
+    rca = _risk_score_match(answer.get("coverage_risk"), prediction.get("coverage_risk"))
+    cws = _numeric_window_score(
+        answer.get("containment_window", {}),
+        prediction.get("containment_window", {}),
+        "open_step",
+        "close_step",
+    )
+    cas = _sequence_similarity(answer.get("expected_containment_action"), prediction.get("expected_containment_action"))
+    ear = _evidence_span_score(answer, prediction, text)
+    res = round(ovs * 0.14 + ans * 0.14 + pcs * 0.16 + dcs * 0.12 + rca * 0.12 + cws * 0.12 + cas * 0.10 + ear * 0.10, 3)
+    return {
+        "OVS": ovs,
+        "ANS": ans,
+        "PCS": pcs,
+        "DCS": dcs,
+        "RCA": rca,
+        "CWS": cws,
+        "CAS": cas,
+        "EAR": ear,
+        "RES": res,
+        "expected_risk": risk_bin(str(answer.get("coverage_risk", "low"))),
+        "predicted_risk": risk_bin(str(prediction.get("coverage_risk", "low"))),
+    }
+
+
+SCENARIO_SCORE_FUNCTIONS = {
+    "fraud_im": _score_fraud_prediction,
+    "public_opinion": _score_public_opinion_prediction,
+    "event_propagation": _score_event_propagation_prediction,
+}
+
+
+def compute_prediction_scores(
+    truth_rows: List[Dict[str, Any]],
+    prediction_rows: List[Dict[str, Any]],
+    scenario_type: str,
+    layer: str,
+) -> Dict[str, Any]:
+    predictions = {row.get("id"): row for row in prediction_rows if row.get("id")}
+    score_fn = SCENARIO_SCORE_FUNCTIONS[scenario_type]
+    required = LLM_BASELINE_REQUIRED_PREDICTION_FIELDS.get(scenario_type, [])
+    per_case: List[Dict[str, Any]] = []
+
+    for truth in truth_rows:
+        row_id = truth.get("id")
+        output = predictions.get(row_id)
+        if not output:
+            per_case.append({"id": row_id, "ok": False, "missing": True, "RES": 0.0})
+            continue
+        prediction = (
+            output.get("benchmark_prediction")
+            if isinstance(output.get("benchmark_prediction"), dict)
+            else output.get("prediction")
+        )
+        prediction = prediction if isinstance(prediction, dict) else {}
+        missing_fields = [key for key in required if key not in prediction]
+        scores = score_fn(truth, prediction)
+        per_case.append(
+            {
+                "id": row_id,
+                "ok": True,
+                "confidence": prediction.get("confidence"),
+                "missing_prediction_fields": missing_fields,
+                **scores,
+            }
+        )
+
+    metric_names = sorted(
+        {
+            key
+            for item in per_case
+            for key, value in item.items()
+            if isinstance(value, (int, float)) and key not in {"confidence"} and key.isupper()
+        }
+    )
+    ok_cases = [item for item in per_case if item.get("ok")]
+    return {
+        "layer": layer,
+        "benchmark_version": "v0.1",
+        "scenario_type": scenario_type,
+        "case_count": len(per_case),
+        "scored_case_count": len(ok_cases),
+        "format_success_rate": round((len(ok_cases) / max(1, len(per_case))) * 100, 2),
+        "complete_schema_rate": round(
+            (
+                sum(1 for item in ok_cases if not item.get("missing_prediction_fields"))
+                / max(1, len(per_case))
+            ) * 100,
+            2,
+        ),
+        **{name: round((_mean(item.get(name, 0.0) for item in ok_cases)) * 100, 2) for name in metric_names if name != "RES"},
+        "RES": _mean(item.get("RES", 0.0) for item in ok_cases),
+        "per_case": per_case,
+    }
+
+
+def score_predictions(args: argparse.Namespace) -> int:
+    truth_rows = load_jsonl(args.annotated)
+    prediction_rows = load_jsonl(args.predictions)
+    metrics = compute_prediction_scores(
+        truth_rows=truth_rows,
+        prediction_rows=prediction_rows,
+        scenario_type=args.scenario_type,
+        layer=args.layer,
+    )
+    write_json(args.output, metrics)
+    summary = {key: value for key, value in metrics.items() if key != "per_case"}
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    print(f"prediction scores: {args.output}")
+    return 0
+
+
+def _presence(value: Any) -> float:
+    if value is None:
+        return 0.0
+    if isinstance(value, (list, tuple, set, dict)):
+        return 1.0 if len(value) > 0 else 0.0
+    if isinstance(value, str):
+        return 1.0 if value.strip() else 0.0
+    if isinstance(value, (int, float, bool)):
+        return 1.0
+    return 0.0
+
+
+def _average_presence(container: Dict[str, Any], fields: Iterable[str]) -> float:
+    fields = list(fields)
+    if not fields:
+        return 1.0
+    return round(sum(_presence(container.get(field)) for field in fields) / max(1, len(fields)), 3)
+
+
+def _mechanistic_case_score(output: Dict[str, Any], scenario_type: str) -> Dict[str, Any]:
+    prediction = (
+        output.get("benchmark_prediction")
+        if isinstance(output.get("benchmark_prediction"), dict)
+        else output.get("prediction")
+    )
+    prediction = prediction if isinstance(prediction, dict) else {}
+    analysis = output.get("cogsec_analysis") if isinstance(output.get("cogsec_analysis"), dict) else {}
+    required = LLM_BASELINE_REQUIRED_PREDICTION_FIELDS.get(scenario_type, [])
+    schema_prediction = _average_presence(prediction, required)
+    schema_analysis = _average_presence(
+        analysis,
+        ["risk_graph", "counterfactual_analysis", "propagation_analysis", "intervention_policy", "evidence_trace", "provenance"],
+    )
+    schema_completeness = round((schema_prediction + schema_analysis) / 2, 3)
+
+    risk_graph = analysis.get("risk_graph") if isinstance(analysis.get("risk_graph"), dict) else {}
+    risk_graph_completeness = _average_presence(risk_graph, ["nodes", "edges", "asset_targets", "fork_points"])
+
+    counterfactual = analysis.get("counterfactual_analysis") if isinstance(analysis.get("counterfactual_analysis"), dict) else {}
+    counterfactual_completeness = _average_presence(
+        counterfactual,
+        ["risky_path", "safe_path", "trajectory_gap", "irreversibility_loss", "key_divergence"],
+    )
+
+    propagation = analysis.get("propagation_analysis") if isinstance(analysis.get("propagation_analysis"), dict) else {}
+    if scenario_type in {"public_opinion", "event_propagation"}:
+        propagation_fields = [
+            "baseline_branch",
+            "intervention_candidates",
+            "counterfactual_branches",
+            "branch_comparison",
+            "selected_best_branch",
+            "selection_metrics",
+        ]
+        propagation_completeness = _average_presence(propagation, propagation_fields)
+    else:
+        propagation_completeness = None
+
+    evidence_trace = analysis.get("evidence_trace") if isinstance(analysis.get("evidence_trace"), list) else []
+    traceability_score = 1.0 if evidence_trace and prediction.get("evidence_spans") else 0.0
+
+    selected = propagation.get("selected_best_branch") if isinstance(propagation.get("selected_best_branch"), dict) else {}
+    policy = analysis.get("intervention_policy") if isinstance(analysis.get("intervention_policy"), list) else []
+    if scenario_type in {"public_opinion", "event_propagation"}:
+        intervention_operability = _average_presence(selected, ["best_intervention_window", "best_intervention_action", "target_nodes", "selection_reason"])
+    else:
+        intervention_operability = 1.0 if policy or prediction.get("expected_safe_action") else 0.0
+
+    branches = propagation.get("counterfactual_branches") if isinstance(propagation.get("counterfactual_branches"), list) else []
+    branch_count = len(branches) if scenario_type in {"public_opinion", "event_propagation"} else None
+    branch_comparison = propagation.get("branch_comparison") if isinstance(propagation.get("branch_comparison"), dict) else {}
+    branch_comparison_completeness = (
+        _average_presence(branch_comparison, ["branch_count", "ranked_branches"])
+        if scenario_type in {"public_opinion", "event_propagation"}
+        else None
+    )
+    best_selection_quality = (
+        _average_presence(selected, ["branch_id", "best_intervention_window", "best_intervention_action", "score_breakdown"])
+        if scenario_type in {"public_opinion", "event_propagation"}
+        else None
+    )
+    provenance = analysis.get("provenance") if isinstance(analysis.get("provenance"), dict) else {}
+    oasis_grounding = 1.0 if provenance.get("has_oasis_counterfactual_branches") or provenance.get("has_oasis_simulation") else 0.0
+
+    score_parts = [
+        schema_completeness,
+        risk_graph_completeness,
+        counterfactual_completeness,
+        traceability_score,
+        intervention_operability,
+    ]
+    if propagation_completeness is not None:
+        score_parts.extend([propagation_completeness, branch_comparison_completeness or 0.0, best_selection_quality or 0.0])
+    mechanistic_score = round(sum(score_parts) / max(1, len(score_parts)), 3)
+
+    return {
+        "SchemaCompleteness": schema_completeness,
+        "RiskGraphCompleteness": risk_graph_completeness,
+        "CounterfactualCompleteness": counterfactual_completeness,
+        "PropagationCompleteness": propagation_completeness,
+        "TraceabilityScore": traceability_score,
+        "InterventionOperability": intervention_operability,
+        "CounterfactualBranchCount": branch_count,
+        "BranchComparisonCompleteness": branch_comparison_completeness,
+        "BestInterventionSelectionQuality": best_selection_quality,
+        "OASISRuntimeGrounding": oasis_grounding,
+        "MechanisticScore": mechanistic_score,
+        "metric_source": provenance.get("metric_source"),
+        "source": provenance.get("source"),
+    }
+
+
+def compute_mechanistic_scores(
+    prediction_rows: List[Dict[str, Any]],
+    scenario_type: str,
+    layer: str,
+) -> Dict[str, Any]:
+    per_case: List[Dict[str, Any]] = []
+    for row in prediction_rows:
+        row_id = row.get("id")
+        if not row.get("ok", True):
+            per_case.append({"id": row_id, "ok": False, "MechanisticScore": 0.0})
+            continue
+        per_case.append({"id": row_id, "ok": True, **_mechanistic_case_score(row, scenario_type)})
+
+    ok_cases = [item for item in per_case if item.get("ok")]
+    metric_names = [
+        "SchemaCompleteness",
+        "RiskGraphCompleteness",
+        "CounterfactualCompleteness",
+        "PropagationCompleteness",
+        "TraceabilityScore",
+        "InterventionOperability",
+        "BranchComparisonCompleteness",
+        "BestInterventionSelectionQuality",
+        "OASISRuntimeGrounding",
+        "MechanisticScore",
+    ]
+    summary = {
+        "layer": layer,
+        "benchmark_version": "v0.1",
+        "scenario_type": scenario_type,
+        "case_count": len(per_case),
+        "scored_case_count": len(ok_cases),
+    }
+    for name in metric_names:
+        values = [item.get(name) for item in ok_cases if isinstance(item.get(name), (int, float))]
+        summary[name] = round((_mean(values) if values else 0.0) * 100, 2)
+    branch_values = [item.get("CounterfactualBranchCount") for item in ok_cases if isinstance(item.get("CounterfactualBranchCount"), (int, float))]
+    summary["mean_counterfactual_branch_count"] = round(_mean(branch_values), 2) if branch_values else None
+    summary["metric_sources"] = sorted({str(item.get("metric_source")) for item in ok_cases if item.get("metric_source")})
+    summary["per_case"] = per_case
+    return summary
+
+
+def score_mechanistic(args: argparse.Namespace) -> int:
+    prediction_rows = load_jsonl(args.predictions)
+    metrics = compute_mechanistic_scores(
+        prediction_rows=prediction_rows,
+        scenario_type=args.scenario_type,
+        layer=args.layer,
+    )
+    write_json(args.output, metrics)
+    summary = {key: value for key, value in metrics.items() if key != "per_case"}
+    print(json.dumps(summary, ensure_ascii=False, indent=2))
+    print(f"mechanistic scores: {args.output}")
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # Layer 2 scoring: Runtime Evaluation Score
 # ---------------------------------------------------------------------------
 
@@ -1377,6 +2213,68 @@ def build_parser() -> argparse.ArgumentParser:
     aqs_cmd.add_argument("--annotated", type=Path, default=ANNOTATED_PATH)
     aqs_cmd.add_argument("--output", type=Path, default=BENCHMARK_ROOT / "outputs" / "aqs_v0.1.json")
     aqs_cmd.set_defaults(func=score_annotation_quality)
+
+    scenario_aqs_cmd = subparsers.add_parser(
+        "scenario-aqs",
+        help="Score public_opinion/event_propagation seed-gold annotation quality",
+    )
+    scenario_aqs_cmd.add_argument("--input", type=Path, required=True)
+    scenario_aqs_cmd.add_argument("--scenario-type", choices=["public_opinion", "event_propagation"], default=None)
+    scenario_aqs_cmd.add_argument("--output", type=Path, required=True)
+    scenario_aqs_cmd.set_defaults(func=score_scenario_annotation_quality)
+
+    baseline_input_cmd = subparsers.add_parser("make-baseline-input", help="Create answer-free JSONL for LLM-only baselines")
+    baseline_input_cmd.add_argument("--input", type=Path, required=True)
+    baseline_input_cmd.add_argument("--output", type=Path, required=True)
+    baseline_input_cmd.add_argument("--scenario-type", default=None)
+    baseline_input_cmd.set_defaults(func=make_baseline_input)
+
+    baseline_validate_cmd = subparsers.add_parser("validate-llm-baseline", help="Validate LLM-only baseline output JSONL")
+    baseline_validate_cmd.add_argument("--input", type=Path, required=True, help="Answer-free baseline input JSONL")
+    baseline_validate_cmd.add_argument("--output", type=Path, required=True, help="LLM baseline output JSONL")
+    baseline_validate_cmd.add_argument(
+        "--scenario-type",
+        choices=["fraud_im", "public_opinion", "event_propagation"],
+        required=True,
+    )
+    baseline_validate_cmd.set_defaults(func=validate_llm_baseline)
+
+    baseline_score_cmd = subparsers.add_parser("score-llm-baseline", help="Score LLM-only baseline predictions against gold answers")
+    baseline_score_cmd.add_argument("--annotated", type=Path, required=True, help="Gold annotated JSONL")
+    baseline_score_cmd.add_argument("--predictions", type=Path, required=True, help="LLM baseline output JSONL")
+    baseline_score_cmd.add_argument("--output", type=Path, required=True, help="Metrics JSON output")
+    baseline_score_cmd.add_argument(
+        "--scenario-type",
+        choices=["fraud_im", "public_opinion", "event_propagation"],
+        required=True,
+    )
+    baseline_score_cmd.set_defaults(func=score_predictions, layer="llm_baseline_evaluation")
+
+    scenario_score_cmd = subparsers.add_parser("score-scenario-predictions", help="Score scenario prediction JSONL against gold answers")
+    scenario_score_cmd.add_argument("--annotated", type=Path, required=True, help="Gold annotated JSONL")
+    scenario_score_cmd.add_argument("--predictions", type=Path, required=True, help="Prediction JSONL with id and prediction object")
+    scenario_score_cmd.add_argument("--output", type=Path, required=True, help="Metrics JSON output")
+    scenario_score_cmd.add_argument(
+        "--scenario-type",
+        choices=["fraud_im", "public_opinion", "event_propagation"],
+        required=True,
+    )
+    scenario_score_cmd.add_argument("--layer", default="scenario_prediction_evaluation")
+    scenario_score_cmd.set_defaults(func=score_predictions)
+
+    mechanistic_score_cmd = subparsers.add_parser(
+        "score-mechanistic",
+        help="Score cogsec_analysis mechanistic completeness and traceability",
+    )
+    mechanistic_score_cmd.add_argument("--predictions", type=Path, required=True, help="Prediction JSONL with cogsec_analysis")
+    mechanistic_score_cmd.add_argument("--output", type=Path, required=True, help="Mechanistic metrics JSON output")
+    mechanistic_score_cmd.add_argument(
+        "--scenario-type",
+        choices=["fraud_im", "public_opinion", "event_propagation"],
+        required=True,
+    )
+    mechanistic_score_cmd.add_argument("--layer", default="mechanistic_traceability_evaluation")
+    mechanistic_score_cmd.set_defaults(func=score_mechanistic)
 
     review_cmd = subparsers.add_parser("make-review-input", help="Create second-model review JSONL and empty review stub")
     review_cmd.add_argument("--raw", type=Path, default=RAW_PATH)

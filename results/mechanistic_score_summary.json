@@ -1,0 +1,67 @@
+{
+  "generated_from": {
+    "fraud_im": "benchmark/outputs/api_fraud_im_after_adapter_v0.1.jsonl",
+    "public_opinion": "benchmark/outputs/api_public_opinion_after_adapter_v0.1.jsonl",
+    "event_propagation": "benchmark/outputs/api_event_propagation_after_adapter_v0.1.jsonl",
+    "fraud_im_metrics": "benchmark/outputs/api_fraud_im_mechanistic_after_adapter_v0.1.json",
+    "public_opinion_metrics": "benchmark/outputs/api_public_opinion_mechanistic_after_adapter_v0.1.json",
+    "event_propagation_metrics": "benchmark/outputs/api_event_propagation_mechanistic_after_adapter_v0.1.json"
+  },
+  "scope": "Mechanistic contract and traceability summary. This is a supplement to Answer RES, not a replacement.",
+  "metric_source_note": "public_opinion and event_propagation counterfactual branches currently use local propagation proxy metrics. Full OASIS per-candidate branch execution is not claimed in this run.",
+  "summary": {
+    "fraud_im": {
+      "prediction_complete_schema_rate": 100.0,
+      "cogsec_analysis_complete_schema_rate": 100.0,
+      "risk_graph_completeness": 100.0,
+      "counterfactual_completeness": 100.0,
+      "propagation_completeness": null,
+      "traceability_score": 100.0,
+      "intervention_operability": 100.0,
+      "counterfactual_branch_count": null,
+      "branch_comparison_completeness": null,
+      "best_intervention_selection_quality": null,
+      "oasis_runtime_grounding": {
+        "has_oasis_simulation": false,
+        "has_oasis_counterfactual_branches": false,
+        "metric_source": null
+      }
+    },
+    "public_opinion": {
+      "prediction_complete_schema_rate": 100.0,
+      "cogsec_analysis_complete_schema_rate": 100.0,
+      "risk_graph_completeness": 100.0,
+      "counterfactual_completeness": 100.0,
+      "propagation_completeness": 100.0,
+      "traceability_score": 100.0,
+      "intervention_operability": 100.0,
+      "counterfactual_branch_count": 4.0,
+      "branch_comparison_completeness": 100.0,
+      "best_intervention_selection_quality": 100.0,
+      "oasis_runtime_grounding": {
+        "has_oasis_simulation": false,
+        "has_oasis_counterfactual_branches": false,
+        "metric_source": "proxy",
+        "fallback_reason": "OASIS adapter import was available, but OASIS run needed an API key; lightweight propagation and proxy branch metrics were used."
+      }
+    },
+    "event_propagation": {
+      "prediction_complete_schema_rate": 100.0,
+      "cogsec_analysis_complete_schema_rate": 100.0,
+      "risk_graph_completeness": 100.0,
+      "counterfactual_completeness": 100.0,
+      "propagation_completeness": 100.0,
+      "traceability_score": 100.0,
+      "intervention_operability": 100.0,
+      "counterfactual_branch_count": 4.0,
+      "branch_comparison_completeness": 100.0,
+      "best_intervention_selection_quality": 100.0,
+      "oasis_runtime_grounding": {
+        "has_oasis_simulation": false,
+        "has_oasis_counterfactual_branches": false,
+        "metric_source": "proxy",
+        "fallback_reason": "OASIS adapter import was available, but OASIS run needed an API key; lightweight propagation and proxy branch metrics were used."
+      }
+    }
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "generated_from": {
+    "fraud_im": "benchmark/outputs/api_fraud_im_answer_scores_after_adapter_v0.1.json",
+    "public_opinion": "benchmark/outputs/api_public_opinion_answer_scores_after_adapter_v0.1.json",
+    "event_propagation": "benchmark/outputs/api_event_propagation_answer_scores_after_adapter_v0.1.json"
+  },
+  "run_command": "conda run -n ai_basic python scripts/run_scenario_api_benchmark.py --scenario all --disable-chroma --no-local-gemma",
+  "notes": [
+    "Answer scores use the existing benchmark scoring code.",
+    "Scorer now prefers benchmark_prediction when present and falls back to legacy prediction.",
+    "This run disables local Gemma and Chroma for fast deterministic adapter validation."
+  ],
+  "summary": {
+    "fraud_im": {
+      "case_count": 20,
+      "format_success_rate": 100.0,
+      "complete_schema_rate": 100.0,
+      "runtime_success_rate": 100.0,
+      "latency_ms": {
+        "p50": 33.802,
+        "p95": 53.564,
+        "max": 54.457
+      },
+      "metrics": {
+        "FPA": 70.0,
+        "ATA": 84.2,
+        "RCA": 70.0,
+        "IWA": 85.0,
+        "EAR": 87.0,
+        "ASA": 25.9,
+        "WSA": 17.2,
+        "RES": 0.699
+      }
+    },
+    "public_opinion": {
+      "case_count": 5,
+      "format_success_rate": 100.0,
+      "complete_schema_rate": 100.0,
+      "runtime_success_rate": 100.0,
+      "propagation_presence_rate": 100.0,
+      "intervention_search_presence_rate": 100.0,
+      "mean_counterfactual_branch_count": 4.0,
+      "latency_ms": {
+        "p50": 45.528,
+        "p95": null,
+        "max": 58.09
+      },
+      "metrics": {
+        "NSS": 26.8,
+        "EAS": 38.0,
+        "UGS": 16.7,
+        "OGS": 38.4,
+        "RCA": 70.0,
+        "IWA": 47.4,
+        "IAS": 37.4,
+        "SPS": 47.9,
+        "EAR": 73.8,
+        "RES": 0.414
+      }
+    },
+    "event_propagation": {
+      "case_count": 5,
+      "format_success_rate": 100.0,
+      "complete_schema_rate": 100.0,
+      "runtime_success_rate": 100.0,
+      "propagation_presence_rate": 100.0,
+      "intervention_search_presence_rate": 100.0,
+      "mean_counterfactual_branch_count": 4.0,
+      "latency_ms": {
+        "p50": 45.429,
+        "p95": null,
+        "max": 58.885
+      },
+      "metrics": {
+        "OVS": 41.9,
+        "ANS": 65.5,
+        "PCS": 57.1,
+        "DCS": 38.5,
+        "RCA": 70.0,
+        "CWS": 90.0,
+        "CAS": 41.5,
+        "EAR": 75.8,
+        "RES": 0.597
+      }
+    }
+  }
+}

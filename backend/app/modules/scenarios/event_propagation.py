@@ -38,9 +38,18 @@ class EventPropagationScenarioSpec(ScenarioSpec):
     # -- required methods ------------------------------------------------
 
     def build_persona_prompt(self, ctx: ScenarioContext) -> str:
+        seed = _join_inputs(ctx, max_chars=300) or "（未提供具体内容）"
         return (
-            "[event_propagation] Full persona prompt for event-propagation profiling "
-            "will be implemented in Phase II."
+            "当前场景为【事件传播分析】。\n"
+            "分析目标：评估信息在传播链中的认知失真风险与受众脆弱性。\n"
+            "请重点关注以下维度在事件传播中的表现：\n"
+            "- 信息不对称（info_asymmetry）：事件真相与流传版本的偏差程度\n"
+            "- 情绪波动（emotional_volatility）：事件触发的受众情绪强度\n"
+            "- 时间压力（time_pressure）：传播链的扩散速度与紧迫感\n"
+            "- 社会认同敏感性（social_proof_sensitivity）：从众转发倾向\n"
+            "- 稀缺性敏感（scarcity_sensitivity）：对独家/首发信息的渴求程度\n"
+            "- 核查习惯（verification_habit）：转发前是否主动核验来源\n"
+            f"参考材料摘要：{seed}"
         )
 
     def build_worldstate_seed(self, ctx: ScenarioContext) -> dict:
@@ -81,18 +90,41 @@ class EventPropagationScenarioSpec(ScenarioSpec):
         )
 
     def run_propagation(self, ctx: ScenarioContext, quick_mode: bool = True) -> dict:
+        import os
         from ...modules.propagation import (
+            OasisPropagationAdapter,
             build_agents,
             build_topology,
             run_forked_propagation,
         )
 
         event = self.build_propagation_event(ctx)
-        n_agents = 20 if quick_mode else 60
-        ticks = 10 if quick_mode else 30
+        n_agents = 12 if quick_mode else 60
+        ticks = 5 if quick_mode else 20
         agents = build_agents(self.name, n_agents=n_agents)
+        intervention_tick = max(2, ticks // 3)
+
+        fallback_reason = None
+        oasis = OasisPropagationAdapter()
+        if oasis.is_available():
+            try:
+                result = oasis.run(
+                    event=event,
+                    agents=agents,
+                    scenario_type=self.name,
+                    n_ticks=ticks,
+                    intervention_tick=intervention_tick,
+                    llm_api_key=os.environ.get("LLM_API_KEY"),
+                    llm_base_url=os.environ.get("LLM_BASE_URL"),
+                    llm_model_name=os.environ.get("LLM_MODEL_NAME"),
+                )
+                payload = result.to_dict()
+                payload.setdefault("runtime", {})["engine"] = "oasis"
+                return payload
+            except Exception as exc:
+                fallback_reason = f"{exc.__class__.__name__}: {exc}"
+
         adjacency = build_topology(agents, topology_type="scale_free_like")
-        intervention_tick = max(2, ticks // 2) if quick_mode else 10
         result = run_forked_propagation(
             event=event,
             agents=agents,
@@ -101,7 +133,11 @@ class EventPropagationScenarioSpec(ScenarioSpec):
             intervention_tick=intervention_tick,
             strategy_type="remove_key_node",
         )
-        return result.to_dict()
+        payload = result.to_dict()
+        payload.setdefault("runtime", {})["engine"] = "lightweight"
+        if fallback_reason:
+            payload["runtime"]["fallback_reason"] = fallback_reason
+        return payload
 
 
 # -----------------------------------------------------------------------

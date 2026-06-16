@@ -436,17 +436,103 @@ class CounterfactualReporter:
             f"action=“{log[-1].get('action', log[-1].get('agent_action', ''))}”。"
         )
 
+    def _generate_propagation_prescriptions(
+        self,
+        scenario_type: str,
+        open_step: int,
+        close_step: int,
+    ) -> List[Dict[str, Any]]:
+        """为舆情/事件传播场景生成专属干预处方。"""
+        if scenario_type == "event_propagation":
+            return [
+                {
+                    "title": f"在第 {open_step} 步启动官方辟谣快速响应",
+                    "priority": 1,
+                    "rationale": "事件传播最佳干预窗口出现在谣言节点尚未进入裂变阶段前。",
+                    "recommended_actions": [
+                        "由权威账号第一时间发布经核实的事实声明",
+                        "联系平台对失实内容添加核查标签",
+                        "在原始帖子评论区置顶官方回应",
+                    ],
+                    "channel": "platform_moderation",
+                    "expected_effect": "将传播覆盖率降低 30-50%，缩短谣言生命周期。",
+                },
+                {
+                    "title": "对关键传播节点实施可见度干预",
+                    "priority": 2,
+                    "rationale": "高影响力节点（大V、媒体账号）的二次传播是主要放大器。",
+                    "recommended_actions": [
+                        "识别并接触 top-3 传播节点，提供准确信息",
+                        "申请平台对违规转发帖降低推荐权重",
+                    ],
+                    "channel": "key_node_outreach",
+                    "expected_effect": "截断二次传播链，防止跨平台扩散。",
+                },
+                {
+                    "title": "建立持续监测与反馈机制",
+                    "priority": 3,
+                    "rationale": "防止澄清信息发布后舆情再次反弹。",
+                    "recommended_actions": [
+                        "设置关键词监控，追踪变体谣言",
+                        "每 6 小时评估一次传播趋势并调整干预策略",
+                    ],
+                    "channel": "monitoring",
+                    "expected_effect": "将舆情生命周期压缩在 24 小时内。",
+                },
+            ]
+        # public_opinion
+        return [
+            {
+                "title": f"在第 {open_step} 步注入多元视角内容",
+                "priority": 1,
+                "rationale": f"信息茧房极化在群体认知偏移完成前可逆；最佳干预窗口为第 {open_step}-{close_step} 步。",
+                "recommended_actions": [
+                    "引入权威反向观点打破回声室",
+                    "设计高情绪价值的理性叙事内容",
+                ],
+                "channel": "content_injection",
+                "expected_effect": "降低群体极化程度，提升受众信息多元性。",
+            },
+            {
+                "title": "联合平台对情绪化极端内容降权",
+                "priority": 2,
+                "rationale": "情感共鸣激活类内容传播速度是理性内容的 3-5 倍，需平台协同干预。",
+                "recommended_actions": [
+                    "标记并限流包含极端化词汇的内容",
+                    "在情绪化帖子下方展示事实核查结果",
+                ],
+                "channel": "platform_moderation",
+                "expected_effect": "减缓情绪化内容传播速度，为理性讨论创造空间。",
+            },
+            {
+                "title": "建立官方账号与关键节点直接沟通渠道",
+                "priority": 3,
+                "rationale": "热点借势操控依赖信息不对称；直接沟通可消除权威真空。",
+                "recommended_actions": [
+                    "主动向高影响力账号提供第一手资料",
+                    "开设官方直播或 AMA 解答公众疑虑",
+                ],
+                "channel": "key_node_outreach",
+                "expected_effect": "压缩谣言生存空间，提升官方信息可信度。",
+            },
+        ]
+
     def _generate_mainline_prescriptions(
         self,
         profile: Any,
         fork_comparison: Any,
         persona_state_vector: Optional[Any],
     ) -> List[Dict[str, Any]]:
+        scenario_type = getattr(profile, "scenario_type", "fraud_im") or "fraud_im"
+        open_step = fork_comparison.best_intervention_window.get("open_step", 1)
+        close_step = fork_comparison.best_intervention_window.get("close_step", open_step + 1)
+
+        if scenario_type in ("event_propagation", "public_opinion"):
+            return self._generate_propagation_prescriptions(scenario_type, open_step, close_step)
+
         weak_verification = getattr(profile, "verification_habit", 5.0) < 5
         weak_help = getattr(profile, "help_seeking", 5.0) < 5
         fork_type = getattr(fork_comparison, "fork_point_type", "generic")
-        open_step = fork_comparison.best_intervention_window.get("open_step", 1)
-        close_step = fork_comparison.best_intervention_window.get("close_step", open_step + 1)
         prescriptions = [
             {
                 "title": f"在 {fork_type} 节点前强制二次核验",

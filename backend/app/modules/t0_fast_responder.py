@@ -39,7 +39,7 @@ class T0FastResponder:
         {
             "id": "safe_account_transfer",
             "tags": ["safe_account", "transfer"],
-            "regex": r"(安全账户|监管账户|safe\s*account).{0,24}(转账|汇款|打款|transfer)",
+            "regex": r"(安全账户|监管账户|safe\s*account).{0,24}(转账|汇款|打款|transfer)|(转账|汇款|打款|transfer).{0,16}(安全账户|监管账户)",
         },
         {
             "id": "police_secrecy_isolation",

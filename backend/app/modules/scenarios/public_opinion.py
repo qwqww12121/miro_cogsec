@@ -38,9 +38,18 @@ class PublicOpinionScenarioSpec(ScenarioSpec):
     # -- required methods ------------------------------------------------
 
     def build_persona_prompt(self, ctx: ScenarioContext) -> str:
+        seed = _join_inputs(ctx, max_chars=300) or "（未提供具体内容）"
         return (
-            "[public_opinion] Full persona prompt for opinion-propagation profiling "
-            "will be implemented in Phase II."
+            "当前场景为【舆情分析】。\n"
+            "分析目标：评估公众在舆情事件中的认知脆弱性与信息处理模式。\n"
+            "请重点关注以下维度在舆情传播中的表现：\n"
+            "- 情绪波动（emotional_volatility）：公众是否处于高情绪激活状态\n"
+            "- 社会认同敏感性（social_proof_sensitivity）：是否易受多数人意见裹挟\n"
+            "- 信息不对称（info_asymmetry）：官方信息与流传信息的落差程度\n"
+            "- 时间压力（time_pressure）：舆情是否处于快速发酵阶段\n"
+            "- 权威服从（authority_compliance）：对官方辟谣的接受倾向\n"
+            "- 核查习惯（verification_habit）：信息接收者是否倾向于主动求证\n"
+            f"参考材料摘要：{seed}"
         )
 
     def build_worldstate_seed(self, ctx: ScenarioContext) -> dict:
@@ -70,18 +79,41 @@ class PublicOpinionScenarioSpec(ScenarioSpec):
         )
 
     def run_propagation(self, ctx: ScenarioContext, quick_mode: bool = True) -> dict:
+        import os
         from ...modules.propagation import (
+            OasisPropagationAdapter,
             build_agents,
             build_topology,
             run_forked_propagation,
         )
 
         event = self.build_propagation_event(ctx)
-        n_agents = 20 if quick_mode else 50
-        ticks = 10 if quick_mode else 30
+        n_agents = 12 if quick_mode else 50
+        ticks = 5 if quick_mode else 20
         agents = build_agents(self.name, n_agents=n_agents)
+        intervention_tick = max(2, ticks // 3)
+
+        fallback_reason = None
+        oasis = OasisPropagationAdapter()
+        if oasis.is_available():
+            try:
+                result = oasis.run(
+                    event=event,
+                    agents=agents,
+                    scenario_type=self.name,
+                    n_ticks=ticks,
+                    intervention_tick=intervention_tick,
+                    llm_api_key=os.environ.get("LLM_API_KEY"),
+                    llm_base_url=os.environ.get("LLM_BASE_URL"),
+                    llm_model_name=os.environ.get("LLM_MODEL_NAME"),
+                )
+                payload = result.to_dict()
+                payload.setdefault("runtime", {})["engine"] = "oasis"
+                return payload
+            except Exception as exc:
+                fallback_reason = f"{exc.__class__.__name__}: {exc}"
+
         adjacency = build_topology(agents, topology_type="campus_local")
-        intervention_tick = max(2, ticks // 2) if quick_mode else 10
         result = run_forked_propagation(
             event=event,
             agents=agents,
@@ -90,7 +122,11 @@ class PublicOpinionScenarioSpec(ScenarioSpec):
             intervention_tick=intervention_tick,
             strategy_type="official_clarification",
         )
-        return result.to_dict()
+        payload = result.to_dict()
+        payload.setdefault("runtime", {})["engine"] = "lightweight"
+        if fallback_reason:
+            payload["runtime"]["fallback_reason"] = fallback_reason
+        return payload
 
 
 # -----------------------------------------------------------------------

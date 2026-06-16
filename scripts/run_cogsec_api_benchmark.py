@@ -47,12 +47,16 @@ def run_cases(args: argparse.Namespace) -> int:
                 scenario_type=row.get("answer", {}).get("fraud_type"),
             )
             latency_ms = (time.perf_counter() - started) * 1000
+            result_dict = result.to_dict()
             outputs.append(
                 {
                     "id": row_id,
                     "ok": True,
                     "latency_ms": round(latency_ms, 3),
-                    "prediction": runtime_prediction(result.to_dict()),
+                    "prediction": runtime_prediction(result_dict),
+                    "benchmark_prediction": result_dict.get("benchmark_prediction", {}),
+                    "cogsec_analysis": result_dict.get("cogsec_analysis", {}),
+                    "adapter_diagnostics": result_dict.get("adapter_diagnostics", {}),
                     "error": None,
                 }
             )

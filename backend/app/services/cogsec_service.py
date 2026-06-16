@@ -22,6 +22,9 @@ from ..modules import (
     resolve_canonical,
     scenario_metadata,
 )
+from ..modules.benchmark_adapter import build_benchmark_payload
+from ..modules.propagation import run_oasis_counterfactual_intervention_search
+from ..modules.scenario_detector import ScenarioDetector
 from ..utils import LocalGemmaClient
 from ..utils.llm_client import LLMClient
 from ..utils.logger import get_logger
@@ -51,6 +54,9 @@ class CogSecAnalysisResult:
     implementation_status: Dict[str, Any]
     scenario_metadata: Dict[str, Any] = field(default_factory=dict)
     scenario_extension: Dict[str, Any] | None = None
+    benchmark_prediction: Dict[str, Any] | None = None
+    cogsec_analysis: Dict[str, Any] | None = None
+    adapter_diagnostics: Dict[str, Any] | None = None
     role_report: Dict[str, Any] | None = None
 
     def to_dict(self) -> Dict[str, Any]:
@@ -89,6 +95,14 @@ class CogSecService:
 
         self._ensure_case_library()
         t0_result = self.t0_responder.scan(scenario_text)
+
+        detection = ScenarioDetector().detect(
+            text=scenario_text,
+            t0_result=t0_result,
+            user_declared=scenario_type,
+        )
+        canonical = detection.canonical
+
         sanitization_result = self.privacy_sanitizer.sanitize_with_retry(
             scenario_text,
             storage_policy="session_only",
@@ -96,16 +110,25 @@ class CogSecService:
         )
         if sanitization_result.pii_leak_detected:
             raise RuntimeError("PII leak detected after sanitization retry")
+        analysis_text = sanitization_result.sanitized_text or scenario_text
 
         profile = self.profile_extractor.extract(
-            scenario=sanitization_result.sanitized_text or scenario_text,
+            scenario=analysis_text,
             questionnaire=questionnaire,
-            scenario_type=scenario_type,
+            scenario_type=canonical,
         )
         persona_state_vector = profile.to_persona_state_vector()
+        # If user supplied a specific Chinese sub-category (e.g. "虚假征信类"), use it
+        # directly for RAG retrieval so we only match cases of that exact sub-type.
+        # Fall back to the canonical type when no sub-category was declared.
+        rag_scenario_type = (
+            scenario_type
+            if scenario_type and scenario_type != canonical
+            else profile.scenario_type
+        )
         risk_graph_bundle = self.threat_rag.build_risk_graph_bundle(
-            scenario_text=sanitization_result.sanitized_text or scenario_text,
-            scenario_type=profile.scenario_type,
+            scenario_text=analysis_text,
+            scenario_type=rag_scenario_type,
             cognitive_profile=profile,
             persona_state_vector=persona_state_vector,
             n_results=3,
@@ -113,7 +136,7 @@ class CogSecService:
         runtime_result = self.runtime.run(
             persona_state_vector=persona_state_vector,
             risk_graph_bundle=risk_graph_bundle,
-            current_input=sanitization_result.sanitized_text or scenario_text,
+            current_input=analysis_text,
             deadline_sec=getattr(Config, "COGSEC_RUNTIME_TIMEOUT_SEC", 15.0),
         )
         branch_a_log = [step.to_dict() for step in runtime_result.fork_comparison.branch_a_state_trace]
@@ -165,7 +188,7 @@ class CogSecService:
         sc_meta["user_role"] = user_role
 
         # -- propagation extension (Phase IV) --
-        scenario_extension = None
+        scenario_extension: Dict[str, Any] = {"detection": detection.to_dict()}
         try:
             spec = get_spec(canonical)
         except KeyError:
@@ -174,10 +197,17 @@ class CogSecService:
         if spec is not None and hasattr(spec, "supports_propagation") and spec.supports_propagation():
             try:
                 propagation_result = spec.run_propagation(scenario_ctx, quick_mode=True)
-                scenario_extension = {"propagation": propagation_result}
+                scenario_extension["propagation"] = propagation_result
+                scenario_extension["propagation_intervention_search"] = run_oasis_counterfactual_intervention_search(
+                    scenario_type=canonical,
+                    seed_text=analysis_text,
+                    risk_graph_bundle=risk_graph_bundle.to_dict(),
+                    propagation_result=propagation_result,
+                    quick_mode=True,
+                )
             except Exception as exc:
                 logger.warning("scenario propagation failed for %s: %s", canonical, exc)
-                scenario_extension = {"propagation_error": str(exc)}
+                scenario_extension["propagation_error"] = str(exc)
 
         analysis_result = CogSecAnalysisResult(
             profile=profile.to_dict(),
@@ -216,6 +246,22 @@ class CogSecService:
             anomalies=anomalies,
             implementation_status=implementation_status,
         )
+
+        # -- benchmark adapter / dual-track analysis output --
+        try:
+            benchmark_payload = build_benchmark_payload(
+                result=analysis_result.to_dict(),
+                scenario_text=analysis_text,
+                scenario_type=canonical,
+            )
+            analysis_result.benchmark_prediction = benchmark_payload["prediction"]
+            analysis_result.cogsec_analysis = benchmark_payload["cogsec_analysis"]
+            analysis_result.adapter_diagnostics = benchmark_payload["adapter_diagnostics"]
+        except Exception as exc:
+            logger.warning("benchmark adapter failed: %s", exc)
+            analysis_result.benchmark_prediction = {}
+            analysis_result.cogsec_analysis = {}
+            analysis_result.adapter_diagnostics = {"adapter_warnings": [str(exc)]}
 
         # -- role report rendering (Phase V) --
         try:
