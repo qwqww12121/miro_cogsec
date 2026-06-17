@@ -7,12 +7,15 @@ folder can travel independently with the GitHub repo.
 from __future__ import annotations
 
 import argparse
+import math
+import re
 import csv
 import hashlib
 import json
 import statistics
 import sys
 import time
+from collections import Counter
 from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
@@ -982,6 +985,323 @@ def runtime_prediction(result: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _level_from_ratio(value: float, high_at: float = 0.60, medium_at: float = 0.25) -> str:
+    if value >= high_at:
+        return "high"
+    if value >= medium_at:
+        return "medium"
+    return "low"
+
+
+def _amplification_from_ratio(value: float) -> str:
+    if value >= 0.60:
+        return "high"
+    if value >= 0.25:
+        return "medium"
+    return "low"
+
+
+def _propagation_dict(result: Dict[str, Any]) -> Dict[str, Any]:
+    extension = result.get("scenario_extension") if isinstance(result.get("scenario_extension"), dict) else {}
+    propagation = extension.get("propagation") if isinstance(extension.get("propagation"), dict) else {}
+    return propagation
+
+
+def _trace_dict(propagation: Dict[str, Any], branch: str) -> Dict[str, Any]:
+    value = propagation.get(branch)
+    return value if isinstance(value, dict) else {}
+
+
+def _final_metrics(trace: Dict[str, Any]) -> Dict[str, Any]:
+    value = trace.get("final_metrics")
+    return value if isinstance(value, dict) else {}
+
+
+def _key_nodes(trace: Dict[str, Any]) -> List[Dict[str, Any]]:
+    return [node for node in _as_list(trace.get("key_nodes")) if isinstance(node, dict)]
+
+
+def _coverage_curve(trace: Dict[str, Any]) -> List[Dict[str, Any]]:
+    return [point for point in _as_list(trace.get("coverage_curve")) if isinstance(point, dict)]
+
+
+def _emotion_curve(trace: Dict[str, Any]) -> List[Dict[str, Any]]:
+    return [point for point in _as_list(trace.get("emotion_curve")) if isinstance(point, dict)]
+
+
+def _comparison_dict(propagation: Dict[str, Any]) -> Dict[str, Any]:
+    value = propagation.get("comparison")
+    return value if isinstance(value, dict) else {}
+
+
+def _fork_point_dict(propagation: Dict[str, Any]) -> Dict[str, Any]:
+    value = propagation.get("fork_point")
+    return value if isinstance(value, dict) else {}
+
+
+def _adapter_evidence_text(base_prediction: Dict[str, Any], propagation: Dict[str, Any]) -> str:
+    branch_a = _trace_dict(propagation, "branch_a")
+    branch_b = _trace_dict(propagation, "branch_b")
+    action_texts: List[str] = []
+    for action in _as_list(branch_a.get("actions"))[:8] + _as_list(branch_b.get("actions"))[:8]:
+        if isinstance(action, dict):
+            action_texts.append(str(action.get("content_summary", "")))
+            action_texts.append(str(action.get("action_type", "")))
+    return " ".join([str(base_prediction.get("evidence_text", "")), *action_texts])
+
+
+def adapt_public_opinion_runtime_prediction(
+    result: Dict[str, Any],
+    base_prediction: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Map propagation runtime traces into the public_opinion benchmark schema.
+
+    The adapter only uses runtime-visible signals. It does not reconstruct
+    source-specific semantic claims that OASIS does not emit directly.
+    """
+    base = dict(base_prediction or runtime_prediction(result))
+    propagation = _propagation_dict(result)
+    branch_a = _trace_dict(propagation, "branch_a")
+    branch_b = _trace_dict(propagation, "branch_b")
+    comparison = _comparison_dict(propagation)
+    fork_point = _fork_point_dict(propagation)
+    final_a = _final_metrics(branch_a)
+    final_b = _final_metrics(branch_b)
+    coverage = max(as_number(final_a.get("coverage_final")), as_number(final_b.get("coverage_final")))
+    peak_risk = max(as_number(final_a.get("peak_risk")), as_number(final_b.get("peak_risk")))
+    emotion_curve = _emotion_curve(branch_a) or _emotion_curve(branch_b)
+    peak_emotion = str(final_a.get("peak_emotion") or final_b.get("peak_emotion") or "neutral")
+    if emotion_curve:
+        peak_point = max(emotion_curve, key=lambda item: as_number(item.get("risk")))
+        peak_emotion = str(peak_point.get("peak_emotion") or peak_emotion)
+
+    key_nodes = _key_nodes(branch_a) or _key_nodes(branch_b)
+    narrative_threads = [
+        {
+            "id": f"thread:{node.get('agent_id', index)}",
+            "claim": f"{node.get('role', 'agent')} is a high-impact propagation node",
+            "risk": str(node.get("intervention_reason", "runtime key node")),
+        }
+        for index, node in enumerate(key_nodes[:3], start=1)
+    ]
+    if not narrative_threads:
+        narrative_threads = [
+            {
+                "id": "thread:runtime_propagation",
+                "claim": "Runtime trace contains propagation activity",
+                "risk": "Semantic narrative labels are not emitted by the backend runtime",
+            }
+        ]
+
+    official_status = "partially_available" if fork_point else "not_applicable_or_unknown"
+    if comparison and as_number(comparison.get("intervention_effectiveness")) <= 0:
+        official_status = "delayed_or_incomplete"
+
+    base.update(
+        {
+            "event_summary": "Runtime OASIS propagation trace for a public opinion scenario.",
+            "narrative_threads": narrative_threads,
+            "emotion_signal": {
+                "dominant_emotion": peak_emotion,
+                "amplification_level": _amplification_from_ratio(max(coverage, peak_risk)),
+                "rationale": "Derived from runtime coverage, risk, and emotion curves.",
+            },
+            "uncertainty_points": [
+                {
+                    "id": "uncertainty:runtime_semantic_gap",
+                    "description": "Runtime propagation traces do not directly label claim-level uncertainty.",
+                }
+            ],
+            "official_response_gap": {
+                "status": official_status,
+                "severity": round(max(0.0, 1.0 - as_number(comparison.get("intervention_effectiveness"))), 3),
+                "description": "Derived from the presence and effectiveness of the runtime official clarification fork.",
+            },
+            "propagation_risk_level": _level_from_ratio(max(coverage, peak_risk)),
+            "best_intervention_window": {
+                "open_stage": f"tick_{as_int(fork_point.get('tick'), 0)}",
+                "close_stage": "before_peak_runtime_risk",
+                "label": str(fork_point.get("description") or fork_point.get("type") or "runtime intervention fork"),
+            },
+            "expected_intervention_action": "Inject official clarification and bind it to the active propagation trace.",
+            "expected_safe_public_action": "Verify claims before resharing and prefer authoritative updates.",
+            "evidence_spans": ["runtime propagation", "official clarification"],
+            "evidence_pack": [
+                {
+                    "id": "ev:runtime_propagation",
+                    "span": "runtime propagation",
+                    "evidence_type": "runtime_trace",
+                    "supports": ["narrative_threads", "propagation_risk_level"],
+                    "confidence": 0.7,
+                },
+                {
+                    "id": "ev:official_clarification",
+                    "span": "official clarification",
+                    "evidence_type": "runtime_trace",
+                    "supports": ["official_response_gap", "best_intervention_window"],
+                    "confidence": 0.7,
+                },
+            ],
+            "confidence": 0.7,
+            "evidence_text": _adapter_evidence_text(base, propagation),
+            "runtime_alignment": {
+                "adapter": "public_opinion_propagation_v0.1",
+                "coverage": "partial",
+                "unsupported_fields": ["claim-specific narrative labels", "claim-specific uncertainty labels"],
+            },
+        }
+    )
+    return base
+
+
+def adapt_event_propagation_runtime_prediction(
+    result: Dict[str, Any],
+    base_prediction: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Map OASIS propagation traces into the event_propagation benchmark schema."""
+    base = dict(base_prediction or runtime_prediction(result))
+    propagation = _propagation_dict(result)
+    branch_a = _trace_dict(propagation, "branch_a")
+    branch_b = _trace_dict(propagation, "branch_b")
+    comparison = _comparison_dict(propagation)
+    fork_point = _fork_point_dict(propagation)
+    final_a = _final_metrics(branch_a)
+    final_b = _final_metrics(branch_b)
+    coverage = max(as_number(final_a.get("coverage_final")), as_number(final_b.get("coverage_final")))
+    peak_risk = max(as_number(final_a.get("peak_risk")), as_number(final_b.get("peak_risk")))
+    key_nodes = _key_nodes(branch_a) or _key_nodes(branch_b)
+    curve = _coverage_curve(branch_a) or _coverage_curve(branch_b)
+
+    origin_role = branch_a.get("agents", [{}])[0].get("role") if isinstance(branch_a.get("agents"), list) and branch_a.get("agents") else "early_source"
+    amplifier_nodes = [
+        {
+            "id": f"node:{node.get('agent_id', index)}",
+            "type": str(node.get("role", "runtime_amplifier")),
+            "description": str(node.get("intervention_reason", "Runtime key propagation node.")),
+        }
+        for index, node in enumerate(key_nodes[:5], start=1)
+    ]
+    propagation_path = [
+        {
+            "step": as_int(point.get("tick"), index),
+            "node": "runtime_trace",
+            "action": f"{as_int(point.get('new_spreads'), 0)} new spreads",
+            "risk_state": _level_from_ratio(as_number(point.get("coverage"))),
+        }
+        for index, point in enumerate(curve, start=1)
+    ]
+    if not propagation_path:
+        propagation_path = [
+            {
+                "step": 1,
+                "node": "runtime_trace",
+                "action": "OASIS propagation executed",
+                "risk_state": _level_from_ratio(coverage),
+            }
+        ]
+
+    distortion_points = []
+    if peak_risk >= 0.55:
+        distortion_points.append(
+            {
+                "id": "distortion:runtime_risk_growth",
+                "description": "Runtime risk curve indicates elevated propagation distortion or amplification risk.",
+                "severity": round(peak_risk, 3),
+            }
+        )
+    if as_number(comparison.get("coverage_reduction")) < 0:
+        distortion_points.append(
+            {
+                "id": "distortion:intervention_backfire",
+                "description": "Branch B coverage exceeded Branch A after intervention in the runtime trace.",
+                "severity": abs(as_number(comparison.get("coverage_reduction"))),
+            }
+        )
+
+    base.update(
+        {
+            "event_summary": "Runtime OASIS propagation trace for an event propagation scenario.",
+            "origin_node": {
+                "id": "node:runtime_origin",
+                "type": str(origin_role or "early_source"),
+                "description": "First runtime agent or seed post in the OASIS propagation trace.",
+            },
+            "amplifier_nodes": amplifier_nodes,
+            "propagation_path": propagation_path,
+            "distortion_points": distortion_points,
+            "coverage_risk": _level_from_ratio(max(coverage, peak_risk)),
+            "containment_window": {
+                "open_step": max(0, as_int(fork_point.get("tick"), 0)),
+                "close_step": max(0, as_int(fork_point.get("tick"), 0) + 1),
+                "label": str(fork_point.get("description") or fork_point.get("type") or "runtime intervention fork"),
+            },
+            "expected_containment_action": "Attach authoritative clarification to the active propagation chain and reduce amplification by high-risk nodes.",
+            "evidence_spans": ["runtime propagation", "official clarification"],
+            "evidence_pack": [
+                {
+                    "id": "ev:runtime_propagation",
+                    "span": "runtime propagation",
+                    "evidence_type": "runtime_trace",
+                    "supports": ["propagation_path", "coverage_risk"],
+                    "confidence": 0.7,
+                },
+                {
+                    "id": "ev:official_clarification",
+                    "span": "official clarification",
+                    "evidence_type": "runtime_trace",
+                    "supports": ["containment_window", "expected_containment_action"],
+                    "confidence": 0.7,
+                },
+            ],
+            "confidence": 0.7,
+            "evidence_text": _adapter_evidence_text(base, propagation),
+            "runtime_alignment": {
+                "adapter": "event_propagation_propagation_v0.1",
+                "coverage": "partial",
+                "unsupported_fields": ["source-specific node identity", "source-specific distortion semantics"],
+            },
+        }
+    )
+    return base
+
+
+def adapt_runtime_prediction_for_scenario(
+    result: Dict[str, Any],
+    scenario_type: str,
+    base_prediction: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    if scenario_type == "public_opinion":
+        return adapt_public_opinion_runtime_prediction(result, base_prediction)
+    if scenario_type == "event_propagation":
+        return adapt_event_propagation_runtime_prediction(result, base_prediction)
+    return dict(base_prediction or runtime_prediction(result))
+
+
+def adapt_runtime_scenario_output(args: argparse.Namespace) -> int:
+    rows = load_jsonl(args.input)
+    adapted_rows: List[Dict[str, Any]] = []
+    for row in rows:
+        result_view = {
+            "scenario_extension": row.get("scenario_extension", {}),
+            "scenario_metadata": row.get("scenario_metadata", {}),
+            "metrics": row.get("metrics", {}),
+        }
+        base_prediction = row.get("prediction") if isinstance(row.get("prediction"), dict) else {}
+        adapted_rows.append(
+            {
+                **row,
+                "prediction": adapt_runtime_prediction_for_scenario(
+                    result_view,
+                    args.scenario_type,
+                    base_prediction=base_prediction,
+                ),
+            }
+        )
+    write_jsonl(args.output, adapted_rows)
+    print(f"adapted runtime scenario output: {args.output} ({len(adapted_rows)} rows)")
+    return 0
+
+
 def run_runtime(args: argparse.Namespace) -> int:
     sys.path.insert(0, str(REPO_ROOT))
     rows = load_jsonl(args.annotated)
@@ -1378,7 +1698,6 @@ def make_baseline_input(args: argparse.Namespace) -> int:
     for row in rows:
         item = {
             "id": row.get("id"),
-            "source": row.get("source", {}),
             "input": row.get("input", {}),
         }
         scenario_type = args.scenario_type or row.get("scenario_type")
@@ -1503,16 +1822,113 @@ def _stringify(value: Any) -> str:
     return normalize_space(json.dumps(value, ensure_ascii=False, sort_keys=True))
 
 
-def _sequence_similarity(left: Any, right: Any) -> float:
-    left_text = _stringify(left)
-    right_text = _stringify(right)
+SEMANTIC_EQUIVALENCE_TERMS = [
+    ("微信群", "私域社群"),
+    ("群聊", "私域社群"),
+    ("社群", "私域社群"),
+    ("大v", "高影响力账号"),
+    ("大V", "高影响力账号"),
+    ("自媒体", "媒体账号"),
+    ("媒体报道", "媒体扩散"),
+    ("转发", "扩散"),
+    ("传播", "扩散"),
+    ("分享", "扩散"),
+    ("放大", "扩散"),
+    ("辟谣", "澄清"),
+    ("官方回应", "官方澄清"),
+    ("回应缺口", "信息缺口"),
+    ("事实缺口", "信息缺口"),
+    ("不确定点", "信息缺口"),
+    ("干预", "阻断"),
+    ("处置", "阻断"),
+    ("遏制", "阻断"),
+    ("containment", "阻断"),
+    ("intervention", "阻断"),
+    ("安全建议", "安全行动"),
+    ("safe action", "安全行动"),
+    ("warning", "风险提醒"),
+    ("风险提示", "风险提醒"),
+    ("证据", "依据"),
+    ("evidence", "依据"),
+    ("origin", "来源"),
+    ("source", "来源"),
+    ("amplifier", "放大节点"),
+    ("distortion", "失真"),
+    ("misinformation", "失真信息"),
+    ("rumor", "谣言"),
+    ("panic", "恐慌"),
+    ("anxiety", "焦虑"),
+    ("anger", "愤怒"),
+    ("credential", "凭证"),
+    ("verification code", "验证码"),
+    ("screen share", "屏幕共享"),
+    ("transfer money", "转账"),
+]
+
+
+def _normalize_semantic_text(value: Any) -> str:
+    text = _stringify(value).lower()
+    text = re.sub(r"\s+", " ", text)
+    for source, target in SEMANTIC_EQUIVALENCE_TERMS:
+        text = text.replace(source.lower(), target.lower())
+    return text.strip()
+
+
+def _semantic_vector(text: str) -> Counter:
+    normalized = _normalize_semantic_text(text)
+    vector: Counter = Counter()
+    if not normalized:
+        return vector
+
+    for token in re.findall(r"[a-zA-Z0-9_]+", normalized):
+        if len(token) > 1:
+            vector[f"tok:{token}"] += 2.0
+
+    compact = re.sub(r"\s+", "", normalized)
+    cjk_chars = [char for char in compact if "\u4e00" <= char <= "\u9fff"]
+    for char in cjk_chars:
+        vector[f"c:{char}"] += 0.6
+    for size, weight in ((2, 1.4), (3, 1.0), (4, 0.7)):
+        if len(compact) >= size:
+            for index in range(len(compact) - size + 1):
+                gram = compact[index:index + size]
+                if any("\u4e00" <= char <= "\u9fff" for char in gram):
+                    vector[f"g{size}:{gram}"] += weight
+    return vector
+
+
+def _cosine_similarity(left: Counter, right: Counter) -> float:
+    if not left and not right:
+        return 1.0
+    if not left or not right:
+        return 0.0
+    keys = set(left) | set(right)
+    numerator = sum(float(left.get(key, 0.0)) * float(right.get(key, 0.0)) for key in keys)
+    left_norm = math.sqrt(sum(float(value) * float(value) for value in left.values()))
+    right_norm = math.sqrt(sum(float(value) * float(value) for value in right.values()))
+    if left_norm == 0.0 or right_norm == 0.0:
+        return 0.0
+    return numerator / (left_norm * right_norm)
+
+
+def _semantic_similarity(left: Any, right: Any) -> float:
+    left_text = _normalize_semantic_text(left)
+    right_text = _normalize_semantic_text(right)
     if not left_text and not right_text:
         return 1.0
     if not left_text or not right_text:
         return 0.0
     if left_text in right_text or right_text in left_text:
         return 1.0
-    return round(SequenceMatcher(None, left_text, right_text).ratio(), 3)
+
+    lexical = SequenceMatcher(None, left_text, right_text).ratio()
+    vector = _cosine_similarity(_semantic_vector(left_text), _semantic_vector(right_text))
+    return round(max(lexical, vector * 0.92 + lexical * 0.08), 3)
+
+
+def _sequence_similarity(left: Any, right: Any) -> float:
+    """Semantic-aware similarity for free-text answer fields."""
+    return _semantic_similarity(left, right)
 
 
 def _text_collection_similarity(expected: Iterable[Any], predicted: Iterable[Any]) -> float:
@@ -1542,11 +1958,65 @@ def _field_texts(items: Iterable[Any], keys: Iterable[str]) -> List[str]:
     return texts
 
 
-def _risk_score_match(expected: Any, predicted: Any) -> float:
+def _acceptable_values(answer: Dict[str, Any], field: str) -> List[Any]:
+    alternatives = answer.get("acceptable_alternatives")
+    if not isinstance(alternatives, dict):
+        return []
+    value = alternatives.get(field)
+    if value is None:
+        return []
+    return _as_list(value)
+
+
+def _best_sequence_similarity(answer: Dict[str, Any], field: str, predicted: Any, primary: Any = None) -> float:
+    candidates = [primary if primary is not None else answer.get(field)]
+    candidates.extend(_acceptable_values(answer, field))
+    return round(max((_sequence_similarity(candidate, predicted) for candidate in candidates), default=0.0), 3)
+
+
+def _best_collection_similarity(
+    answer: Dict[str, Any],
+    field: str,
+    predicted_items: Iterable[Any],
+    keys: Iterable[str],
+) -> float:
+    predicted_texts = _field_texts(predicted_items, keys)
+    candidates = [_field_texts(_as_list(answer.get(field)), keys)]
+    for alternative in _acceptable_values(answer, field):
+        candidates.append(_field_texts(_as_list(alternative), keys))
+    return round(max((_text_collection_similarity(candidate, predicted_texts) for candidate in candidates), default=0.0), 3)
+
+
+def _has_gray_area_risk_cues(text: str) -> bool:
+    lowered = (text or "").lower()
+    cues = [
+        "微信", "私聊", "联系", "加群", "进群", "接待", "实名", "手机卡", "代办",
+        "代还", "刷卡", "养卡", "套现", "低价", "保证", "客服", "链接", "下载",
+        "验证码", "转账", "付款", "充值", "押金", "保证金",
+        "private", "contact", "telegram", "whatsapp", "payment", "transfer",
+        "verification code", "download", "app",
+    ]
+    return any(cue in lowered for cue in cues)
+
+
+def _risk_score_match(
+    expected: Any,
+    predicted: Any,
+    acceptable: Optional[Iterable[Any]] = None,
+    gray_area: bool = False,
+) -> float:
     expected_bin = risk_bin(str(expected or "low"))
     predicted_bin = risk_bin(str(predicted or "low"))
+    acceptable_bins = {risk_bin(str(item)) for item in (acceptable or [])}
+    if predicted_bin in acceptable_bins:
+        return 1.0
     if expected_bin == predicted_bin:
         return 1.0
+    if gray_area and expected_bin == "low":
+        if predicted_bin == "medium":
+            return 0.75
+        if predicted_bin == "high":
+            return 0.45
     adjacent = {
         ("low", "medium"),
         ("medium", "low"),
@@ -1554,6 +2024,60 @@ def _risk_score_match(expected: Any, predicted: Any) -> float:
         ("high", "medium"),
     }
     return 0.5 if (expected_bin, predicted_bin) in adjacent else 0.0
+
+
+ASSET_EQUIVALENCE = {
+    "credential": "credential",
+    "credentials": "credential",
+    "identity": "identity",
+    "device": "device_control",
+    "device_control": "device_control",
+    "funds": "funds",
+    "money": "funds",
+    "account": "credential",
+    "social_trust": "social_support",
+    "social_support": "social_support",
+    "reputation": "social_support",
+    "public_safety": "social_support",
+}
+
+
+def _normalize_asset_type(value: Any) -> str:
+    text = str(value or "").strip().lower()
+    return ASSET_EQUIVALENCE.get(text, text)
+
+
+def _fork_binary_score(expected_fork: Any, predicted_fork: Any, text: str) -> float:
+    expected_no_fork = expected_fork in FORK_FAMILY_BINARY
+    predicted_no_fork = predicted_fork in FORK_FAMILY_BINARY or predicted_fork in {"missing", None, ""}
+    if expected_no_fork == predicted_no_fork:
+        return 1.0
+    if expected_no_fork and not predicted_no_fork and _has_gray_area_risk_cues(text):
+        return 0.5
+    return 0.0
+
+
+ORIGIN_TYPE_GROUPS = [
+    {"official_source", "article_source", "local_source"},
+    {"early_source_post", "early_rumour_source", "unknown"},
+    {"media_amplifier", "high_influence_amplifier", "cross_platform_amplifier", "aggregation_amplifier"},
+]
+
+
+def _categorical_soft_match(expected: Any, predicted: Any, groups: Iterable[Iterable[str]]) -> float:
+    expected_text = str(expected or "").strip()
+    predicted_text = str(predicted or "").strip()
+    if expected_text == predicted_text:
+        return 1.0
+    if not expected_text or not predicted_text:
+        return 0.0
+    for group in groups:
+        group_set = set(group)
+        if expected_text in group_set and predicted_text in group_set:
+            return 0.6
+    if expected_text == "unknown" or predicted_text == "unknown":
+        return 0.4
+    return 0.0
 
 
 def _evidence_span_score(answer: Dict[str, Any], prediction: Dict[str, Any], text: str) -> float:
@@ -1616,20 +2140,25 @@ def _score_fraud_prediction(truth: Dict[str, Any], prediction: Dict[str, Any]) -
         if isinstance(prediction.get("fork_points"), list) and prediction.get("fork_points")
         else "missing"
     )
-    fpa = 1.0 if (expected_fork in FORK_FAMILY_BINARY) == (predicted_fork in FORK_FAMILY_BINARY) else 0.0
+    fpa = _fork_binary_score(expected_fork, predicted_fork, text)
 
     expected_assets = [
-        item.get("type") for item in _as_list(answer.get("asset_targets"))
-        if isinstance(item, dict) and item.get("type")
+            _normalize_asset_type(item.get("type")) for item in _as_list(answer.get("asset_targets"))
+            if isinstance(item, dict) and item.get("type")
     ]
     predicted_assets = [
-        item.get("type") for item in _as_list(prediction.get("asset_targets"))
+        _normalize_asset_type(item.get("type")) for item in _as_list(prediction.get("asset_targets"))
         if isinstance(item, dict) and item.get("type")
     ]
     expected_set = set(expected_assets)
     predicted_set = set(predicted_assets)
     ata = round(len(expected_set & predicted_set) / max(1, len(expected_set)), 3) if expected_set else 1.0
-    rca = _risk_score_match(answer.get("risk_level"), prediction.get("risk_level"))
+    rca = _risk_score_match(
+        answer.get("risk_level"),
+        prediction.get("risk_level"),
+        acceptable=_acceptable_values(answer, "risk_level"),
+        gray_area=_has_gray_area_risk_cues(text),
+    )
     iwa = _numeric_window_score(
         answer.get("intervention_window", {}),
         prediction.get("intervention_window", {}),
@@ -1637,8 +2166,8 @@ def _score_fraud_prediction(truth: Dict[str, Any], prediction: Dict[str, Any]) -
         "end_turn",
     )
     ear = _evidence_span_score(answer, prediction, text)
-    action_score = _sequence_similarity(answer.get("expected_safe_action"), prediction.get("expected_safe_action"))
-    warning_score = _sequence_similarity(answer.get("expected_warning"), prediction.get("expected_warning"))
+    action_score = _best_sequence_similarity(answer, "expected_safe_action", prediction.get("expected_safe_action"))
+    warning_score = _best_sequence_similarity(answer, "expected_warning", prediction.get("expected_warning"))
     res = round(fpa * 0.20 + ata * 0.16 + rca * 0.16 + iwa * 0.14 + ear * 0.18 + action_score * 0.10 + warning_score * 0.06, 3)
     return {
         "FPA": fpa,
@@ -1661,27 +2190,38 @@ def _score_fraud_prediction(truth: Dict[str, Any], prediction: Dict[str, Any]) -
 def _score_public_opinion_prediction(truth: Dict[str, Any], prediction: Dict[str, Any]) -> Dict[str, Any]:
     answer = truth.get("answer", {}) if isinstance(truth.get("answer"), dict) else {}
     text = truth.get("input", {}).get("text", "")
-    nss = _text_collection_similarity(
-        _field_texts(_as_list(answer.get("narrative_threads")), ["claim", "risk"]),
-        _field_texts(_as_list(prediction.get("narrative_threads")), ["claim", "risk"]),
+    nss = _best_collection_similarity(
+        answer,
+        "narrative_threads",
+        _as_list(prediction.get("narrative_threads")),
+        ["claim", "risk"],
     )
     eas_emotion = 1.0 if (answer.get("emotion_signal", {}) or {}).get("dominant_emotion") == (prediction.get("emotion_signal", {}) or {}).get("dominant_emotion") else 0.0
     eas_level = 1.0 if (answer.get("emotion_signal", {}) or {}).get("amplification_level") == (prediction.get("emotion_signal", {}) or {}).get("amplification_level") else 0.0
     eas = round(eas_emotion * 0.55 + eas_level * 0.45, 3)
-    ugs = _text_collection_similarity(
-        _field_texts(_as_list(answer.get("uncertainty_points")), ["description"]),
-        _field_texts(_as_list(prediction.get("uncertainty_points")), ["description"]),
+    ugs = _best_collection_similarity(
+        answer,
+        "uncertainty_points",
+        _as_list(prediction.get("uncertainty_points")),
+        ["description"],
     )
     ogs_status = 1.0 if (answer.get("official_response_gap", {}) or {}).get("status") == (prediction.get("official_response_gap", {}) or {}).get("status") else 0.0
-    ogs_desc = _sequence_similarity(
-        (answer.get("official_response_gap", {}) or {}).get("description"),
+    ogs_desc = _best_sequence_similarity(
+        answer,
+        "official_response_gap.description",
         (prediction.get("official_response_gap", {}) or {}).get("description"),
+        primary=(answer.get("official_response_gap", {}) or {}).get("description"),
     )
     ogs = round(ogs_status * 0.6 + ogs_desc * 0.4, 3)
-    rca = _risk_score_match(answer.get("propagation_risk_level"), prediction.get("propagation_risk_level"))
+    rca = _risk_score_match(
+        answer.get("propagation_risk_level"),
+        prediction.get("propagation_risk_level"),
+        acceptable=_acceptable_values(answer, "propagation_risk_level"),
+        gray_area=True,
+    )
     iwa = _stage_window_score(answer.get("best_intervention_window", {}), prediction.get("best_intervention_window", {}))
-    ias = _sequence_similarity(answer.get("expected_intervention_action"), prediction.get("expected_intervention_action"))
-    sps = _sequence_similarity(answer.get("expected_safe_public_action"), prediction.get("expected_safe_public_action"))
+    ias = _best_sequence_similarity(answer, "expected_intervention_action", prediction.get("expected_intervention_action"))
+    sps = _best_sequence_similarity(answer, "expected_safe_public_action", prediction.get("expected_safe_public_action"))
     ear = _evidence_span_score(answer, prediction, text)
     res = round(nss * 0.16 + eas * 0.12 + ugs * 0.14 + ogs * 0.12 + rca * 0.12 + iwa * 0.10 + ias * 0.10 + sps * 0.06 + ear * 0.08, 3)
     return {
@@ -1703,32 +2243,49 @@ def _score_public_opinion_prediction(truth: Dict[str, Any], prediction: Dict[str
 def _score_event_propagation_prediction(truth: Dict[str, Any], prediction: Dict[str, Any]) -> Dict[str, Any]:
     answer = truth.get("answer", {}) if isinstance(truth.get("answer"), dict) else {}
     text = truth.get("input", {}).get("text", "")
-    ovs_type = 1.0 if (answer.get("origin_node", {}) or {}).get("type") == (prediction.get("origin_node", {}) or {}).get("type") else 0.0
-    ovs_desc = _sequence_similarity(
-        (answer.get("origin_node", {}) or {}).get("description"),
+    ovs_type = _categorical_soft_match(
+        (answer.get("origin_node", {}) or {}).get("type"),
+        (prediction.get("origin_node", {}) or {}).get("type"),
+        ORIGIN_TYPE_GROUPS,
+    )
+    ovs_desc = _best_sequence_similarity(
+        answer,
+        "origin_node.description",
         (prediction.get("origin_node", {}) or {}).get("description"),
+        primary=(answer.get("origin_node", {}) or {}).get("description"),
     )
     ovs = round(ovs_type * 0.6 + ovs_desc * 0.4, 3)
-    ans = _text_collection_similarity(
-        _field_texts(_as_list(answer.get("amplifier_nodes")), ["type", "description"]),
-        _field_texts(_as_list(prediction.get("amplifier_nodes")), ["type", "description"]),
+    ans = _best_collection_similarity(
+        answer,
+        "amplifier_nodes",
+        _as_list(prediction.get("amplifier_nodes")),
+        ["type", "description"],
     )
-    pcs = _text_collection_similarity(
-        _field_texts(_as_list(answer.get("propagation_path")), ["node", "action", "risk_state"]),
-        _field_texts(_as_list(prediction.get("propagation_path")), ["node", "action", "risk_state"]),
+    pcs = _best_collection_similarity(
+        answer,
+        "propagation_path",
+        _as_list(prediction.get("propagation_path")),
+        ["node", "action", "risk_state"],
     )
-    dcs = _text_collection_similarity(
-        _field_texts(_as_list(answer.get("distortion_points")), ["description"]),
-        _field_texts(_as_list(prediction.get("distortion_points")), ["description"]),
+    dcs = _best_collection_similarity(
+        answer,
+        "distortion_points",
+        _as_list(prediction.get("distortion_points")),
+        ["description"],
     )
-    rca = _risk_score_match(answer.get("coverage_risk"), prediction.get("coverage_risk"))
+    rca = _risk_score_match(
+        answer.get("coverage_risk"),
+        prediction.get("coverage_risk"),
+        acceptable=_acceptable_values(answer, "coverage_risk"),
+        gray_area=True,
+    )
     cws = _numeric_window_score(
         answer.get("containment_window", {}),
         prediction.get("containment_window", {}),
         "open_step",
         "close_step",
     )
-    cas = _sequence_similarity(answer.get("expected_containment_action"), prediction.get("expected_containment_action"))
+    cas = _best_sequence_similarity(answer, "expected_containment_action", prediction.get("expected_containment_action"))
     ear = _evidence_span_score(answer, prediction, text)
     res = round(ovs * 0.14 + ans * 0.14 + pcs * 0.16 + dcs * 0.12 + rca * 0.12 + cws * 0.12 + cas * 0.10 + ear * 0.10, 3)
     return {
@@ -1753,6 +2310,140 @@ SCENARIO_SCORE_FUNCTIONS = {
 }
 
 
+LAYER_NAMES = [
+    "problem_localization",
+    "actionability",
+    "evidence_grounding",
+    "mechanism_insight",
+    "output_reliability",
+]
+TASK_SOLVING_RES_WEIGHTS = {
+    "problem_localization": 0.30,
+    "actionability": 0.30,
+    "evidence_grounding": 0.15,
+    "mechanism_insight": 0.15,
+    "output_reliability": 0.10,
+}
+PROPAGATION_SCENARIO_TYPES = {"public_opinion", "event_propagation"}
+
+
+def _mean_present(values: Iterable[Optional[float]]) -> Optional[float]:
+    present = [value for value in values if value is not None]
+    if not present:
+        return None
+    return round(sum(present) / max(1, len(present)), 3)
+
+
+def _mean_metrics(*values: Any) -> float:
+    nums = [as_number(value) for value in values if value is not None]
+    return round(sum(nums) / max(1, len(nums)), 3)
+
+
+def _bool_score(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    return 1.0 if bool(value) else 0.0
+
+
+def _latency_score(latency_ms: Any) -> Optional[float]:
+    if latency_ms is None:
+        return None
+    latency = as_number(latency_ms, default=-1.0)
+    if latency < 0:
+        return None
+    if latency <= 30_000:
+        return 1.0
+    if latency <= 60_000:
+        return 0.5
+    return 0.0
+
+
+def _runtime_layer_score(output: Dict[str, Any], scenario_type: str) -> Optional[float]:
+    if not any(key in output for key in ("ok", "latency_ms", "has_propagation")):
+        return None
+    scores: List[float] = []
+    if "ok" in output:
+        scores.append(1.0 if output.get("ok") else 0.0)
+    latency = _latency_score(output.get("latency_ms"))
+    if latency is not None:
+        scores.append(latency)
+    if scenario_type in PROPAGATION_SCENARIO_TYPES and "has_propagation" in output:
+        scores.append(1.0 if output.get("has_propagation") else 0.0)
+    return round(sum(scores) / max(1, len(scores)), 3) if scores else None
+
+
+def compute_layer_scores(
+    scenario_type: str,
+    scores: Dict[str, Any],
+    output: Optional[Dict[str, Any]] = None,
+    missing_fields: Optional[List[str]] = None,
+) -> Dict[str, Optional[float]]:
+    output = output or {}
+    scenario_match = _bool_score(output.get("scenario_match")) if "scenario_match" in output else None
+    missing_fields = missing_fields or []
+
+    if scenario_type == "fraud_im":
+        problem_localization = _mean_present([scores.get("RCA"), scores.get("FPA"), scores.get("ATA")])
+        actionability = _mean_present([scores.get("IWA"), scores.get("ASA"), scores.get("WSA")])
+        evidence_grounding = _mean_present([scores.get("EAR")])
+        mechanism_insight = _mean_present([scores.get("FPA"), scores.get("ATA")])
+    elif scenario_type == "public_opinion":
+        problem_localization = _mean_present([scenario_match, scores.get("RCA"), scores.get("NSS"), scores.get("UGS")])
+        actionability = _mean_present([scores.get("IWA"), scores.get("IAS"), scores.get("SPS")])
+        evidence_grounding = _mean_present([scores.get("EAR")])
+        mechanism_insight = _mean_present([scores.get("NSS"), scores.get("EAS"), scores.get("UGS"), scores.get("OGS")])
+    elif scenario_type == "event_propagation":
+        problem_localization = _mean_present([scenario_match, scores.get("RCA"), scores.get("OVS"), scores.get("ANS")])
+        actionability = _mean_present([scores.get("CWS"), scores.get("CAS")])
+        evidence_grounding = _mean_present([scores.get("EAR")])
+        mechanism_insight = _mean_present([scores.get("OVS"), scores.get("ANS"), scores.get("PCS"), scores.get("DCS")])
+    else:
+        problem_localization = actionability = evidence_grounding = mechanism_insight = None
+
+    required_count = len(LLM_BASELINE_REQUIRED_PREDICTION_FIELDS.get(scenario_type, []))
+    schema_score = 1.0 - (len(missing_fields) / max(1, required_count))
+    ok_score = _bool_score(output.get("ok")) if "ok" in output else 1.0
+    output_reliability = _mean_present([schema_score, ok_score])
+
+    return {
+        "problem_localization": problem_localization,
+        "actionability": actionability,
+        "evidence_grounding": evidence_grounding,
+        "mechanism_insight": mechanism_insight,
+        "output_reliability": output_reliability,
+    }
+
+
+def empty_layer_scores(runtime_score: Optional[float] = 0.0) -> Dict[str, Optional[float]]:
+    return {
+        "problem_localization": 0.0,
+        "actionability": 0.0,
+        "evidence_grounding": 0.0,
+        "mechanism_insight": 0.0,
+        "output_reliability": runtime_score,
+    }
+
+
+def summarize_layer_scores(per_case: List[Dict[str, Any]]) -> Dict[str, Optional[float]]:
+    return {
+        layer: _mean_present(
+            item.get("layer_scores", {}).get(layer)
+            for item in per_case
+            if isinstance(item.get("layer_scores"), dict)
+        )
+        for layer in LAYER_NAMES
+    }
+
+
+def application_res(layer_scores: Dict[str, Optional[float]]) -> float:
+    """Task-solving RES: prioritize problem localization and actionable resolution."""
+    total = 0.0
+    for layer, weight in TASK_SOLVING_RES_WEIGHTS.items():
+        value = layer_scores.get(layer)
+        total += weight * (float(value) if value is not None else 0.0)
+    return round(total, 3)
+
+
 def compute_prediction_scores(
     truth_rows: List[Dict[str, Any]],
     prediction_rows: List[Dict[str, Any]],
@@ -1768,7 +2459,15 @@ def compute_prediction_scores(
         row_id = truth.get("id")
         output = predictions.get(row_id)
         if not output:
-            per_case.append({"id": row_id, "ok": False, "missing": True, "RES": 0.0})
+            per_case.append(
+                {
+                    "id": row_id,
+                    "ok": False,
+                    "missing": True,
+                    "RES": 0.0,
+                    "layer_scores": empty_layer_scores(runtime_score=None),
+                }
+            )
             continue
         prediction = (
             output.get("benchmark_prediction")
@@ -1778,12 +2477,15 @@ def compute_prediction_scores(
         prediction = prediction if isinstance(prediction, dict) else {}
         missing_fields = [key for key in required if key not in prediction]
         scores = score_fn(truth, prediction)
+        layer_scores = compute_layer_scores(scenario_type, scores, output, missing_fields)
+        scores["RES"] = application_res(layer_scores)
         per_case.append(
             {
                 "id": row_id,
                 "ok": True,
                 "confidence": prediction.get("confidence"),
                 "missing_prediction_fields": missing_fields,
+                "layer_scores": layer_scores,
                 **scores,
             }
         )
@@ -1800,6 +2502,13 @@ def compute_prediction_scores(
     return {
         "layer": layer,
         "benchmark_version": "v0.1",
+        "scoring_method": "task_solving_semantic_res_v0.5",
+        "scoring_note": (
+            "RES is computed from one task-solving rubric: problem localization 30%, "
+            "actionability 30%, evidence grounding 15%, mechanism insight 15%, "
+            "output reliability 10%. Free-text fields use semantic vector cosine "
+            "with lexical fallback; categorical fields use only lightweight soft matching."
+        ),
         "scenario_type": scenario_type,
         "case_count": len(per_case),
         "scored_case_count": len(ok_cases),
@@ -1812,6 +2521,7 @@ def compute_prediction_scores(
             2,
         ),
         **{name: round((_mean(item.get(name, 0.0) for item in ok_cases)) * 100, 2) for name in metric_names if name != "RES"},
+        "layer_scores": summarize_layer_scores(per_case),
         "RES": _mean(item.get("RES", 0.0) for item in ok_cases),
         "per_case": per_case,
     }

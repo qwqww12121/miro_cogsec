@@ -2,28 +2,33 @@
 
 You are an LLM-only baseline for the Miro-CogSec `public_opinion` benchmark.
 
-Your task is to analyze public-discussion risk directly, without using Miro-CogSec modules, retrieval, propagation simulators, or external tools.
+Analyze the input directly. Do not use retrieval, external tools, propagation simulation, counterfactual runtime, or hidden system modules.
 
 ## Input
 
-You receive JSONL. Each line is one public-opinion seed:
+Each request contains one case with the same information available to the benchmark runner:
 
 ```json
 {
-  "id": "public-opinion-v0.1-001",
+  "id": "CASE_ID",
   "scenario_type": "public_opinion",
-  "source": {"dataset": "...", "event": "...", "license": "..."},
-  "input": {"language": "zh-CN", "channel": "public_discussion_summary", "text": "..."}
+  "input": {
+    "language": "zh-CN",
+    "channel": "VALUE",
+    "text": "VALUE"
+  }
 }
 ```
 
-If the input line already contains an `answer` object, ignore it. Use only `id`, `source`, `scenario_type`, and `input`.
+Use only `id`, `scenario_type`, and `input`. If any other field is present, do not use it as ground truth.
+
+## Task
+
+Produce a practical public-opinion safety analysis: locate the core public-discussion risk, explain the narrative or uncertainty mechanism, cite evidence from the input, and recommend a concrete intervention or safe public action.
 
 ## Output
 
-Return JSONL. Keep exactly one output line per input line. Do not wrap the result in Markdown.
-
-Each output line must have this structure:
+Return exactly one JSON object. Do not use Markdown.
 
 ```json
 {
@@ -35,28 +40,28 @@ Each output line must have this structure:
       {
         "claim": "VALUE",
         "risk": "VALUE",
-        "evidence_spans": ["SHORT_SPAN"]
+        "evidence_spans": ["SHORT_SPAN_FROM_INPUT"]
       }
     ],
     "emotion_signal": {
-      "dominant_emotion": "anger|panic|anxiety|sympathy|confusion|neutral|polarized_anger|other",
-      "amplification_level": "low|medium|high",
+      "dominant_emotion": "VALUE",
+      "amplification_level": "VALUE",
       "rationale": "VALUE",
-      "evidence_spans": ["SHORT_SPAN"]
+      "evidence_spans": ["SHORT_SPAN_FROM_INPUT"]
     },
     "uncertainty_points": [
       {
         "description": "VALUE",
-        "evidence_spans": ["SHORT_SPAN"]
+        "evidence_spans": ["SHORT_SPAN_FROM_INPUT"]
       }
     ],
     "official_response_gap": {
-      "status": "none_observed|not_applicable_or_unknown|partially_available|delayed_or_incomplete|investigation_pending",
+      "status": "VALUE",
       "severity": 0.0,
       "description": "VALUE",
-      "evidence_spans": ["SHORT_SPAN"]
+      "evidence_spans": ["SHORT_SPAN_FROM_INPUT"]
     },
-    "propagation_risk_level": "low|medium|high|critical",
+    "propagation_risk_level": "VALUE",
     "best_intervention_window": {
       "open_stage": "VALUE",
       "close_stage": "VALUE",
@@ -64,17 +69,10 @@ Each output line must have this structure:
     },
     "expected_intervention_action": "VALUE",
     "expected_safe_public_action": "VALUE",
-    "evidence_spans": ["SHORT_SPAN"],
+    "evidence_spans": ["SHORT_SPAN_FROM_INPUT"],
     "confidence": 0.0
   }
 }
 ```
 
-## Rules
-
-- Analyze public opinion formation, not fraud.
-- Focus on narrative formation, emotional amplification, uncertainty, rumor/fact gaps, official response gaps, and intervention strategy.
-- Do not assume that all public discussions require official response. Use `not_applicable_or_unknown` or `none_observed` when appropriate.
-- Do not overstate risk if the text says reliable sources are already available and no strong emotional mobilization appears.
-- Use short evidence spans copied from `input.text`.
-- Keep recommendations concrete and proportional: clarification, source labeling, timeline updates, uncertainty disclosure, or public verification guidance.
+Do not assume every discussion requires official intervention. If the input shows existing reliable clarification, account for it.

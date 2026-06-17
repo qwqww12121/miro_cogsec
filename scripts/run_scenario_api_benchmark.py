@@ -180,11 +180,10 @@ def run_one_scenario(
     for index, row in enumerate(rows, start=1):
         started = time.perf_counter()
         row_id = row.get("id", f"{scenario}-{index}")
-        declared_type = row.get("answer", {}).get("fraud_type") if scenario == "fraud_im" else scenario
         try:
             result = service.analyze_text(
                 scenario_text=row["input"]["text"],
-                scenario_type=declared_type,
+                scenario_type=scenario,
             )
             latency_ms = (time.perf_counter() - started) * 1000
             compact = compact_result(result.to_dict(), scenario)

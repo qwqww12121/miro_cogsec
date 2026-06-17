@@ -4,10 +4,10 @@
   "case_count": 20,
   "ECR": 1.0,
   "FVS": 1.0,
-  "WCS": 0.95,
+  "WCS": 1.0,
   "TRS": 1.0,
   "RFS": 1.0,
-  "AQI": 0.993,
+  "AQI": 1.0,
   "per_case": [
     {
       "id": "cogsec-v0.1-001",
@@ -20,7 +20,7 @@
       "evidence_count": 3,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-002",
@@ -33,7 +33,7 @@
       "evidence_count": 4,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-003",
@@ -43,10 +43,10 @@
       "TRS": 1.0,
       "RFS": 1.0,
       "annotation_quality": 1.0,
-      "evidence_count": 2,
+      "evidence_count": 3,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-004",
@@ -59,7 +59,7 @@
       "evidence_count": 4,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-005",
@@ -72,20 +72,20 @@
       "evidence_count": 3,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-006",
       "ECR": 1.0,
       "FVS": 1.0,
-      "WCS": 0.0,
+      "WCS": 1.0,
       "TRS": 1.0,
       "RFS": 1.0,
-      "annotation_quality": 0.85,
+      "annotation_quality": 1.0,
       "evidence_count": 4,
       "fork_count": 2,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-007",
@@ -98,7 +98,7 @@
       "evidence_count": 3,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-008",
@@ -111,7 +111,7 @@
       "evidence_count": 3,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-009",
@@ -124,7 +124,7 @@
       "evidence_count": 3,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-010",
@@ -137,7 +137,7 @@
       "evidence_count": 3,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-011",
@@ -150,7 +150,7 @@
       "evidence_count": 3,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-012",
@@ -163,7 +163,7 @@
       "evidence_count": 0,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-013",
@@ -176,7 +176,7 @@
       "evidence_count": 0,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-014",
@@ -189,7 +189,7 @@
       "evidence_count": 0,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-015",
@@ -202,7 +202,7 @@
       "evidence_count": 0,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-016",
@@ -215,7 +215,7 @@
       "evidence_count": 0,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-017",
@@ -228,7 +228,7 @@
       "evidence_count": 0,
       "fork_count": 1,
       "source_license": "CC BY-NC 4.01",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-018",
@@ -241,7 +241,7 @@
       "evidence_count": 4,
       "fork_count": 2,
       "source_license": "check_upstream_terms_before_redistribution",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-019",
@@ -254,7 +254,7 @@
       "evidence_count": 4,
       "fork_count": 2,
       "source_license": "check_upstream_terms_before_redistribution",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     },
     {
       "id": "cogsec-v0.1-020",
@@ -267,7 +267,7 @@
       "evidence_count": 3,
       "fork_count": 1,
       "source_license": "public_reference",
-      "review_status": "silver_pending_review"
+      "review_status": "gold_reviewed"
     }
   ]
 }
