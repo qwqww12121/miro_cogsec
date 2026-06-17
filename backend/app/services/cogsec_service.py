@@ -1,4 +1,4 @@
-"""CogSec 场景分析编排服务。"""
+﻿"""CogSec 场景分析编排服务。"""
 
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ from ..modules import (
     scenario_metadata,
 )
 from ..modules.benchmark_adapter import build_benchmark_payload
+from ..modules.conversational_response import build_conversational_response
 from ..modules.propagation import run_oasis_counterfactual_intervention_search
 from ..modules.scenario_detector import ScenarioDetector
 from ..utils import LocalGemmaClient
@@ -58,6 +59,13 @@ class CogSecAnalysisResult:
     cogsec_analysis: Dict[str, Any] | None = None
     adapter_diagnostics: Dict[str, Any] | None = None
     role_report: Dict[str, Any] | None = None
+    assistant_message: str | None = None
+    response_plan: Dict[str, Any] | None = None
+    graph_payload: Dict[str, Any] | None = None
+    suggested_followups: List[str] | None = None
+    latency_profile: Dict[str, Any] | None = None
+    conversation_state: Dict[str, Any] | None = None
+    tone: str = "friendly"
 
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典。"""
@@ -83,6 +91,9 @@ class CogSecService:
         questionnaire: Optional[Dict[str, Any]] = None,
         scenario_type: Optional[str] = None,
         user_role: str = "individual",
+        tone: str = "friendly",
+        conversation_id: Optional[str] = None,
+        turn_id: Optional[str] = None,
     ) -> CogSecAnalysisResult:
         """从场景文本生成完整的 CogSec 分析结果。"""
         started = time.perf_counter()
@@ -245,6 +256,7 @@ class CogSecService:
             },
             anomalies=anomalies,
             implementation_status=implementation_status,
+            tone=tone,
         )
 
         # -- benchmark adapter / dual-track analysis output --
@@ -280,6 +292,30 @@ class CogSecService:
                 "error": str(exc),
                 "role": user_role,
             }
+
+        # -- user-facing conversational response layer --
+        try:
+            conversational = build_conversational_response(
+                result=analysis_result.to_dict(),
+                user_message=analysis_text,
+                tone=tone,
+                conversation_id=conversation_id,
+                turn_id=turn_id,
+            )
+            analysis_result.assistant_message = conversational["assistant_message"]
+            analysis_result.response_plan = conversational["response_plan"]
+            analysis_result.graph_payload = conversational["graph_payload"]
+            analysis_result.suggested_followups = conversational["suggested_followups"]
+            analysis_result.latency_profile = conversational["latency_profile"]
+            analysis_result.conversation_state = conversational["conversation_state"]
+        except Exception as exc:
+            logger.warning("conversational response rendering failed: %s", exc)
+            analysis_result.assistant_message = "结论：系统已完成结构化分析，但自然语言回答层生成失败。"
+            analysis_result.response_plan = {"error": str(exc), "tone": tone}
+            analysis_result.graph_payload = {}
+            analysis_result.suggested_followups = []
+            analysis_result.latency_profile = {"fallback_reason": str(exc)}
+            analysis_result.conversation_state = {"tone": tone, "has_cached_analysis": False}
 
         return analysis_result
 

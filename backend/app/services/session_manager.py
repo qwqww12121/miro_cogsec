@@ -1,4 +1,4 @@
-"""Session manager — wraps SessionStore + file parsing + CogSecService.
+﻿"""Session manager — wraps SessionStore + file parsing + CogSecService.
 
 Orchestrates multi-turn session assembly then delegates to the existing
 CogSecService.analyze_text() mainline for the actual analysis.
@@ -15,6 +15,7 @@ import tempfile
 from typing import Any, Dict, List, Optional
 
 from ..config import Config
+from ..modules.conversational_response import answer_followup_from_state
 from ..modules.session import (
     ConversationTurn,
     build_incremental_analysis,
@@ -208,7 +209,7 @@ class SessionManager:
     # analyze — merge all fragments, delegate to CogSecService
     # ------------------------------------------------------------------
 
-    def analyze(self, session_id: str) -> Dict[str, Any]:
+    def analyze(self, session_id: str, tone: str = "friendly") -> Dict[str, Any]:
         """Merge all session fragments via build_session_text() and run CogSec mainline.
 
         Returns the same CogSecAnalysisResult.to_dict() payload as
@@ -228,16 +229,35 @@ class SessionManager:
             scenario_text=session_text,
             scenario_type=session.scenario_type,
             user_role=session.user_role,
+            tone=tone,
+            conversation_id=session.session_id,
+            turn_id=getattr(turns[-1], 'turn_id', None),
         )
         payload = result.to_dict()
+        if payload.get("conversation_state"):
+            session.state["last_analysis"] = payload["conversation_state"]
         payload["session"] = session.to_dict()
         payload["session_summary"] = {
             "session_id": session.session_id,
             "turn_count": len(turns),
             "scenario_type": session.scenario_type,
             "user_role": session.user_role,
+            "tone": tone,
+            "state_reused": False,
         }
         return payload
+
+    def answer_followup(self, session_id: str, content: str, tone: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Answer a simple follow-up from the last cached full analysis, if available."""
+        session = self._require_session(session_id)
+        last_analysis = session.state.get("last_analysis") if isinstance(session.state, dict) else None
+        if not isinstance(last_analysis, dict):
+            return None
+        return answer_followup_from_state(
+            state=last_analysis,
+            user_message=content,
+            tone=tone or last_analysis.get("tone"),
+        )
 
     # ------------------------------------------------------------------
     # internal
