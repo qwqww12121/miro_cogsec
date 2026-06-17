@@ -1,0 +1,234 @@
+import Section from '../Section'
+import StatTile from '../StatTile'
+import Empty from '../Empty'
+import Icon from '../Icon'
+
+function getRiskTone(score) {
+  if (score == null) return 'default'
+  if (score >= 70) return 'danger'
+  if (score >= 50) return 'sand'
+  return 'leaf'
+}
+
+export default function FraudImResult({ data, loading, error }) {
+  if (loading) {
+    return (
+      <Section title="分析进行中">
+        <div className="py-12 flex items-center justify-center text-sm text-ink-500">
+          <span className="w-2 h-2 rounded-full bg-brand mr-2 animate-pulse" />
+          正在调用 CogSec 引擎，预计 5-30 秒…
+        </div>
+      </Section>
+    )
+  }
+  if (error) {
+    return (
+      <Section title="分析失败">
+        <div className="rounded-md bg-rose-50 border border-rose-100 text-rose-600 text-sm px-3 py-2 flex items-start gap-2">
+          <Icon name="alert" className="w-4 h-4 mt-0.5" />
+          <div>{String(error)}</div>
+        </div>
+      </Section>
+    )
+  }
+  if (!data) {
+    return (
+      <Section title="分析结果">
+        <Empty title="尚未运行分析" hint="在左侧填写对话内容并点击「开始分析」。" />
+      </Section>
+    )
+  }
+
+  const profile = data.profile || {}
+  const metrics = data.metrics || {}
+  const strategies = data.strategies || []
+  const counter = data.counterfactual_report || {}
+  const interventions = data.intervention_prescriptions || []
+  const anomalies = data.anomalies || []
+  const t0 = data.t0_fast_response || {}
+  const t0Matched = Boolean(t0.alert || t0.matched || (t0.hits || []).length)
+  const t0Rules = getT0Rules(t0)
+
+  const overall = profile.overall_vulnerability_score
+  const protection = profile.protection_score
+
+  return (
+    <>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatTile
+          label="脆弱度评分"
+          value={overall != null ? overall.toFixed(1) : '—'}
+          hint="0-100，越高越易受骗"
+          tone={getRiskTone(overall)}
+        />
+        <StatTile
+          label="保护因子均值"
+          value={protection != null ? protection.toFixed(2) : '—'}
+          hint="6 维保护习惯均值"
+          tone="leaf"
+        />
+        <StatTile
+          label="T0 拦截延迟"
+          value={metrics.t0_latency_ms != null ? `${metrics.t0_latency_ms} ms` : '—'}
+          hint={metrics.t0_target_met ? '✓ 达成 <500ms' : '未达成'}
+          tone={metrics.t0_target_met ? 'leaf' : 'sand'}
+        />
+        <StatTile
+          label="端到端耗时"
+          value={metrics.end_to_end_ms != null ? `${(metrics.end_to_end_ms / 1000).toFixed(2)} s` : '—'}
+          hint={metrics.end_to_end_target_met ? '✓ 达成 <30s' : '已完成'}
+          tone={metrics.end_to_end_target_met ? 'leaf' : 'brand'}
+        />
+      </div>
+
+      <Section title="场景与画像摘要">
+        <div className="grid md:grid-cols-2 gap-4 text-sm">
+          <div>
+            <div className="text-[11px] text-ink-500 mb-1">场景类型</div>
+            <div className="font-medium text-ink-900">{profile.scenario_type || '—'}</div>
+          </div>
+          <div>
+            <div className="text-[11px] text-ink-500 mb-1">认知模式</div>
+            <div className="font-medium text-ink-900">
+              {data.persona_state_vector?.cognitive_mode || '—'}
+            </div>
+          </div>
+          <div className="md:col-span-2">
+            <div className="text-[11px] text-ink-500 mb-1">摘要</div>
+            <div className="text-ink-900 leading-relaxed">{profile.summary || profileSummary(profile)}</div>
+          </div>
+        </div>
+      </Section>
+
+      <Section title={`检索到的攻击策略 · ${strategies.length} 条`}>
+        {strategies.length === 0 ? (
+          <Empty title="未检索到策略" hint="案例库未匹配，已使用默认 fallback。" />
+        ) : (
+          <ul className="divide-y divide-border">
+            {strategies.slice(0, 6).map((s, i) => (
+              <li key={i} className="py-3 first:pt-0 last:pb-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-medium text-ink-900 text-sm">{s.tactic_name || s.id}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="tag bg-brand-50 text-brand-600">{s.cialdini_principle || '—'}</span>
+                    <span className="tag bg-slate-100 text-ink-500">强度 {s.intensity_level ?? '—'}</span>
+                  </div>
+                </div>
+                {s.description && (
+                  <div className="text-xs text-ink-500 mt-1.5 leading-relaxed">{s.description}</div>
+                )}
+                {s.typical_dialogue && (
+                  <div className="text-xs italic text-ink-500 mt-1.5">"{s.typical_dialogue}"</div>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <Section title="T0 即时拦截">
+          <div className="text-sm space-y-2">
+            <Row label="是否命中">
+              <span className={`tag ${t0Matched ? 'bg-rose-50 text-rose-600' : 'bg-leaf-50 text-leaf-600'}`}>
+                {t0Matched ? '命中高危模式' : '未命中'}
+              </span>
+            </Row>
+            <Row label="匹配规则">
+              <span className="text-ink-900">{t0Rules.join(', ') || '—'}</span>
+            </Row>
+            <Row label="延迟">
+              <span className="text-ink-900">{t0.latency_ms != null ? `${t0.latency_ms} ms` : '—'}</span>
+            </Row>
+          </div>
+        </Section>
+        <Section title="异常信号">
+          {anomalies.length === 0 ? (
+            <div className="text-sm text-ink-500">无异常。</div>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {anomalies.map((a) => (
+                <span key={a} className="tag bg-rose-50 text-rose-600">{a}</span>
+              ))}
+            </div>
+          )}
+        </Section>
+      </div>
+
+      <Section title="反事实路径报告">
+        {counter.summary_branch_a || counter.summary_branch_b ? (
+          <div className="text-sm text-ink-900 space-y-3">
+            {counter.summary_branch_a && (
+              <div>
+                <div className="text-[11px] text-ink-500 mb-1">分支 A（顺从路径）</div>
+                <div className="leading-relaxed whitespace-pre-wrap">{counter.summary_branch_a}</div>
+              </div>
+            )}
+            {counter.summary_branch_b && (
+              <div>
+                <div className="text-[11px] text-ink-500 mb-1">分支 B（干预路径）</div>
+                <div className="leading-relaxed whitespace-pre-wrap">{counter.summary_branch_b}</div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-sm text-ink-500">后端未返回叙事内容。</div>
+        )}
+      </Section>
+
+      <Section title={`干预处方 · ${interventions.length} 条`}>
+        {interventions.length === 0 ? (
+          <Empty title="暂无干预建议" />
+        ) : (
+          <ol className="space-y-3">
+            {interventions.map((p, i) => (
+              <li key={i} className="flex gap-3">
+                <div className="w-6 h-6 rounded-full bg-leaf-50 text-leaf-600 text-xs font-semibold flex items-center justify-center flex-none">
+                  {i + 1}
+                </div>
+                <div className="text-sm">
+                  <div className="font-medium text-ink-900">
+                    {p.action || p.title || `干预 ${i + 1}`}
+                  </div>
+                  {p.rationale && <div className="text-xs text-ink-500 mt-1">{p.rationale}</div>}
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </Section>
+    </>
+  )
+}
+
+function Row({ label, children }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-ink-500 text-xs">{label}</span>
+      <div className="text-right text-sm">{children}</div>
+    </div>
+  )
+}
+
+function profileSummary(profile) {
+  if (!profile || !profile.scenario_type) return '—'
+  return `场景：${profile.scenario_type}；脆弱度 ${(profile.overall_vulnerability_score ?? 0).toFixed(1)}/100。`
+}
+
+function getT0Rules(t0) {
+  const legacyRules = [
+    ...(t0.matched_patterns || []),
+    ...(t0.matched_keywords || []),
+  ]
+  if (legacyRules.length) {
+    return legacyRules.map(formatT0Item).filter(Boolean)
+  }
+  return (t0.hits || [])
+    .map((hit) => hit.rule_id || hit.matched_text || hit.keyword || hit.pattern)
+    .filter(Boolean)
+}
+
+function formatT0Item(item) {
+  if (typeof item === 'string') return item
+  return item?.rule_id || item?.matched_text || item?.keyword || item?.pattern || ''
+}

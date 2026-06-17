@@ -1,7 +1,7 @@
 {
   "name": "miro-cogsec-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -10,13 +10,16 @@
   },
   "dependencies": {
     "axios": "^1.13.2",
-    "d3": "^7.9.0",
-    "echarts": "^5.6.0",
-    "vue": "^3.5.24",
-    "vue-router": "^4.6.3"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.27.0",
+    "recharts": "^2.13.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.1",
-    "vite": "^7.2.4"
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "vite": "^5.4.10"
   }
 }

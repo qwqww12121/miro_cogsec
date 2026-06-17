@@ -1,24 +1,26 @@
-﻿# 前端修改指导文档：后端输出层接入建议
+# 前端修改指导文档：React 前端接入后端输出层
 
-> 本文档只给前端修改建议。本次任务没有修改任何前端代码。
+> 本文档只给前端修改建议。当前代码已同步 React + Tailwind 前端，但本次没有直接改 React 结果页展示逻辑。
 
 ## 1. 当前前端结构审查
 
-当前前端是 Vue + Vite 项目，核心目录如下：
+当前前端是 React + Vite + Tailwind 项目，核心目录如下：
 
 - `frontend/src/api/cogsec.js`
-  - 负责调用 `/api/cogsec/analyze` 和 `/api/cogsec/report/<reportId>`。
-- `frontend/src/components/cogsec/CogSecWorkbench.vue`
-  - 当前 CogSec 主工作台。
-  - 直接展示 `analysis.profile`、`metrics`、`risk_graph_bundle`、`branch_a_log`、`branch_b_log`、`intervention_prescriptions` 等工程字段。
-- `frontend/src/components/cogsec/GraphVisualization.vue`
-  - 用 ECharts 展示节点和边。
-- `frontend/src/components/cogsec/BranchTimeline.vue`
-  - 展示双分支时间线。
-- `frontend/src/components/cogsec/screens/*`
-  - 分屏展示数字孪生、风险图、双分支、曲线和干预处方。
+  - 负责调用 `/api/cogsec/analyze`。
+- `frontend/src/api/scenarios.js`
+  - 三个场景统一拼装请求体，分别传入 `fraud_im` / `public_opinion` / `event_propagation`。
+- `frontend/src/pages/scenarios/*Page.jsx`
+  - 三个场景的输入页。
+- `frontend/src/components/results/*Result.jsx`
+  - 当前三个结果面板。
+  - 直接展示 `profile`、`metrics`、`counterfactual_report`、`scenario_extension.propagation`、`intervention_prescriptions` 等结构化字段。
+- `frontend/src/pages/Home.jsx`
+  - 首页场景选择与智能识别入口。
+- `frontend/src/pages/BenchmarkPage.jsx`
+  - 离线 benchmark 摘要页。
 
-当前页面优点是机制展示完整，但主要问题是用户第一眼看到的是工程工作台，不是成熟 AI 助手的最终回答。
+当前页面优点是三类场景入口清楚、机制展示较完整；主要问题是用户第一眼仍然看到结构化结果和工程指标，不是后端新增的成熟 AI 助手式最终回答。
 
 ## 2. 这次后端新增的可消费字段
 
@@ -26,7 +28,7 @@
 
 | 字段 | 用途 | 前端建议 |
 |---|---|---|
-| `assistant_message` | 面向用户/评审的自然语言最终回答 | 放在工作台首屏最上方，作为主答案 |
+| `assistant_message` | 面向用户/评审的自然语言最终回答 | 放在结果页首屏最上方，作为主答案 |
 | `response_plan` | 后端用于生成回答的轻量规划 | 仅调试或二级详情使用，不建议首屏直接展示 |
 | `graph_payload` | 规整后的图谱高亮数据 | 未来替代或补充 `risk_graph_bundle` 的可视化输入 |
 | `suggested_followups` | 建议追问 | 放在回答卡片底部，做快捷按钮 |
@@ -35,7 +37,7 @@
 
 ## 3. 首屏建议结构
 
-建议把 `CogSecWorkbench.vue` 的第一屏从“工程仪表盘优先”改为“答案优先”：
+建议把三个结果页的第一屏从“工程指标优先”改为“答案优先”：
 
 ```text
 [自然语言回答区]
@@ -45,7 +47,7 @@ suggested_followups
 [状态条]
 scenario / risk / metric_source / latency
 
-[机制详情 tabs]
+[机制详情]
 证据链 | 图谱 | 传播路径 | 干预分支 | 原始工程数据
 ```
 
@@ -57,12 +59,46 @@ scenario / risk / metric_source / latency
 
 | 组件 | 输入 | 作用 |
 |---|---|---|
-| `AssistantAnswerPanel.vue` | `assistantMessage`, `suggestedFollowups`, `tone` | 展示自然回答和追问按钮 |
-| `CogSecStatusStrip.vue` | `scenarioMetadata`, `latencyProfile`, `responsePlan` | 展示场景、来源、耗时、是否 proxy |
-| `EvidenceList.vue` | `responsePlan.evidence`, `graphPayload.evidence_links` | 展示 2-4 条关键证据 |
-| `InterventionBranchesPanel.vue` | `responsePlan.candidate_summaries`, `responsePlan.selected_branch` | 展示候选方案和 selected best branch |
-| `GraphPayloadView.vue` | `graphPayload` | 优先高亮节点/边，不直接吃超大 raw graph |
-| `RawDebugPanel.vue` | 原始 `analysis` | 折叠显示，供研究/调试使用 |
+| `AssistantAnswerPanel.jsx` | `assistantMessage`, `suggestedFollowups`, `tone` | 展示自然回答和追问按钮 |
+| `CogSecStatusStrip.jsx` | `scenarioMetadata`, `latencyProfile`, `responsePlan` | 展示场景、来源、耗时、是否 proxy |
+| `EvidenceList.jsx` | `responsePlan.evidence_trace`, `graphPayload.evidence_links` | 展示 2-4 条关键证据 |
+| `InterventionBranchesPanel.jsx` | `responsePlan.candidate_summaries`, `responsePlan.selected_branch` | 展示候选方案和 selected best branch |
+| `GraphPayloadView.jsx` | `graphPayload` | 优先高亮节点/边，不直接吃超大 raw graph |
+| `RawDebugPanel.jsx` | 原始 `analysis` | 折叠显示，供研究/调试使用 |
+
+### 最小展示块建议
+
+后续前端同学可以先不重构页面，只在三个 `*Result.jsx` 的指标卡片之前加入一个很小的展示块：
+
+```jsx
+function AssistantMessageBlock({ data }) {
+  if (!data?.assistant_message) return null
+  return (
+    <Section title="系统结论">
+      <div className="text-sm text-ink-900 leading-relaxed whitespace-pre-wrap">
+        {data.assistant_message}
+      </div>
+      {data.suggested_followups?.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {data.suggested_followups.slice(0, 4).map((item) => (
+            <button key={item} type="button" className="btn-ghost text-xs">
+              {item}
+            </button>
+          ))}
+        </div>
+      )}
+    </Section>
+  )
+}
+```
+
+接入位置：
+
+- `frontend/src/components/results/FraudImResult.jsx`
+- `frontend/src/components/results/PublicOpinionResult.jsx`
+- `frontend/src/components/results/EventPropagationResult.jsx`
+
+放在 `return <>` 后、四个 `StatTile` 指标之前即可。没有 `assistant_message` 时返回 `null`，不影响旧后端。
 
 ## 5. graph_payload 使用建议
 
@@ -85,7 +121,7 @@ scenario / risk / metric_source / latency
 
 前端建议：
 
-1. 优先用 `highlight_nodes` 控制 ECharts 节点高亮。
+1. 优先用 `highlight_nodes` 控制图谱节点高亮。
 2. 用 `active_branch` 切换候选干预分支展示。
 3. 用 `evidence_links` 在图谱旁展示证据卡片。
 4. 如果 `nodes/edges` 为空，再 fallback 到旧的 `risk_graph_bundle`。
@@ -130,19 +166,19 @@ scenario / risk / metric_source / latency
 
 ### P0：只接主答案
 
-- 在 `CogSecWorkbench.vue` 首屏顶部展示 `analysis.assistant_message`。
+- 在三个 React 结果页首屏顶部展示 `data.assistant_message`。
 - 有 `suggested_followups` 时展示为按钮。
-- 保留旧屏幕 tabs，不改图谱、不改分支。
+- 保留现有 StatTile、曲线、传播仿真表格和干预建议，不改图谱、不改分支。
 
 ### P1：接 latency 和 metric source
 
-- 展示 `analysis.latency_profile.metric_source`。
+- 展示 `data.latency_profile.metric_source`。
 - 如果是 `proxy`，文案用“轻量近似指标”，不要写“完整 OASIS”。
 - 展示 quick/full latency，但不让它压过主答案。
 
 ### P2：接 graph_payload 高亮
 
-- `GraphVisualization.vue` 支持 `graph_payload.nodes/edges`。
+- 未来的图谱组件支持 `graph_payload.nodes/edges`。
 - 支持 `highlight_nodes` 视觉高亮。
 - 旧 `risk_graph_bundle` 作为 fallback。
 
@@ -152,7 +188,18 @@ scenario / risk / metric_source / latency
 - 点击后走 `/session/<id>/turn`。
 - 用 `conversational_response.assistant_message` 追加到聊天区。
 
-## 9. 验收标准
+## 9. 当前 TODO 清单
+
+| 优先级 | TODO | 文件 |
+|---|---|---|
+| P0 | 新增 `AssistantMessageBlock.jsx` 或在三个结果页内联最小展示块 | `frontend/src/components/results/*Result.jsx` |
+| P0 | 请求体默认带 `tone: 'friendly'`，评测/展示时可切到 `judge_friendly` 或 `expert` | `frontend/src/api/scenarios.js` |
+| P1 | 在结果页小状态区展示 `latency_profile.metric_source` 和 fallback reason | `frontend/src/components/results/*Result.jsx` |
+| P1 | proxy/lightweight 指标文案改成“轻量近似”，避免展示成完整 OASIS runtime | `frontend/src/components/results/*Result.jsx` |
+| P2 | 用 `graph_payload.highlight_nodes/highlight_edges` 驱动图谱高亮 | 后续图谱组件 |
+| P3 | suggested followups 接 session 追问接口 | 新聊天/追问组件 |
+
+## 10. 验收标准
 
 前端改完后建议检查：
 
@@ -161,10 +208,10 @@ scenario / risk / metric_source / latency
 3. `expert` 能看到 selected branch 和 metric_source。
 4. `judge_friendly` 不显示 benchmark / adapter / diagnostics 字样。
 5. proxy 指标不会被展示成 OASIS runtime。
-6. 旧的图谱、分支、曲线页面仍可打开。
-7. 后端没有 `assistant_message` 时，前端能 fallback 到旧工作台。
+6. 旧的结构化结果、曲线和传播仿真页面仍可打开。
+7. 后端没有 `assistant_message` 时，前端能 fallback 到旧结果页。
 
-## 10. 不建议做的事
+## 11. 不建议做的事
 
 - 不要把 `benchmark_prediction` 原样作为主答案。
 - 不要把 `cogsec_analysis` 原样渲染成大段 JSON。
