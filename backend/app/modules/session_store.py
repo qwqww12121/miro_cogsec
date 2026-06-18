@@ -1,4 +1,4 @@
-"""In-memory session store for multi-turn CogSec input assembly.
+﻿"""In-memory session store for multi-turn CogSec input assembly.
 
 No database, no Redis — a plain dict with basic TTL eviction.
 """
@@ -67,6 +67,7 @@ class SessionData:
     fragments: List[InputFragment] = field(default_factory=list)
     created_at: float = field(default_factory=time.time)
     last_access: float = field(default_factory=time.time)
+    state: Dict[str, Any] = field(default_factory=dict)
 
     def touch(self) -> None:
         self.last_access = time.time()
@@ -81,6 +82,14 @@ class SessionData:
             "created_at": self.created_at,
             "last_access": self.last_access,
         }
+        if self.state:
+            last_analysis = self.state.get("last_analysis") if isinstance(self.state, dict) else None
+            payload["state_summary"] = {
+                "has_cached_analysis": bool(last_analysis),
+                "cached_scenario": (last_analysis or {}).get("scenario") if isinstance(last_analysis, dict) else None,
+                "cached_tone": (last_analysis or {}).get("tone") if isinstance(last_analysis, dict) else None,
+                "cached_fields": (last_analysis or {}).get("cached_fields", []) if isinstance(last_analysis, dict) else [],
+            }
         if include_content:
             payload["merged_text"] = self.merge()
         return payload

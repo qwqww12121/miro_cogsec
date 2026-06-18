@@ -1,4 +1,4 @@
-"""Counterfactual intervention search for propagation scenarios.
+﻿"""Counterfactual intervention search for propagation scenarios.
 
 The search layer is deliberately above the OASIS / lightweight propagation
 runtime. It generates several intervention candidates, runs comparable
@@ -8,7 +8,9 @@ selects the branch with the best risk-reduction / cost tradeoff.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
+import time
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -169,8 +171,9 @@ def run_oasis_counterfactual_intervention_search(
         ticks=ticks,
     )
 
-    branches: List[Dict[str, Any]] = []
-    for index, candidate in enumerate(candidates, start=1):
+    branch_started = time.perf_counter()
+
+    def run_candidate_branch(index: int, candidate: InterventionCandidate) -> Dict[str, Any]:
         branch_trace = run_propagation_simulation(
             event=event,
             agents=deepcopy(agents),
@@ -184,17 +187,30 @@ def run_oasis_counterfactual_intervention_search(
             branch_trace=branch_trace,
             candidate=candidate,
         )
-        branches.append(
-            {
-                "branch_id": f"branch_{index:03d}",
-                "intervention_candidate": candidate.to_dict(),
-                "coverage_curve": branch_trace.coverage_curve,
-                "polarization_curve": _polarization_curve(branch_trace),
-                "misinformation_curve": _misinformation_curve(branch_trace, seed_text),
-                "key_node_activity": _key_node_activity_curve(branch_trace, baseline_trace.key_nodes),
-                "final_metrics": branch_metrics,
-            }
-        )
+        return {
+            "branch_id": f"branch_{index:03d}",
+            "intervention_candidate": candidate.to_dict(),
+            "coverage_curve": branch_trace.coverage_curve,
+            "polarization_curve": _polarization_curve(branch_trace),
+            "misinformation_curve": _misinformation_curve(branch_trace, seed_text),
+            "key_node_activity": _key_node_activity_curve(branch_trace, baseline_trace.key_nodes),
+            "final_metrics": branch_metrics,
+        }
+
+    if len(candidates) <= 1:
+        branches = [run_candidate_branch(index, candidate) for index, candidate in enumerate(candidates, start=1)]
+        branch_execution_mode = "single_proxy"
+    else:
+        max_workers = min(4, len(candidates))
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [
+                executor.submit(run_candidate_branch, index, candidate)
+                for index, candidate in enumerate(candidates, start=1)
+            ]
+            branches = [future.result() for future in futures]
+        branches = sorted(branches, key=lambda item: item.get("branch_id", ""))
+        branch_execution_mode = "parallel_proxy"
+    branch_execution_latency_ms = round((time.perf_counter() - branch_started) * 1000, 2)
 
     selected = _select_best_branch(branches)
     baseline_branch = {
@@ -247,6 +263,7 @@ def run_oasis_counterfactual_intervention_search(
             "has_oasis_baseline_propagation": oasis_grounded,
             "branch_count": len(branches),
             "candidate_generation_source": "risk_graph|evidence_chain|key_nodes|heuristic",
+            "branch_execution_mode": branch_execution_mode,
         },
         "diagnostics": {
             "quick_mode": quick_mode,
@@ -254,6 +271,9 @@ def run_oasis_counterfactual_intervention_search(
             "ticks": ticks,
             "topology_type": topology_type,
             "metric_source": metric_source,
+            "branch_execution_mode": branch_execution_mode,
+            "branch_execution_latency_ms": branch_execution_latency_ms,
+            "branch_count": len(branches),
             "notes": [
                 "Counterfactual branches currently use local propagation proxy metrics.",
                 "Full OASIS per-candidate execution can replace this module without changing the output schema.",
