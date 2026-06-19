@@ -23,7 +23,7 @@ export default function App() {
       <footer className="border-t border-border bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4 text-xs text-ink-500 flex justify-between">
           <div>© CogSec · 认知安全分析系统</div>
-          <div>v0.2 · Vite + React</div>
+          <div>v0.7 · Vite + React</div>
         </div>
       </footer>
     </div>
