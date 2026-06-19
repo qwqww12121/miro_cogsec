@@ -279,7 +279,7 @@ class ThreatKnowledgeRAG:
         evidence_items = self._collect_evidence_items(scenario_text, strategies)
         asset_targets = self._derive_asset_targets(scenario_text, strategies)
         environment_context = self._derive_environment_context(scenario_text, scenario_type)
-        fork_points = self._derive_fork_points(scenario_text, strategies, asset_targets)
+        fork_points = self._derive_fork_points(scenario_text, strategies, asset_targets, scenario_type)
 
         consistency_scores = []
         for strategy in strategies:
@@ -541,7 +541,12 @@ class ThreatKnowledgeRAG:
         scenario_text: str,
         strategies: List[AttackStrategy],
         asset_targets: List[Dict[str, Any]],
+        scenario_type: str = "fraud_im",
     ) -> List[Dict[str, Any]]:
+        # 传播场景无需 fraud 专属 fork 节点
+        if scenario_type in ("event_propagation", "public_opinion"):
+            return []
+
         lowered = (scenario_text or "").lower()
         fork_specs = [
             ("transfer_money", ["转账", "汇款", "打款", "safe account"], 0.96),
