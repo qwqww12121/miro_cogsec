@@ -16,6 +16,8 @@ import Section from '../Section'
 import StatTile from '../StatTile'
 import Empty from '../Empty'
 import Icon from '../Icon'
+import AssistantMessageBlock from '../AssistantMessageBlock'
+import GraphPayloadView from '../GraphPayloadView'
 
 /**
  * 直接消费 backend /api/cogsec/analyze 的真实返回，按"舆情分析"语义重新组织展示，
@@ -61,6 +63,8 @@ export default function PublicOpinionResult({ data, loading, error }) {
   const propagation = data.scenario_extension?.propagation || null
   const scenarioType = metadata.canonical || profile.scenario_type || '—'
   const coverageFinal = propagation?.branch_a?.final_metrics?.coverage_final
+  const latency = data.latency_profile || {}
+  const metricSourceHint = getMetricSourceHint(latency.metric_source)
 
   // 情绪向量：直接来自 profile 的真实维度（0-10）
   const emotionDims = [
@@ -76,6 +80,7 @@ export default function PublicOpinionResult({ data, loading, error }) {
 
   return (
     <>
+      <AssistantMessageBlock data={data} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatTile
           label="脆弱度评分"
@@ -98,7 +103,7 @@ export default function PublicOpinionResult({ data, loading, error }) {
         <StatTile
           label="端到端耗时"
           value={metrics.end_to_end_ms != null ? `${(metrics.end_to_end_ms / 1000).toFixed(2)} s` : '—'}
-          hint={metrics.end_to_end_target_met ? '✓ <30s' : '已完成'}
+          hint={metricSourceHint || (metrics.end_to_end_target_met ? '✓ <30s' : '已完成')}
           tone={metrics.end_to_end_target_met ? 'leaf' : 'brand'}
         />
       </div>
@@ -241,6 +246,8 @@ export default function PublicOpinionResult({ data, loading, error }) {
         </div>
       </Section>
 
+      <GraphPayloadView graphPayload={data.graph_payload} />
+
       <Section title="异常信号">
         {anomalies.length === 0 ? (
           <div className="text-sm text-ink-500">无异常。</div>
@@ -254,6 +261,14 @@ export default function PublicOpinionResult({ data, loading, error }) {
       </Section>
     </>
   )
+}
+
+function getMetricSourceHint(source) {
+  if (!source) return null
+  if (source === '代理仿真' || source === 'proxy') return '轻量近似指标'
+  if (source === '启发式估算' || source === 'heuristic') return '启发式近似指标'
+  if (source === 'LLM 假设推断' || source === 'llm_hypothesis') return 'LLM 推断指标'
+  return null
 }
 
 function getRiskTone(score) {

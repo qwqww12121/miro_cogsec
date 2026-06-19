@@ -13,3 +13,15 @@ export async function analyzeCogSec(payload) {
   }
   return resp.data?.data ?? resp.data
 }
+
+export async function answerFollowup(conversationState, message, tone) {
+  const resp = await client.post('/api/cogsec/followup', {
+    state: conversationState,
+    message,
+    tone: tone || 'friendly',
+  })
+  if (resp?.data?.success === false) {
+    throw new Error(resp.data.error || '追问失败')
+  }
+  return resp.data?.data ?? resp.data
+}

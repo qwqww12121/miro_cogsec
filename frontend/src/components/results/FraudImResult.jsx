@@ -2,6 +2,8 @@ import Section from '../Section'
 import StatTile from '../StatTile'
 import Empty from '../Empty'
 import Icon from '../Icon'
+import AssistantMessageBlock from '../AssistantMessageBlock'
+import GraphPayloadView from '../GraphPayloadView'
 
 function getRiskTone(score) {
   if (score == null) return 'default'
@@ -51,9 +53,12 @@ export default function FraudImResult({ data, loading, error }) {
 
   const overall = profile.overall_vulnerability_score
   const protection = profile.protection_score
+  const latency = data.latency_profile || {}
+  const metricSourceHint = getMetricSourceHint(latency.metric_source)
 
   return (
     <>
+      <AssistantMessageBlock data={data} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatTile
           label="脆弱度评分"
@@ -76,7 +81,7 @@ export default function FraudImResult({ data, loading, error }) {
         <StatTile
           label="端到端耗时"
           value={metrics.end_to_end_ms != null ? `${(metrics.end_to_end_ms / 1000).toFixed(2)} s` : '—'}
-          hint={metrics.end_to_end_target_met ? '✓ 达成 <30s' : '已完成'}
+          hint={metricSourceHint || (metrics.end_to_end_target_met ? '✓ 达成 <30s' : '已完成')}
           tone={metrics.end_to_end_target_met ? 'leaf' : 'brand'}
         />
       </div>
@@ -176,6 +181,8 @@ export default function FraudImResult({ data, loading, error }) {
         )}
       </Section>
 
+      <GraphPayloadView graphPayload={data.graph_payload} />
+
       <Section title={`干预处方 · ${interventions.length} 条`}>
         {interventions.length === 0 ? (
           <Empty title="暂无干预建议" />
@@ -226,6 +233,14 @@ function getT0Rules(t0) {
   return (t0.hits || [])
     .map((hit) => hit.rule_id || hit.matched_text || hit.keyword || hit.pattern)
     .filter(Boolean)
+}
+
+function getMetricSourceHint(source) {
+  if (!source) return null
+  if (source === '代理仿真' || source === 'proxy') return '轻量近似指标'
+  if (source === '启发式估算' || source === 'heuristic') return '启发式近似指标'
+  if (source === 'LLM 假设推断' || source === 'llm_hypothesis') return 'LLM 推断指标'
+  return null
 }
 
 function formatT0Item(item) {

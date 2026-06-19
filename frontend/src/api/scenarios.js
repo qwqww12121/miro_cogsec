@@ -24,6 +24,7 @@ export async function runFraudImAnalysis(form) {
     scenario: scenarioText,
     scenario_type: form.scenarioCategory || undefined,
     questionnaire: form.questionnaire || undefined,
+    tone: form.tone || 'friendly',
   })
 }
 
@@ -38,6 +39,7 @@ export async function runPublicOpinionAnalysis(form) {
   return analyzeCogSec({
     scenario: scenarioText,
     scenario_type: 'public_opinion',
+    tone: form.tone || 'friendly',
   })
 }
 
@@ -53,5 +55,6 @@ export async function runEventPropagationAnalysis(form) {
   return analyzeCogSec({
     scenario: scenarioText,
     scenario_type: 'event_propagation',
+    tone: form.tone || 'friendly',
   })
 }

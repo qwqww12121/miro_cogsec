@@ -14,6 +14,8 @@ import Section from '../Section'
 import StatTile from '../StatTile'
 import Empty from '../Empty'
 import Icon from '../Icon'
+import AssistantMessageBlock from '../AssistantMessageBlock'
+import GraphPayloadView from '../GraphPayloadView'
 
 /**
  * 消费 /api/cogsec/analyze 的真实返回。事件传播优先使用
@@ -59,6 +61,8 @@ export default function EventPropagationResult({ data, loading, error }) {
   const interventions = data.intervention_prescriptions || []
   const metrics = data.metrics || {}
 
+  const latency = data.latency_profile || {}
+  const metricSourceHint = getMetricSourceHint(latency.metric_source)
   const propagationTimeline = buildPropagationTimeline(propagation?.branch_a, propagation?.branch_b)
   const fallbackTimeline = buildBranchTimeline(branchA, branchB)
   const timeline = propagationTimeline.length ? propagationTimeline : fallbackTimeline
@@ -77,6 +81,7 @@ export default function EventPropagationResult({ data, loading, error }) {
 
   return (
     <>
+      <AssistantMessageBlock data={data} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatTile
           label="推演总步长"
@@ -99,7 +104,7 @@ export default function EventPropagationResult({ data, loading, error }) {
         <StatTile
           label="端到端耗时"
           value={metrics.end_to_end_ms != null ? `${(metrics.end_to_end_ms / 1000).toFixed(2)} s` : '—'}
-          hint={metrics.end_to_end_target_met ? '✓ <30s' : '已完成'}
+          hint={metricSourceHint || (metrics.end_to_end_target_met ? '✓ <30s' : '已完成')}
           tone={metrics.end_to_end_target_met ? 'leaf' : 'brand'}
         />
       </div>
@@ -212,8 +217,18 @@ export default function EventPropagationResult({ data, loading, error }) {
             : counter.narrative || counter.summary || '后端未返回叙事内容。'}
         </div>
       </Section>
+
+      <GraphPayloadView graphPayload={data.graph_payload} />
     </>
   )
+}
+
+function getMetricSourceHint(source) {
+  if (!source) return null
+  if (source === '代理仿真' || source === 'proxy') return '轻量近似指标'
+  if (source === '启发式估算' || source === 'heuristic') return '启发式近似指标'
+  if (source === 'LLM 假设推断' || source === 'llm_hypothesis') return 'LLM 推断指标'
+  return null
 }
 
 function buildPropagationTimeline(branchA, branchB) {

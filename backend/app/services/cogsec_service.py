@@ -22,6 +22,9 @@ from ..modules import (
     resolve_canonical,
     scenario_metadata,
 )
+from ..modules.benchmark_adapter import build_benchmark_payload
+from ..modules.conversational_response import build_conversational_response
+from ..modules.propagation import run_oasis_counterfactual_intervention_search
 from ..modules.scenario_detector import ScenarioDetector
 from ..utils import LocalGemmaClient
 from ..utils.llm_client import LLMClient
@@ -52,7 +55,17 @@ class CogSecAnalysisResult:
     implementation_status: Dict[str, Any]
     scenario_metadata: Dict[str, Any] = field(default_factory=dict)
     scenario_extension: Dict[str, Any] | None = None
+    benchmark_prediction: Dict[str, Any] | None = None
+    cogsec_analysis: Dict[str, Any] | None = None
+    adapter_diagnostics: Dict[str, Any] | None = None
     role_report: Dict[str, Any] | None = None
+    assistant_message: str | None = None
+    response_plan: Dict[str, Any] | None = None
+    graph_payload: Dict[str, Any] | None = None
+    suggested_followups: List[str] | None = None
+    latency_profile: Dict[str, Any] | None = None
+    conversation_state: Dict[str, Any] | None = None
+    tone: str = "friendly"
 
     def to_dict(self) -> Dict[str, Any]:
         """转换为字典。"""
@@ -78,6 +91,9 @@ class CogSecService:
         questionnaire: Optional[Dict[str, Any]] = None,
         scenario_type: Optional[str] = None,
         user_role: str = "individual",
+        tone: str = "friendly",
+        conversation_id: Optional[str] = None,
+        turn_id: Optional[str] = None,
     ) -> CogSecAnalysisResult:
         """从场景文本生成完整的 CogSec 分析结果。"""
         started = time.perf_counter()
@@ -105,9 +121,10 @@ class CogSecService:
         )
         if sanitization_result.pii_leak_detected:
             raise RuntimeError("PII leak detected after sanitization retry")
+        analysis_text = sanitization_result.sanitized_text or scenario_text
 
         profile = self.profile_extractor.extract(
-            scenario=sanitization_result.sanitized_text or scenario_text,
+            scenario=analysis_text,
             questionnaire=questionnaire,
             scenario_type=canonical,
         )
@@ -121,7 +138,7 @@ class CogSecService:
             else profile.scenario_type
         )
         risk_graph_bundle = self.threat_rag.build_risk_graph_bundle(
-            scenario_text=sanitization_result.sanitized_text or scenario_text,
+            scenario_text=analysis_text,
             scenario_type=rag_scenario_type,
             cognitive_profile=profile,
             persona_state_vector=persona_state_vector,
@@ -130,7 +147,7 @@ class CogSecService:
         runtime_result = self.runtime.run(
             persona_state_vector=persona_state_vector,
             risk_graph_bundle=risk_graph_bundle,
-            current_input=sanitization_result.sanitized_text or scenario_text,
+            current_input=analysis_text,
             deadline_sec=getattr(Config, "COGSEC_RUNTIME_TIMEOUT_SEC", 15.0),
         )
         branch_a_log = [step.to_dict() for step in runtime_result.fork_comparison.branch_a_state_trace]
@@ -192,6 +209,13 @@ class CogSecService:
             try:
                 propagation_result = spec.run_propagation(scenario_ctx, quick_mode=True)
                 scenario_extension["propagation"] = propagation_result
+                scenario_extension["propagation_intervention_search"] = run_oasis_counterfactual_intervention_search(
+                    scenario_type=canonical,
+                    seed_text=analysis_text,
+                    risk_graph_bundle=risk_graph_bundle.to_dict(),
+                    propagation_result=propagation_result,
+                    quick_mode=True,
+                )
             except Exception as exc:
                 logger.warning("scenario propagation failed for %s: %s", canonical, exc)
                 scenario_extension["propagation_error"] = str(exc)
@@ -232,6 +256,7 @@ class CogSecService:
             },
             anomalies=anomalies,
             implementation_status=implementation_status,
+            tone=tone,
         )
 
         # -- role report rendering (Phase V) --
@@ -251,6 +276,46 @@ class CogSecService:
                 "error": str(exc),
                 "role": user_role,
             }
+
+        # -- benchmark adapter / dual-track analysis output --
+        try:
+            benchmark_payload = build_benchmark_payload(
+                result=analysis_result.to_dict(),
+                scenario_text=analysis_text,
+                scenario_type=canonical,
+            )
+            analysis_result.benchmark_prediction = benchmark_payload["prediction"]
+            analysis_result.cogsec_analysis = benchmark_payload["cogsec_analysis"]
+            analysis_result.adapter_diagnostics = benchmark_payload["adapter_diagnostics"]
+        except Exception as exc:
+            logger.warning("benchmark adapter failed: %s", exc)
+            analysis_result.benchmark_prediction = {}
+            analysis_result.cogsec_analysis = {}
+            analysis_result.adapter_diagnostics = {"adapter_warnings": [str(exc)]}
+
+        # -- user-facing conversational response layer --
+        try:
+            conversational = build_conversational_response(
+                result=analysis_result.to_dict(),
+                user_message=analysis_text,
+                tone=tone,
+                conversation_id=conversation_id,
+                turn_id=turn_id,
+            )
+            analysis_result.assistant_message = conversational["assistant_message"]
+            analysis_result.response_plan = conversational["response_plan"]
+            analysis_result.graph_payload = conversational["graph_payload"]
+            analysis_result.suggested_followups = conversational["suggested_followups"]
+            analysis_result.latency_profile = conversational["latency_profile"]
+            analysis_result.conversation_state = conversational["conversation_state"]
+        except Exception as exc:
+            logger.warning("conversational response rendering failed: %s", exc)
+            analysis_result.assistant_message = "结论：系统已完成结构化分析，但自然语言回答层生成失败。"
+            analysis_result.response_plan = {"error": str(exc), "tone": tone}
+            analysis_result.graph_payload = {}
+            analysis_result.suggested_followups = []
+            analysis_result.latency_profile = {"fallback_reason": str(exc)}
+            analysis_result.conversation_state = {"tone": tone, "has_cached_analysis": False}
 
         return analysis_result
 

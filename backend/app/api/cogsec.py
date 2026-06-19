@@ -6,6 +6,7 @@ from flask import jsonify, request
 from . import cogsec_bp
 from ..services.cogsec_service import CogSecService
 from ..services.session_manager import SessionManager
+from ..modules.conversational_response import answer_followup_from_state
 from ..modules.session import (
     build_incremental_analysis,
     build_session_text,
@@ -29,6 +30,7 @@ def analyze_cogsec():
         questionnaire = data.get('questionnaire')
         scenario_type = data.get('scenario_type')
         user_role = data.get('user_role', 'individual')
+        tone = data.get('tone', 'friendly')
 
         if not scenario:
             return jsonify({
@@ -42,6 +44,7 @@ def analyze_cogsec():
             questionnaire=questionnaire,
             scenario_type=scenario_type,
             user_role=user_role,
+            tone=tone,
         )
 
         return jsonify({
@@ -55,6 +58,43 @@ def analyze_cogsec():
             "success": False,
             "error": str(e),
             "traceback": traceback.format_exc()
+        }), 500
+
+
+@cogsec_bp.route('/followup', methods=['POST'])
+def cogsec_followup():
+    """从缓存的 conversation_state 直接回答追问，不重跑完整 pipeline。
+
+    Request JSON:
+        state:   conversation_state（来自上次分析结果）
+        message: 用户追问文本
+        tone:    可选，默认沿用 state 里的 tone
+    """
+    try:
+        data = request.get_json() or {}
+        state = data.get('state')
+        message = (data.get('message') or '').strip()
+        tone = data.get('tone')
+
+        if not state or not message:
+            return jsonify({"success": False, "error": "请提供 state 和 message"}), 400
+
+        result = answer_followup_from_state(
+            state=state,
+            user_message=message,
+            tone=tone,
+        )
+        if result is None:
+            return jsonify({"success": False, "error": "无法从缓存状态回答，请重新分析"}), 422
+
+        return jsonify({"success": True, "data": result})
+
+    except Exception as e:
+        logger.error(f"追问失败: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
         }), 500
 
 
@@ -338,7 +378,7 @@ def _turn_from_json(session_id: str):
         source=data.get('source', 'chat'),
         metadata=data.get('metadata'),
     )
-    return _build_turn_response(session_id, [turn])
+    return _build_turn_response(session_id, [turn], tone=data.get('tone'))
 
 
 def _turn_from_file(session_id: str):
@@ -355,10 +395,10 @@ def _turn_from_file(session_id: str):
         file_data=file_data,
         original_filename=uploaded.filename,
     )
-    return _build_turn_response(session_id, turns)
+    return _build_turn_response(session_id, turns, tone=request.form.get('tone'))
 
 
-def _build_turn_response(session_id: str, latest_turns):
+def _build_turn_response(session_id: str, latest_turns, tone=None):
     session = _session_manager.get(session_id)
     all_turns = _session_manager.get_turns(session_id)
 
@@ -369,13 +409,27 @@ def _build_turn_response(session_id: str, latest_turns):
         latest_turns=latest_turns,
     )
 
+    conversational = None
+    if latest_turns:
+        latest = latest_turns[-1]
+        if getattr(latest, "role", "user") == "user":
+            conversational = _session_manager.answer_followup(
+                session_id=session_id,
+                content=getattr(latest, "content", ""),
+                tone=tone,
+            )
+
+    data = {
+        "turns_added": [t.to_dict() for t in latest_turns],
+        "incremental_analysis": incremental,
+        "session": session.to_dict(),
+    }
+    if conversational is not None:
+        data["conversational_response"] = conversational
+
     return jsonify({
         "success": True,
-        "data": {
-            "turns_added": [t.to_dict() for t in latest_turns],
-            "incremental_analysis": incremental,
-            "session": session.to_dict(),
-        },
+        "data": data,
     })
 
 
@@ -391,7 +445,9 @@ def session_analyze(session_id: str):
     返回结构与 POST /api/cogsec/analyze 相同，额外附加顶层 ``session`` 字段。
     """
     try:
-        result = _session_manager.analyze(session_id)
+        data = request.get_json(silent=True) or {}
+        tone = data.get('tone') or request.args.get('tone') or 'friendly'
+        result = _session_manager.analyze(session_id, tone=tone)
         return jsonify({
             "success": True,
             "data": result,
