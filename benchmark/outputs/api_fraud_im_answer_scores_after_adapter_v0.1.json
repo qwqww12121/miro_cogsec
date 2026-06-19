@@ -1,0 +1,513 @@
+{
+  "layer": "api_answer_score_after_adapter",
+  "benchmark_version": "v0.1",
+  "scenario_type": "fraud_im",
+  "case_count": 20,
+  "scored_case_count": 20,
+  "format_success_rate": 100.0,
+  "complete_schema_rate": 100.0,
+  "ASA": 25.9,
+  "ATA": 84.2,
+  "EAR": 87.0,
+  "FPA": 70.0,
+  "IWA": 80.0,
+  "RCA": 82.5,
+  "WSA": 17.2,
+  "RES": 0.712,
+  "per_case": [
+    {
+      "id": "cogsec-v0.1-001",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 0.5,
+      "IWA": 1.0,
+      "EAR": 1.0,
+      "ASA": 0.737,
+      "WSA": 0.615,
+      "RES": 0.871,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "medium",
+      "expected_assets": [
+        "identity",
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds",
+        "identity",
+        "account",
+        "social_trust"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-002",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 0.5,
+      "RCA": 0.5,
+      "IWA": 1.0,
+      "EAR": 0.525,
+      "ASA": 0.286,
+      "WSA": 0.082,
+      "RES": 0.628,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "medium",
+      "expected_assets": [
+        "funds",
+        "credential"
+      ],
+      "predicted_assets": [
+        "funds",
+        "account"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-003",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 1.0,
+      "ASA": 0.095,
+      "WSA": 0.178,
+      "RES": 0.86,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-004",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 0.572,
+      "ASA": 0.143,
+      "WSA": 0.103,
+      "RES": 0.783,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds",
+        "account"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-005",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 1.0,
+      "ASA": 0.311,
+      "WSA": 0.208,
+      "RES": 0.884,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-006",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 0.65,
+      "ASA": 0.327,
+      "WSA": 0.167,
+      "RES": 0.82,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds",
+        "account",
+        "social_trust"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-007",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 0.5,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 0.767,
+      "ASA": 0.462,
+      "WSA": 0.246,
+      "RES": 0.779,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "identity",
+        "credential"
+      ],
+      "predicted_assets": [
+        "funds",
+        "identity",
+        "account"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-008",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 0.502,
+      "ASA": 0.213,
+      "WSA": 0.148,
+      "RES": 0.781,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-009",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 1.0,
+      "ASA": 0.356,
+      "WSA": 0.213,
+      "RES": 0.888,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-010",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 1.0,
+      "ASA": 0.327,
+      "WSA": 0.12,
+      "RES": 0.88,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-011",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 0.787,
+      "ASA": 0.28,
+      "WSA": 0.118,
+      "RES": 0.837,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds",
+        "account"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-012",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 0.0,
+      "ATA": 1.0,
+      "RCA": 0.5,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.061,
+      "WSA": 0.125,
+      "RES": 0.504,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "low",
+      "predicted_risk": "medium",
+      "expected_assets": [],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-013",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 0.0,
+      "ATA": 1.0,
+      "RCA": 0.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.24,
+      "WSA": 0.125,
+      "RES": 0.442,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "low",
+      "predicted_risk": "high",
+      "expected_assets": [],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-014",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 0.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.204,
+      "WSA": 0.071,
+      "RES": 0.595,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "low",
+      "predicted_risk": "low",
+      "expected_assets": [],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-015",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 0.0,
+      "ATA": 1.0,
+      "RCA": 0.5,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.163,
+      "WSA": 0.113,
+      "RES": 0.513,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "unknown_app_download",
+      "expected_risk": "low",
+      "predicted_risk": "medium",
+      "expected_assets": [],
+      "predicted_assets": [
+        "funds",
+        "device"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-016",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 0.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 0.825,
+      "ASA": 0.146,
+      "WSA": 0.057,
+      "RES": 0.557,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "unknown_app_download",
+      "expected_risk": "low",
+      "predicted_risk": "low",
+      "expected_assets": [],
+      "predicted_assets": [
+        "device",
+        "identity"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-017",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 0.0,
+      "ATA": 1.0,
+      "RCA": 0.5,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.178,
+      "WSA": 0.075,
+      "RES": 0.512,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "low",
+      "predicted_risk": "medium",
+      "expected_assets": [],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-018",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 0.333,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 1.0,
+      "ASA": 0.4,
+      "WSA": 0.28,
+      "RES": 0.79,
+      "expected_fork": "verification_code",
+      "predicted_fork": "screen_share",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "credential",
+        "device_control",
+        "funds"
+      ],
+      "predicted_assets": [
+        "credentials",
+        "device",
+        "funds",
+        "account",
+        "social_trust"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-019",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 0.5,
+      "RCA": 1.0,
+      "IWA": 0.0,
+      "EAR": 1.0,
+      "ASA": 0.115,
+      "WSA": 0.167,
+      "RES": 0.642,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds",
+        "social_support"
+      ],
+      "predicted_assets": [
+        "funds",
+        "account",
+        "social_trust"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-020",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "FPA": 1.0,
+      "ATA": 0.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 0.767,
+      "ASA": 0.133,
+      "WSA": 0.233,
+      "RES": 0.665,
+      "expected_fork": "verification_code",
+      "predicted_fork": "transfer_money",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "credential"
+      ],
+      "predicted_assets": [
+        "credentials",
+        "device",
+        "account"
+      ]
+    }
+  ]
+}

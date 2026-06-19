@@ -1,0 +1,75 @@
+{
+  "layer": "api_scenario_runtime_after_adapter",
+  "benchmark_version": "v0.1",
+  "scenario_type": "event_propagation",
+  "case_count": 5,
+  "runtime_success_rate": 100.0,
+  "scenario_resolution_accuracy": 100.0,
+  "propagation_presence_rate": 100.0,
+  "intervention_search_presence_rate": 100.0,
+  "mean_counterfactual_branch_count": 4.0,
+  "latency_ms": {
+    "p50": 51472.066,
+    "p95": null,
+    "max": 54274.043
+  },
+  "error_count": 0,
+  "errors": [],
+  "per_case": [
+    {
+      "id": "event-propagation-v0.1-001",
+      "ok": true,
+      "latency_ms": 54274.043,
+      "scenario_match": true,
+      "resolved_scenario_type": "event_propagation",
+      "has_propagation": true,
+      "has_intervention_search": true,
+      "counterfactual_branch_count": 4,
+      "error": null
+    },
+    {
+      "id": "event-propagation-v0.1-002",
+      "ok": true,
+      "latency_ms": 53909.41,
+      "scenario_match": true,
+      "resolved_scenario_type": "event_propagation",
+      "has_propagation": true,
+      "has_intervention_search": true,
+      "counterfactual_branch_count": 4,
+      "error": null
+    },
+    {
+      "id": "event-propagation-v0.1-003",
+      "ok": true,
+      "latency_ms": 51472.066,
+      "scenario_match": true,
+      "resolved_scenario_type": "event_propagation",
+      "has_propagation": true,
+      "has_intervention_search": true,
+      "counterfactual_branch_count": 4,
+      "error": null
+    },
+    {
+      "id": "event-propagation-v0.1-004",
+      "ok": true,
+      "latency_ms": 49624.959,
+      "scenario_match": true,
+      "resolved_scenario_type": "event_propagation",
+      "has_propagation": true,
+      "has_intervention_search": true,
+      "counterfactual_branch_count": 4,
+      "error": null
+    },
+    {
+      "id": "event-propagation-v0.1-005",
+      "ok": true,
+      "latency_ms": 42876.318,
+      "scenario_match": true,
+      "resolved_scenario_type": "event_propagation",
+      "has_propagation": true,
+      "has_intervention_search": true,
+      "counterfactual_branch_count": 4,
+      "error": null
+    }
+  ]
+}

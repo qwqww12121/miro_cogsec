@@ -1,0 +1,637 @@
+{
+  "layer": "llm_baseline_evaluation",
+  "benchmark_version": "v0.1",
+  "scoring_method": "task_solving_semantic_res_v0.5",
+  "scoring_note": "RES is computed from one task-solving rubric: problem localization 30%, actionability 30%, evidence grounding 15%, mechanism insight 15%, output reliability 10%. Free-text fields use semantic vector cosine with lexical fallback; categorical fields use only lightweight soft matching.",
+  "scenario_type": "fraud_im",
+  "case_count": 20,
+  "scored_case_count": 20,
+  "format_success_rate": 100.0,
+  "complete_schema_rate": 100.0,
+  "ASA": 13.8,
+  "ATA": 72.5,
+  "EAR": 79.0,
+  "FPA": 100.0,
+  "IWA": 65.0,
+  "RCA": 95.0,
+  "WSA": 20.2,
+  "layer_scores": {
+    "problem_localization": 0.892,
+    "actionability": 0.33,
+    "evidence_grounding": 0.79,
+    "mechanism_insight": 0.863,
+    "output_reliability": 1.0
+  },
+  "RES": 0.714,
+  "per_case": [
+    {
+      "id": "cogsec-v0.1-001",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 0.833,
+        "actionability": 0.252,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 0.75,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 0.5,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.115,
+      "WSA": 0.14,
+      "RES": 0.688,
+      "expected_fork": "private_contact_lure",
+      "predicted_fork": "contact_initiation",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "identity",
+        "funds"
+      ],
+      "predicted_assets": [
+        "identity",
+        "financial"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-002",
+      "ok": true,
+      "confidence": 0.85,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 0.667,
+        "actionability": 0.371,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 0.5,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 0.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.275,
+      "WSA": 0.337,
+      "RES": 0.636,
+      "expected_fork": "private_contact_lure",
+      "predicted_fork": "contact_shift",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds",
+        "credential"
+      ],
+      "predicted_assets": [
+        "financial_account",
+        "personal_identity"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-003",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 0.667,
+        "actionability": 0.296,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 0.5,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 0.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.267,
+      "WSA": 0.12,
+      "RES": 0.614,
+      "expected_fork": "private_contact_lure",
+      "predicted_fork": "contact_decision",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "financial"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-004",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.316,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.19,
+      "WSA": 0.258,
+      "RES": 0.795,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "contact_decision",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-005",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.259,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.128,
+      "WSA": 0.148,
+      "RES": 0.778,
+      "expected_fork": "private_contact_lure",
+      "predicted_fork": "contact_decision",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-006",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.433,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.261,
+      "WSA": 0.537,
+      "RES": 0.83,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "compliance_lure",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds",
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-007",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 0.667,
+        "actionability": 0.319,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 0.5,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 0.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.077,
+      "WSA": 0.379,
+      "RES": 0.621,
+      "expected_fork": "identity_asset_exchange",
+      "predicted_fork": "action_decision",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "identity",
+        "credential"
+      ],
+      "predicted_assets": [
+        "identity_document",
+        "bank_card"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-008",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.343,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.148,
+      "WSA": 0.382,
+      "RES": 0.803,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "decision_to_contact",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds",
+        "personal_information"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-009",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.287,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.095,
+      "WSA": 0.265,
+      "RES": 0.786,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "payment_decision",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-010",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.352,
+        "evidence_grounding": 0.793,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 0.793,
+      "ASA": 0.318,
+      "WSA": 0.239,
+      "RES": 0.775,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "payment_decision",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-011",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.35,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.067,
+      "WSA": 0.482,
+      "RES": 0.805,
+      "expected_fork": "private_contact_lure",
+      "predicted_fork": "contact_decision",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds"
+      ],
+      "predicted_assets": [
+        "funds",
+        "personal_contact"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-012",
+      "ok": true,
+      "confidence": 1.0,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.333,
+        "evidence_grounding": 0.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 0.0,
+      "ASA": 0.0,
+      "WSA": 0.0,
+      "RES": 0.65,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "missing",
+      "expected_risk": "low",
+      "predicted_risk": "low",
+      "expected_assets": [],
+      "predicted_assets": []
+    },
+    {
+      "id": "cogsec-v0.1-013",
+      "ok": true,
+      "confidence": 1.0,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.333,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 1.0,
+      "ASA": 0.0,
+      "WSA": 0.0,
+      "RES": 0.8,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "missing",
+      "expected_risk": "low",
+      "predicted_risk": "low",
+      "expected_assets": [],
+      "predicted_assets": []
+    },
+    {
+      "id": "cogsec-v0.1-014",
+      "ok": true,
+      "confidence": 1.0,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.333,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 1.0,
+      "ASA": 0.0,
+      "WSA": 0.0,
+      "RES": 0.8,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "missing",
+      "expected_risk": "low",
+      "predicted_risk": "low",
+      "expected_assets": [],
+      "predicted_assets": []
+    },
+    {
+      "id": "cogsec-v0.1-015",
+      "ok": true,
+      "confidence": 1.0,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.333,
+        "evidence_grounding": 0.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 0.0,
+      "ASA": 0.0,
+      "WSA": 0.0,
+      "RES": 0.65,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "missing",
+      "expected_risk": "low",
+      "predicted_risk": "low",
+      "expected_assets": [],
+      "predicted_assets": []
+    },
+    {
+      "id": "cogsec-v0.1-016",
+      "ok": true,
+      "confidence": 1.0,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.333,
+        "evidence_grounding": 0.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 0.0,
+      "ASA": 0.0,
+      "WSA": 0.0,
+      "RES": 0.65,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "missing",
+      "expected_risk": "low",
+      "predicted_risk": "low",
+      "expected_assets": [],
+      "predicted_assets": []
+    },
+    {
+      "id": "cogsec-v0.1-017",
+      "ok": true,
+      "confidence": 1.0,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.333,
+        "evidence_grounding": 0.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 1.0,
+      "EAR": 0.0,
+      "ASA": 0.0,
+      "WSA": 0.0,
+      "RES": 0.65,
+      "expected_fork": "no_fork_needed",
+      "predicted_fork": "missing",
+      "expected_risk": "low",
+      "predicted_risk": "low",
+      "expected_assets": [],
+      "predicted_assets": []
+    },
+    {
+      "id": "cogsec-v0.1-018",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 0.333,
+        "actionability": 0.388,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 0.5,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 0.0,
+      "RCA": 0.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.271,
+      "WSA": 0.393,
+      "RES": 0.541,
+      "expected_fork": "verification_code",
+      "predicted_fork": "行为决策",
+      "expected_risk": "high",
+      "predicted_risk": "low",
+      "expected_assets": [
+        "credential",
+        "device_control",
+        "funds"
+      ],
+      "predicted_assets": [
+        "银行账户",
+        "验证码"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-019",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 0.667,
+        "actionability": 0.463,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 0.5,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 0.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.525,
+      "WSA": 0.364,
+      "RES": 0.664,
+      "expected_fork": "transfer_money",
+      "predicted_fork": "decision",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "funds",
+        "social_support"
+      ],
+      "predicted_assets": [
+        "bank_account"
+      ]
+    },
+    {
+      "id": "cogsec-v0.1-020",
+      "ok": true,
+      "confidence": 0.95,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "problem_localization": 1.0,
+        "actionability": 0.173,
+        "evidence_grounding": 1.0,
+        "mechanism_insight": 1.0,
+        "output_reliability": 1.0
+      },
+      "FPA": 1.0,
+      "ATA": 1.0,
+      "RCA": 1.0,
+      "IWA": 0.5,
+      "EAR": 1.0,
+      "ASA": 0.018,
+      "WSA": 0.0,
+      "RES": 0.752,
+      "expected_fork": "verification_code",
+      "predicted_fork": "action_choice",
+      "expected_risk": "high",
+      "predicted_risk": "high",
+      "expected_assets": [
+        "credential"
+      ],
+      "predicted_assets": [
+        "credential"
+      ]
+    }
+  ]
+}

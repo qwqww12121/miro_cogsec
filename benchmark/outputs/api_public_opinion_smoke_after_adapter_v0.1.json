@@ -1,0 +1,75 @@
+{
+  "layer": "api_scenario_runtime_after_adapter",
+  "benchmark_version": "v0.1",
+  "scenario_type": "public_opinion",
+  "case_count": 5,
+  "runtime_success_rate": 100.0,
+  "scenario_resolution_accuracy": 100.0,
+  "propagation_presence_rate": 100.0,
+  "intervention_search_presence_rate": 100.0,
+  "mean_counterfactual_branch_count": 4.0,
+  "latency_ms": {
+    "p50": 52551.852,
+    "p95": null,
+    "max": 60838.206
+  },
+  "error_count": 0,
+  "errors": [],
+  "per_case": [
+    {
+      "id": "public-opinion-v0.1-001",
+      "ok": true,
+      "latency_ms": 51073.788,
+      "scenario_match": true,
+      "resolved_scenario_type": "public_opinion",
+      "has_propagation": true,
+      "has_intervention_search": true,
+      "counterfactual_branch_count": 4,
+      "error": null
+    },
+    {
+      "id": "public-opinion-v0.1-002",
+      "ok": true,
+      "latency_ms": 52551.852,
+      "scenario_match": true,
+      "resolved_scenario_type": "public_opinion",
+      "has_propagation": true,
+      "has_intervention_search": true,
+      "counterfactual_branch_count": 4,
+      "error": null
+    },
+    {
+      "id": "public-opinion-v0.1-003",
+      "ok": true,
+      "latency_ms": 60838.206,
+      "scenario_match": true,
+      "resolved_scenario_type": "public_opinion",
+      "has_propagation": true,
+      "has_intervention_search": true,
+      "counterfactual_branch_count": 4,
+      "error": null
+    },
+    {
+      "id": "public-opinion-v0.1-004",
+      "ok": true,
+      "latency_ms": 53559.853,
+      "scenario_match": true,
+      "resolved_scenario_type": "public_opinion",
+      "has_propagation": true,
+      "has_intervention_search": true,
+      "counterfactual_branch_count": 4,
+      "error": null
+    },
+    {
+      "id": "public-opinion-v0.1-005",
+      "ok": true,
+      "latency_ms": 47940.836,
+      "scenario_match": true,
+      "resolved_scenario_type": "public_opinion",
+      "has_propagation": true,
+      "has_intervention_search": true,
+      "counterfactual_branch_count": 4,
+      "error": null
+    }
+  ]
+}

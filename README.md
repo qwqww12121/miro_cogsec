@@ -19,8 +19,8 @@ Miro-CogSec 面向诈骗、舆情诱导等人因安全场景。核心思想：�
 ```text
 Input（单次文本 or 多轮 Session）
   -> ScenarioDetector          场景感知（fraud_im / public_opinion / event_propagation）
-  -> PrivacySanitizer          本地脱敏（Presidio + 正则）
   -> T0FastResponder           毫秒级红旗检测
+  -> PrivacySanitizer          本地脱敏（Presidio + 正则）
   -> CognitiveProfiler         18 维认知数字孪生
   -> ThreatKnowledgeRAG        攻击策略检索 + RiskGraphBundle（ChromaDB）
   -> MiroFishRuntime           Fork A/B WorldState 反事实推演（6 步 × 6 规则）
@@ -72,9 +72,12 @@ backend/
   requirements.txt
   run.py
 
-frontend/                   # React + Tailwind（Vite）
+frontend/                   # React + Tailwind（Vite，端口 3000）
   src/
-    pages/scenarios/        # 三个场景页
+    pages/
+      Home.jsx              # 首页：智能识别 + 手动选择
+      BenchmarkPage.jsx     # /benchmark 评测对比页
+      scenarios/            # 三个场景页（FraudIm / PublicOpinion / EventPropagation）
     components/results/     # 三个结果面板
     api/                    # axios 封装
 
@@ -83,12 +86,68 @@ data/
   liwc_chinese.json         # 中文 LIWC 词典
   t0_regex_patterns.json    # T0 红旗规则
 
-models/                     # 本地模型存放目录（不纳入 git）
+benchmark/
+  data/                     # Gold 标注数据（三类场景各一份 .jsonl）
+  outputs/
+    api_*_after_adapter_v0.1.jsonl          # Miro 推理输出
+    api_*_answer_scores_after_adapter_v0.1.json  # RES 语义评分结果
+    llm_baseline/           # LLM-only baseline 输出 + 评分
+    closed_model_judge/     # 盲评请求 + Qwen3.7-plus 评判结果
+  cogsec_benchmark.py       # 评分框架（RES 语义相似度 v0.5）
 
 scripts/
   quick_smoke.py            # 本地快速回归测试
   smoke_cogsec_http.py      # HTTP 端到端 smoke test
+  make_closed_model_judge_input.py  # 生成盲评请求
+  run_closed_model_judge.py         # 调用 LLM judge 打分
+  rescore_miro_outputs.py           # 用 benchmark_prediction 字段重新打分
+
+models/                     # 本地模型存放目录（不纳入 git）
 ```
+
+---
+
+## Benchmark 评测
+
+评测包含三项指标，样本量：诈骗IM 20 条、舆情分析 5 条、事件传播 5 条。
+
+### RES 语义总分
+
+RES（Result Evaluation Score）采用语义相似度 v0.5：自由文本字段用向量余弦相似度，分类字段用软匹配。
+
+| 场景 | Miro-CogSec | LLM-only |
+|---|---|---|
+| 诈骗IM | **0.712** | 0.714 |
+| 舆情分析 | **0.414** | 0.376 |
+| 事件传播 | **0.597** | 0.589 |
+
+Miro 在舆情与事件传播场景超过 LLM-only 基线，诈骗 IM 几乎持平（差 0.2%）。
+
+### 分维度得分
+
+| 场景 | 系统 | 检测 | 推理 | 干预 | 证据 | 运行 |
+|---|---|---|---|---|---|---|
+| 诈骗IM | Miro | 0.825 | 0.700 | **0.800** | **0.870** | **1.000** |
+| 诈骗IM | LLM-only | **0.892** | **0.863** | 0.330 | 0.790 | — |
+| 舆情分析 | Miro | **0.700** | **0.374** | **0.474** | 0.738 | **0.667** |
+| 舆情分析 | LLM-only | 0.277 | 0.128 | 0.159 | **0.843** | — |
+| 事件传播 | Miro | **0.700** | **0.613** | **0.900** | 0.758 | **0.667** |
+| 事件传播 | LLM-only | 0.354 | 0.413 | 0.607 | **0.927** | — |
+
+Miro 优势在干预窗口与运行完整性；LLM-only 在检测（诈骗IM）和证据归因（舆情/事件传播）上更高。
+
+### 盲评胜率（Qwen3.7-plus）
+
+无参考答案盲测，结构化预测 dict 格式，温度 0.0。
+
+| 场景 | 样本 | Miro 胜 | LLM 胜 | Miro 胜率 |
+|---|---|---|---|---|
+| 诈骗IM | 20 | 1 | 19 | 5% |
+| 舆情分析 | 5 | 0 | 5 | 0% |
+| 事件传播 | 5 | 2 | 3 | 40% |
+| **合计** | **30** | **3** | **27** | **10%** |
+
+盲评反映表达流畅度，LLM-only 以自然语言叙述风格占优；RES 语义评分反映字段精确度，两者衡量维度不同。
 
 ---
 
@@ -109,7 +168,6 @@ scripts/
 ### 第二步：创建 Python 环境
 
 ```bash
-# 创建专用 conda 环境（必须 3.11，camel-oasis 不支持 3.12+）
 conda create -n ciscn python=3.11 -y
 conda activate ciscn
 ```
@@ -120,7 +178,6 @@ conda activate ciscn
 
 **有 NVIDIA GPU（推荐）：**
 ```bash
-# CUDA 12.4（RTX 系列均兼容）
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 ```
 
@@ -136,7 +193,6 @@ pip install torch torchvision torchaudio
 ### 第四步：安装后端依赖
 
 ```bash
-# 安装后端所有依赖（包含 Flask、ChromaDB、Presidio、sentence-transformers 等）
 pip install -r backend/requirements.txt
 ```
 
@@ -156,7 +212,6 @@ pip install oasis
 ### 第五步：安装前端依赖
 
 ```bash
-# 在项目根目录执行（安装根目录 + frontend 两处依赖）
 npm install
 npm install --prefix frontend
 ```
@@ -203,8 +258,6 @@ LOCAL_SANITIZE_ENABLED=true
 
 #### 7.1 Presidio 脱敏模型（必须）
 
-Presidio 依赖 spaCy 中文模型，首次运行前需下载：
-
 ```bash
 conda activate ciscn
 python -m spacy download zh_core_web_sm
@@ -219,8 +272,6 @@ python -m spacy download zh_core_web_sm
 
 ChromaDB 使用 `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` 做向量索引，**首次启动后端时会自动下载**（约 470 MB），无需手动操作。
 
-下载位置：`~/.cache/huggingface/hub/`（Windows：`C:\Users\<用户名>\.cache\huggingface\hub\`）
-
 > 若网络受限，可提前手动下载：
 > ```bash
 > python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')"
@@ -228,42 +279,24 @@ ChromaDB 使用 `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` �
 
 #### 7.3 本地 Gemma 模型（可选，需 GPU 显存 ≥ 8GB）
 
-如果选择方案 C（本地 Gemma），需要从 HuggingFace 下载模型：
-
-**前提：申请模型访问权限**
-
-1. 登录 [huggingface.co](https://huggingface.co)
-2. 访问 [google/gemma-4-E2B-it](https://huggingface.co/google/gemma-4-E2B-it) 并同意使用协议
-
-**下载模型：**
-
 ```bash
 conda activate ciscn
 pip install huggingface_hub
-
-# 登录 HuggingFace（需要 Access Token，在 HF 设置页生成）
 huggingface-cli login
 
-# 下载模型到 models/ 目录（约 5GB，需要稳定网络）
 huggingface-cli download google/gemma-4-E2B-it \
     --local-dir models/google--gemma-4-E2B-it \
     --local-dir-use-symlinks False
 ```
 
-> **国内下载替代方案（使用 hf-mirror）：**
+> **国内下载（hf-mirror）：**
 > ```bash
 > HF_ENDPOINT=https://hf-mirror.com huggingface-cli download google/gemma-4-E2B-it \
 >     --local-dir models/google--gemma-4-E2B-it \
 >     --local-dir-use-symlinks False
 > ```
 
-下载完成后在 `.env` 中启用：
-
-```env
-COGSEC_USE_LOCAL_GEMMA=true
-```
-
-模型会以 fp16 精度全量加载到 GPU 0（RTX 4070 Laptop 8GB 可用）。
+下载完成后在 `.env` 中启用：`COGSEC_USE_LOCAL_GEMMA=true`
 
 ---
 
@@ -272,7 +305,6 @@ COGSEC_USE_LOCAL_GEMMA=true
 **同时启动前端 + 后端（推荐）：**
 
 ```bash
-# 在项目根目录执行
 npm run dev
 ```
 
@@ -281,23 +313,20 @@ npm run dev
 ```bash
 # 启动后端（端口 5001）
 conda activate ciscn
-cd backend
-python run.py
+cd backend && python run.py
 
 # 另开终端，启动前端（端口 3000）
-cd frontend
-npm run dev
+cd frontend && npm run dev
 ```
-
-启动成功后：
 
 | 服务 | 地址 |
 |---|---|
 | **前端** | http://localhost:3000 |
 | **后端 API** | http://localhost:5001 |
 | **CogSec 分析接口** | http://localhost:5001/api/cogsec/analyze |
+| **Benchmark 评测页** | http://localhost:3000/benchmark |
 
-> **首次启动较慢**：ChromaDB 会下载 sentence-transformers 向量模型并建立索引，约需 1-3 分钟。之后重启不再重复下载。
+> **首次启动较慢**：ChromaDB 会下载向量模型并建立索引，约需 1-3 分钟。
 
 ---
 
@@ -305,8 +334,6 @@ npm run dev
 
 ```bash
 conda activate ciscn
-
-# 快速回归测试（后端需已启动）
 python scripts/quick_smoke.py
 ```
 
@@ -422,7 +449,7 @@ pip install camel-ai[all]==0.2.5 oasis
 
 ### Q：OASIS 分析耗时很长（90s+）
 
-OASIS 多 Agent 仿真每次需调用 LLM 约 60-120 次（12 个 Agent × 5 tick × 双分支），是正常现象。使用 DeepSeek API 时约 90-120 秒，使用 qwen-plus 时类似。诈骗 IM 场景不使用 OASIS，通常 8-15 秒。
+OASIS 多 Agent 仿真每次需调用 LLM 约 60-120 次（12 个 Agent × 5 tick × 双分支），是正常现象。使用 DeepSeek API 时约 90-120 秒。诈骗 IM 场景不使用 OASIS，通常 8-15 秒。
 
 ### Q：前端启动后访问空白页 / 接口 404
 

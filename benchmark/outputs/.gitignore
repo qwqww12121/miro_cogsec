@@ -1,3 +1,4 @@
-*
-!.gitignore
-!README.md
+# 允许所有 benchmark 输出文件上传
+# 只排除可能很大的临时/缓存文件
+*.tmp
+*.cache
