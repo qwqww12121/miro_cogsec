@@ -5,6 +5,7 @@ import FraudImPage from './pages/scenarios/FraudImPage'
 import PublicOpinionPage from './pages/scenarios/PublicOpinionPage'
 import EventPropagationPage from './pages/scenarios/EventPropagationPage'
 import BenchmarkPage from './pages/BenchmarkPage'
+import JudgeCompare from './pages/JudgeCompare'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/scenario/public-opinion" element={<PublicOpinionPage />} />
           <Route path="/scenario/event-propagation" element={<EventPropagationPage />} />
           <Route path="/benchmark" element={<BenchmarkPage />} />
+          <Route path="/judge-compare" element={<JudgeCompare />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

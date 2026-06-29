@@ -35,6 +35,16 @@ export default function Navbar() {
           >
             Benchmark 对比
           </NavLink>
+          <NavLink
+            to="/judge-compare"
+            className={({ isActive }) =>
+              `px-3 py-1.5 rounded-md text-sm ${
+                isActive ? 'bg-slate-100 text-ink-900 font-medium' : 'text-ink-500 hover:bg-slate-50'
+              }`
+            }
+          >
+            裁判对比
+          </NavLink>
         </nav>
       </div>
     </header>
