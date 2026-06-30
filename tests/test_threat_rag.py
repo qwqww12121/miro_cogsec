@@ -82,3 +82,23 @@ def test_assert_operation_allowed_blocks_unknown_operation():
 
     assert rag.assert_operation_allowed("攻击者执行权威施压并要求继续操作") is True
     assert rag.assert_operation_allowed("攻击者突然要求去线下见面交现金") is False
+
+
+def test_identity_asset_text_uses_semantic_forks_without_transfer_fallback():
+    rag = ThreatKnowledgeRAG("unused", enable_chroma=False)
+    rag.ingest_cases([
+        build_case("case_credit", "虚假征信类", "authority", "安全账户限时转移"),
+    ])
+    profile = CognitiveProfile(scenario_type="fraud_im")
+
+    bundle = rag.build_risk_graph_bundle(
+        "广告称可以买到已实名激活手机卡，留下微信联系，强调多年老店和信誉第一。",
+        "fraud_im",
+        profile,
+        profile,
+    )
+
+    fork_types = {item["type"] for item in bundle.fork_points}
+    assert "identity_asset_exchange" in fork_types
+    assert "private_contact_lure" in fork_types
+    assert "transfer_money" not in fork_types

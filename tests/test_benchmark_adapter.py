@@ -1,109 +1,164 @@
-from __future__ import annotations
+"""Benchmark adapter regression tests."""
 
-from app.modules.benchmark_adapter import (
-    EVENT_PROPAGATION_FIELDS,
-    FRAUD_FIELDS,
-    PUBLIC_OPINION_FIELDS,
-    build_benchmark_payload,
-    build_llm_only_cogsec_analysis,
-    normalize_asset_targets,
-)
-from app.modules.propagation.intervention_search import run_oasis_counterfactual_intervention_search
+from modules.benchmark_adapter import build_benchmark_payload
+import modules.benchmark_adapter as benchmark_adapter
 
 
-def _base_result(scenario: str) -> dict:
-    return {
-        "profile": {"scenario_type": scenario},
-        "risk_graph_bundle": {
-            "nodes": [{"id": "risk:1", "label": "risk"}],
-            "links": [{"source": "risk:1", "target": "asset:identity", "relation": "targets"}],
-            "asset_targets": [
-                {"id": "asset:identity", "label": "身份资料", "severity": 0.82},
-            ],
-            "fork_points": [{"id": "fork:1", "type": "transfer_money", "severity": 0.6}],
-            "evidence_items": [{"label": "实名手机卡", "matched_terms": ["实名", "手机卡"]}],
-            "attack_strategy_chain": [{"typical_dialogue": "留下微信联系"}],
-        },
-        "fork_comparison": {
-            "fork_point_type": "transfer_money",
-            "best_intervention_window": {"open_step": 1, "close_step": 1, "label": "添加微信前阻断"},
-            "trajectory_gap": 0.4,
-            "irreversibility_loss": 0.3,
-        },
-        "counterfactual_report": {
-            "score_comparison": {"risk_breakdown": {"risk_level": "high"}},
-        },
-        "intervention_prescriptions": [{"action": "stop_and_verify"}],
-        "t0_fast_response": {"should_interrupt": True, "risk_level": "high"},
-        "scenario_metadata": {"canonical": scenario},
-        "scenario_extension": {"detection": {"canonical": scenario}},
-    }
-
-
-def test_fraud_adapter_complete_schema_and_asset_mapping() -> None:
-    text = "广告称可以买到已实名激活手机卡，留下微信联系，强调多年老店和信誉第一。"
-    result = _base_result("fraud_im")
-    payload = build_benchmark_payload(result=result, scenario_text=text, scenario_type="fraud_im")
+def test_benign_download_text_is_not_forced_into_fraud_flow():
+    payload = build_benchmark_payload(
+        result={},
+        scenario_text="页面说明可下载河道治理施工合同电子版，供企业内部归档使用。",
+        scenario_type="fraud_im",
+    )
     prediction = payload["prediction"]
 
-    assert all(field in prediction for field in FRAUD_FIELDS)
-    assert {item["type"] for item in prediction["asset_targets"]} >= {"identity", "account", "social_trust"}
-    assert prediction["evidence_spans"]
-    assert all(span in text for span in prediction["evidence_spans"])
-    assert payload["cogsec_analysis"]["provenance"]["source"] == "mirofish_pipeline"
+    assert prediction["is_fraud"] is False
+    assert prediction["fraud_type"] == "no_fraud_signal"
+    assert prediction["risk_level"] == "none"
+    assert prediction["fork_points"] == []
 
 
-def test_asset_targets_map_without_type() -> None:
-    assets, source = normalize_asset_targets(
-        [{"id": "asset:credential", "label": "验证码和登录密码", "severity": 0.9}],
-        "客服要求提供验证码和登录密码。",
+def test_identity_asset_text_prefers_grounded_semantic_fork():
+    payload = build_benchmark_payload(
+        result={},
+        scenario_text="广告称可以买到已实名激活手机卡，留下微信联系，强调多年老店和信誉第一。",
+        scenario_type="fraud_im",
     )
-    assert source == "label|id|matched_terms"
-    assert assets[0]["type"] == "credentials"
+    prediction = payload["prediction"]
+    fork_types = {item["type"] for item in prediction["fork_points"]}
+
+    assert prediction["fraud_type"] == "identity_asset_trade"
+    assert "identity_asset_exchange" in fork_types
+    assert "private_contact_lure" in fork_types
+    assert "transfer_money" not in fork_types
+    assert prediction["risk_level"] == "high"
+    assert prediction["attack_stage"] == "initial_contact"
+    assert prediction["intervention_window"]["start_turn"] == 0
 
 
-def test_public_opinion_adapter_complete_with_search() -> None:
-    text = "公开讨论迅速发酵，评论区出现愤怒表达、未经证实的目击叙述和要求官方立即公布细节的呼声。"
-    result = _base_result("public_opinion")
-    result["scenario_extension"]["propagation_intervention_search"] = run_oasis_counterfactual_intervention_search(
+def test_more_benign_public_info_is_not_flagged_as_fraud():
+    benign_samples = [
+        "酒店介绍私人会所、香薰理疗、棋牌室、游泳池和健身房等设施，满足游客休闲娱乐需求。",
+        "建设工程信息公告列出相关公司、项目联系人和发布时间，内容为公开招投标信息。",
+        "寻人启事说明老人走失地点、衣着特征和家属联系方式，请发现后及时联系家人。",
+    ]
+    for text in benign_samples:
+        payload = build_benchmark_payload(result={}, scenario_text=text, scenario_type="fraud_im")
+        prediction = payload["prediction"]
+        assert prediction["is_fraud"] is False
+        assert prediction["risk_level"] == "none"
+        assert prediction["fork_points"] == []
+
+
+def test_public_opinion_low_risk_negation_gate():
+    payload = build_benchmark_payload(
+        result={},
+        scenario_text="公众讨论围绕一条已由多家可靠媒体确认的公开新闻展开。评论主要是信息补充、背景解释和理性讨论，未出现明显未经证实的爆料、强烈情绪动员或要求立即行动的呼吁。",
         scenario_type="public_opinion",
-        seed_text=text,
-        risk_graph_bundle=result["risk_graph_bundle"],
-        quick_mode=True,
     )
-    payload = build_benchmark_payload(result=result, scenario_text=text, scenario_type="public_opinion")
     prediction = payload["prediction"]
-
-    assert all(field in prediction for field in PUBLIC_OPINION_FIELDS)
-    assert prediction["best_intervention_window"]["open_stage"]
-    assert prediction["expected_intervention_action"]
-    assert payload["cogsec_analysis"]["provenance"]["branch_count"] >= 3
+    assert prediction["propagation_risk_level"] == "low"
+    assert prediction["emotion_signal"]["dominant_emotion"] == "neutral"
+    assert prediction["best_intervention_window"]["label"] == "无需干预"
 
 
-def test_event_propagation_adapter_complete_with_search() -> None:
-    text = "首发帖被多个新闻账号和个人账号转发，随后有人补充未经证实的嫌疑人身份，权威账号发布更正。"
-    result = _base_result("event_propagation")
-    result["scenario_extension"]["propagation_intervention_search"] = run_oasis_counterfactual_intervention_search(
+def test_event_propagation_low_risk_negation_gate():
+    payload = build_benchmark_payload(
+        result={},
+        scenario_text="官方应急账号发布一条天气预警更新，地方媒体和社区账号转发时保留了原始发布时间、影响区域和防护建议。后续讨论主要围绕交通安排和学校通知展开，未出现明显地点误传、时间误传或断章取义。",
         scenario_type="event_propagation",
-        seed_text=text,
-        risk_graph_bundle=result["risk_graph_bundle"],
-        quick_mode=True,
     )
-    payload = build_benchmark_payload(result=result, scenario_text=text, scenario_type="event_propagation")
+    prediction = payload["prediction"]
+    assert prediction["coverage_risk"] == "low"
+    assert prediction["distortion_points"] == []
+    assert prediction["containment_window"]["label"] == "无需特殊遏制"
+
+
+def test_semantic_frame_drives_fork_without_keyword_rules(monkeypatch):
+    text = "帖子说可以绕过平台审核取得内部名额，要求先提交账户截图。"
+
+    def fake_extract_semantic_frame(**_: object):
+        return {
+            "available": True,
+            "scenario": "fraud_im",
+            "risk_level": "high",
+            "is_harmful": True,
+            "risk_type": "account_access_lure",
+            "summary": "对方以内部名额诱导用户提交账户截图。",
+            "evidence_spans": ["绕过平台审核", "内部名额", "提交账户截图"],
+            "assets": [
+                {
+                    "type": "account",
+                    "description": "账户访问安全",
+                    "severity": 0.82,
+                    "evidence_spans": ["提交账户截图"],
+                }
+            ],
+            "fork_candidates": [
+                {
+                    "type": "submit_account_artifact_vs_verify_platform",
+                    "trigger": "用户是否在未核验来源前提交账户截图",
+                    "unsafe_branch": ["相信内部名额", "提交账户截图", "账户信息暴露"],
+                    "safe_branch": ["暂停提交", "回到平台官方渠道核验"],
+                    "intervention_window": {
+                        "start_turn": 0,
+                        "end_turn": 1,
+                        "rationale": "提交截图前仍可阻断。",
+                    },
+                    "evidence_spans": ["提交账户截图"],
+                }
+            ],
+            "warning": "不要向无法核验的对象提交账户截图。",
+            "safe_action": "停止提交截图，并通过平台官方渠道核验。",
+            "confidence": 0.84,
+            "provenance": {"source": "llm_semantic_frame", "model": "test"},
+        }
+
+    monkeypatch.setattr(benchmark_adapter, "extract_semantic_frame", fake_extract_semantic_frame)
+
+    payload = build_benchmark_payload(result={}, scenario_text=text, scenario_type="fraud_im")
     prediction = payload["prediction"]
 
-    assert all(field in prediction for field in EVENT_PROPAGATION_FIELDS)
-    assert prediction["containment_window"]["open_step"] >= 1
-    assert prediction["expected_containment_action"]
-    assert payload["cogsec_analysis"]["propagation_analysis"]["counterfactual_branches"]
+    assert prediction["fraud_type"] == "account_access_lure"
+    assert prediction["fork_points"][0]["type"] == "submit_account_artifact_vs_verify_platform"
+    assert prediction["counterfactual_paths"]["risky_path"][1]["action"] == "提交账户截图"
+    assert payload["adapter_diagnostics"]["semantic_frame"]["used"] is True
 
 
-def test_llm_only_provenance_is_not_runtime_grounded() -> None:
-    analysis = build_llm_only_cogsec_analysis(
-        prediction={"evidence_spans": ["迅速发酵"], "best_intervention_window": {}},
-        scenario_type="public_opinion",
-    )
-    provenance = analysis["provenance"]
-    assert provenance["source"] == "llm_only"
-    assert provenance["has_runtime_simulation"] is False
-    assert provenance["has_oasis_counterfactual_branches"] is False
+def test_public_event_frame_drives_event_prediction(monkeypatch):
+    text = "新闻被截取标题转发，原文限定条件被裁掉，新的讨论变得绝对化。"
+
+    def fake_public_event_frame(**_: object):
+        return {
+            "available": True,
+            "scenario": "event_propagation",
+            "risk_level": "high",
+            "summary": "新闻被截断后跨平台传播并失去限定条件。",
+            "evidence_spans": ["截取标题转发", "原文限定条件被裁掉", "新的讨论变得绝对化"],
+            "origin": {"description": "新闻原文", "evidence_spans": ["新闻"]},
+            "amplifiers": [{"description": "截取标题转发者", "role": "personal", "evidence_spans": ["截取标题转发"]}],
+            "propagation_steps": [
+                {"step": 1, "actor": "转发者", "action": "截取标题", "transformation": "删除限定条件", "risk_state": "high", "evidence_spans": ["截取标题转发", "原文限定条件被裁掉"]}
+            ],
+            "distortion_points": [
+                {"type": "context_loss", "description": "原文限定条件被裁掉", "severity": 0.8, "evidence_spans": ["原文限定条件被裁掉"]}
+            ],
+            "containment_plan": {
+                "open_step": 1,
+                "close_step": 2,
+                "label": "上下文保留窗口",
+                "actor_actions": [{"actor": "platform", "target_surface": "转发入口", "action": "提示补充原文链接", "expected_effect": "减少断章取义"}],
+            },
+            "provenance": {"source": "llm_public_event_frame", "model": "test"},
+        }
+
+    monkeypatch.setattr(benchmark_adapter, "extract_public_event_frame", fake_public_event_frame)
+    monkeypatch.setattr(benchmark_adapter, "extract_semantic_frame", lambda **_: {"available": False, "provenance": {"source": "should_not_use"}})
+
+    payload = build_benchmark_payload(result={}, scenario_text=text, scenario_type="event_propagation")
+    prediction = payload["prediction"]
+
+    assert prediction["coverage_risk"] == "high"
+    assert prediction["distortion_points"][0]["description"] == "原文限定条件被裁掉"
+    assert prediction["expected_containment_action"].startswith("平台在转发入口")
+    assert payload["adapter_diagnostics"]["public_event_frame"]["used"] is True
