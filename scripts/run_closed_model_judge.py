@@ -7,6 +7,8 @@ import time
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
+sys.set_int_max_str_digits(0)  # 解除 Python 3.11+ 大整数字符串限制
+
 from openai import OpenAI
 
 
