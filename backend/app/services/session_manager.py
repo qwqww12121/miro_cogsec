@@ -1,4 +1,4 @@
-﻿"""Session manager — wraps SessionStore + file parsing + CogSecService.
+"""Session manager — wraps SessionStore + file parsing + CogSecService.
 
 Orchestrates multi-turn session assembly then delegates to the existing
 CogSecService.analyze_text() mainline for the actual analysis.

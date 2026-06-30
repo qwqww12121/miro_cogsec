@@ -107,6 +107,83 @@ def _cosine_similarity(left: str, right: str) -> float:
     return float(numerator / max(1e-6, left_norm * right_norm))
 
 
+_FRAUD_TEXT_SIGNALS: Dict[str, List[str]] = {
+    "identity_asset_trade": ["实名", "手机卡", "身份资料", "实名卡"],
+    "credit_card_cashout": ["信用卡代还", "代还", "养卡", "套现", "低点位", "刷卡"],
+    "gambling_lure": ["赌博", "博彩", "投注", "开奖", "极速赛车", "赛车技巧"],
+    "private_contact_lure": ["微信", "私下", "加好友", "联系方式", "联系"],
+    "phishing_link": ["链接", "网址", "钓鱼", "密码", "登录", "验证码"],
+    "app_download": ["下载", "安装", "APP", "app"],
+    "loan_fraud": ["贷款", "放款", "保证金", "刷流水", "激活费"],
+    "investment_fraud": ["投资", "理财", "收益", "导师", "提现"],
+    "fake_official": ["公安", "警方", "监管", "法院", "征信", "安全账户", "冻结"],
+    "benign_information": [
+        "合同电子版",
+        "合同模板",
+        "合同范本",
+        "资料下载",
+        "普通资料",
+        "资料索引",
+        "企业介绍",
+        "工程咨询",
+        "规划设计",
+        "项目策划",
+        "酒店介绍",
+        "私人会所",
+        "游泳池",
+        "健身房",
+        "公开招投标信息",
+        "建设工程信息公告",
+        "寻人启事",
+        "衣着特征",
+        "家属联系方式",
+        "系统重装软件",
+        "向导式操作",
+    ],
+}
+
+_SIGNAL_CASE_BOOST: Dict[str, Dict[str, float]] = {
+    "credit_card_cashout": {"虚假贷款代办信用卡类": 0.45},
+    "loan_fraud": {"虚假贷款代办信用卡类": 0.45},
+    "investment_fraud": {"虚假网络投资理财类": 0.45},
+    "fake_official": {"冒充公检法及政府机关类": 0.45, "虚假征信类": 0.35},
+    "phishing_link": {"冒充电商物流客服类": 0.25, "机票退改签类": 0.2},
+}
+
+_RAG_SUPPRESS_SIGNALS = {"identity_asset_trade", "gambling_lure", "benign_information"}
+
+
+def _text_signals(text: str) -> List[str]:
+    source = text or ""
+    signals = [
+        signal
+        for signal, keywords in _FRAUD_TEXT_SIGNALS.items()
+        if any(keyword.lower() in source.lower() for keyword in keywords)
+    ]
+    if "benign_information" in signals:
+        risky = {"phishing_link", "fake_official", "loan_fraud", "investment_fraud", "credit_card_cashout"}
+        if not (set(signals) & risky):
+            return ["benign_information"]
+    return signals
+
+
+def _query_signals(query: str) -> List[str]:
+    return [
+        signal
+        for signal in _FRAUD_TEXT_SIGNALS
+        if f"signal:{signal}" in (query or "")
+    ]
+
+
+def _case_signal_adjustment(case_category: str, signals: List[str]) -> float:
+    score = 0.0
+    for signal in signals:
+        score += _SIGNAL_CASE_BOOST.get(signal, {}).get(case_category, 0.0)
+    if any(signal in _RAG_SUPPRESS_SIGNALS for signal in signals):
+        score -= 0.6
+    return score
+
+
 @dataclass
 class AttackStrategy:
     """单条攻击策略。"""
@@ -237,6 +314,7 @@ class ThreatKnowledgeRAG:
         scenario_type: str,
         cognitive_profile: Any,
         n_results: int = 3,
+        scenario_text: str = "",
     ) -> List[AttackStrategy]:
         """按场景与受害者画像检索最相关的攻击策略。"""
         # Non-fraud scenarios have no entries in the case store; use hardcoded templates
@@ -248,7 +326,11 @@ class ThreatKnowledgeRAG:
         if not self.case_store:
             return []
 
-        query = self._build_query(scenario_type, cognitive_profile)
+        signals = _text_signals(scenario_text)
+        if scenario_type == "fraud_im" and any(signal in _RAG_SUPPRESS_SIGNALS for signal in signals):
+            return []
+
+        query = self._build_query(scenario_type, cognitive_profile, scenario_text=scenario_text)
         candidate_case_ids = self._retrieve_case_ids(query, scenario_type, n_results=max(n_results, 3))
         candidate_cases = [self.case_store[case_id] for case_id in candidate_case_ids if case_id in self.case_store]
         strategies = self._rank_strategies(candidate_cases, cognitive_profile)
@@ -274,12 +356,17 @@ class ThreatKnowledgeRAG:
         n_results: int = 3,
     ) -> RiskGraphBundle:
         """Construct the mainline threat-persona-context graph bundle."""
-        strategies = self.retrieve_attack_strategies(scenario_type, cognitive_profile, n_results=n_results)
+        strategies = self.retrieve_attack_strategies(
+            scenario_type,
+            cognitive_profile,
+            n_results=n_results,
+            scenario_text=scenario_text,
+        )
         weakness_hits = self._derive_persona_weakness_hits(persona_state_vector)
         evidence_items = self._collect_evidence_items(scenario_text, strategies)
         asset_targets = self._derive_asset_targets(scenario_text, strategies)
         environment_context = self._derive_environment_context(scenario_text, scenario_type)
-        fork_points = self._derive_fork_points(scenario_text, strategies, asset_targets)
+        fork_points = self._derive_fork_points(scenario_text, strategies, asset_targets, scenario_type)
 
         consistency_scores = []
         for strategy in strategies:
@@ -440,8 +527,13 @@ class ThreatKnowledgeRAG:
             return 0.85
         return SequenceMatcher(None, scenario_type, case_category).ratio()
 
-    def _build_query(self, scenario_type: str, cognitive_profile: Any) -> str:
+    def _build_query(self, scenario_type: str, cognitive_profile: Any, scenario_text: str = "") -> str:
         query_parts = [f"Fraud type: {scenario_type or 'unknown'}"]
+        if scenario_text:
+            query_parts.append(f"Input text: {scenario_text}")
+        signals = _text_signals(scenario_text)
+        if signals:
+            query_parts.append("Text signals: " + ", ".join(f"signal:{signal}" for signal in signals))
 
         if getattr(cognitive_profile, "authority_compliance", 0) > 6:
             query_parts.append("victim is responsive to authority claims")
@@ -506,10 +598,14 @@ class ThreatKnowledgeRAG:
         scenario_text: str,
         strategies: List[AttackStrategy],
     ) -> List[Dict[str, Any]]:
+        if "benign_information" in _text_signals(scenario_text):
+            return []
         lowered = (scenario_text or "").lower()
         candidates = [
-            ("asset:funds", "资金账户", 0.95, ["转账", "汇款", "退款", "safe account"]),
+            ("asset:funds", "资金账户", 0.95, ["转账", "汇款", "退款", "付款", "充值", "保证金", "定金", "手续费", "套现", "代还", "safe account"]),
             ("asset:credential", "身份凭证", 0.92, ["验证码", "动态码", "短信", "密码"]),
+            ("asset:identity", "身份资料", 0.88, ["实名", "身份", "身份证", "手机卡", "个人信息", "资料"]),
+            ("asset:account", "账号资产", 0.84, ["账号", "账户", "信用卡", "银行卡", "微信", "支付宝"]),
             ("asset:device", "设备控制权", 0.86, ["共享屏幕", "远程", "下载", "app"]),
             ("asset:social", "社会支持系统", 0.72, ["不要告诉别人", "单独联系", "保密"]),
         ]
@@ -517,8 +613,6 @@ class ThreatKnowledgeRAG:
         for asset_id, label, severity, keywords in candidates:
             if any(keyword.lower() in lowered for keyword in keywords):
                 assets.append({"id": asset_id, "label": label, "severity": severity})
-        if not assets and strategies:
-            assets.append({"id": "asset:funds", "label": "资金账户", "severity": 0.8})
         return assets
 
     def _derive_environment_context(self, scenario_text: str, scenario_type: str) -> Dict[str, Any]:
@@ -534,6 +628,8 @@ class ThreatKnowledgeRAG:
             "time_pressure": any(token in lowered for token in ["马上", "立即", "今天内", "过期"]),
             "social_isolation": any(token in lowered for token in ["不要告诉别人", "单独联系", "保密"]),
             "official_masking": any(token in lowered for token in ["官方", "客服", "警方", "监管"]),
+            "private_contact_lure": any(token in lowered for token in ["微信", "私下", "加好友", "联系方式", "联系"]),
+            "text_signals": _text_signals(scenario_text),
         }
 
     def _derive_fork_points(
@@ -541,10 +637,22 @@ class ThreatKnowledgeRAG:
         scenario_text: str,
         strategies: List[AttackStrategy],
         asset_targets: List[Dict[str, Any]],
+        scenario_type: str = "fraud_im",
     ) -> List[Dict[str, Any]]:
+        # 传播场景无需 fraud 专属 fork 节点
+        if scenario_type in ("event_propagation", "public_opinion"):
+            return []
+        if "benign_information" in _text_signals(scenario_text):
+            return []
+
         lowered = (scenario_text or "").lower()
         fork_specs = [
-            ("transfer_money", ["转账", "汇款", "打款", "safe account"], 0.96),
+            ("private_contact_lure", ["微信", "私下", "加好友", "联系方式", "联系"], 0.82),
+            ("identity_asset_exchange", ["实名", "手机卡", "身份资料", "身份证"], 0.84),
+            ("unlicensed_financial_service", ["信用卡代还", "代还", "养卡", "套现", "低点位", "刷卡"], 0.84),
+            ("gambling_entry", ["赌博", "博彩", "投注", "开奖", "极速赛车", "赛车技巧"], 0.86),
+            ("phishing_link_entry", ["钓鱼", "伪造链接", "网址", "链接", "登录", "密码"], 0.86),
+            ("transfer_money", ["转账", "汇款", "打款", "付款", "充值", "保证金", "定金", "手续费", "safe account", "安全账户"], 0.96),
             ("screen_share", ["共享屏幕", "远程控制", "screen share"], 0.88),
             ("verification_code", ["验证码", "动态码"], 0.92),
             ("unknown_app_download", ["下载", "安装", "app"], 0.83),
@@ -553,7 +661,8 @@ class ThreatKnowledgeRAG:
         ]
         forks = []
         for fork_type, keywords, severity in fork_specs:
-            if any(keyword.lower() in lowered for keyword in keywords):
+            hits = [keyword for keyword in keywords if keyword.lower() in lowered]
+            if hits:
                 forks.append(
                     {
                         "id": f"fork:{fork_type}",
@@ -561,19 +670,36 @@ class ThreatKnowledgeRAG:
                         "severity": severity,
                         "asset": asset_targets[0]["label"] if asset_targets else "核心资产",
                         "from_strategy": strategies[0].id if strategies else None,
+                        "evidence_refs": [f"ev:{hit}" for hit in hits[:3]],
+                        "matched_terms": hits[:5],
+                        "runtime_alignment": self._runtime_alignment_for_fork(fork_type),
                     }
                 )
-        if not forks and strategies:
-            forks.append(
-                {
-                    "id": "fork:transfer_money",
-                    "type": "transfer_money",
-                    "severity": 0.78,
-                    "asset": asset_targets[0]["label"] if asset_targets else "资金账户",
-                    "from_strategy": strategies[0].id,
-                }
-            )
         return forks
+
+    def _runtime_alignment_for_fork(self, fork_type: str) -> Dict[str, Any]:
+        direct = {
+            "transfer_money",
+            "screen_share",
+            "verification_code",
+            "unknown_app_download",
+            "social_isolation",
+            "fake_official_verification",
+        }
+        nearest = {
+            "private_contact_lure": "transfer_money",
+            "identity_asset_exchange": "transfer_money",
+            "unlicensed_financial_service": "transfer_money",
+            "gambling_entry": "transfer_money",
+            "phishing_link_entry": "unknown_app_download",
+        }
+        if fork_type in direct:
+            return {"status": "direct", "runtime_type": fork_type}
+        return {
+            "status": "nearest",
+            "runtime_type": nearest.get(fork_type, "transfer_money"),
+            "note": "semantic fork is preserved; runtime_type is only a runtime-compatible approximation",
+        }
 
     def _build_graph_objects(
         self,
@@ -746,7 +872,8 @@ class ThreatKnowledgeRAG:
         doc_tokens = set(_tokenize(doc))
         overlap = len(query_tokens & doc_tokens) / max(1, len(query_tokens))
         similarity = SequenceMatcher(None, scenario_type or "", case.category).ratio()
-        return overlap + similarity
+        signal_adjustment = _case_signal_adjustment(case.category, _query_signals(query))
+        return overlap + similarity + signal_adjustment
 
     def _principle_alignment(self, profile: Any, principle: str) -> float:
         mapping = {

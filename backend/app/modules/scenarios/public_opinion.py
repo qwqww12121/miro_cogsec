@@ -93,40 +93,29 @@ class PublicOpinionScenarioSpec(ScenarioSpec):
         agents = build_agents(self.name, n_agents=n_agents)
         intervention_tick = max(2, ticks // 3)
 
-        fallback_reason = None
         oasis = OasisPropagationAdapter()
         if oasis.is_available():
-            try:
-                result = oasis.run(
-                    event=event,
-                    agents=agents,
-                    scenario_type=self.name,
-                    n_ticks=ticks,
-                    intervention_tick=intervention_tick,
-                    llm_api_key=os.environ.get("LLM_API_KEY"),
-                    llm_base_url=os.environ.get("LLM_BASE_URL"),
-                    llm_model_name=os.environ.get("LLM_MODEL_NAME"),
-                )
-                payload = result.to_dict()
-                payload.setdefault("runtime", {})["engine"] = "oasis"
-                return payload
-            except Exception as exc:
-                fallback_reason = f"{exc.__class__.__name__}: {exc}"
-
-        adjacency = build_topology(agents, topology_type="campus_local")
-        result = run_forked_propagation(
-            event=event,
-            agents=agents,
-            adjacency=adjacency,
-            ticks=ticks,
-            intervention_tick=intervention_tick,
-            strategy_type="official_clarification",
-        )
-        payload = result.to_dict()
-        payload.setdefault("runtime", {})["engine"] = "lightweight"
-        if fallback_reason:
-            payload["runtime"]["fallback_reason"] = fallback_reason
-        return payload
+            result = oasis.run(
+                event=event,
+                agents=agents,
+                scenario_type=self.name,
+                n_ticks=ticks,
+                intervention_tick=intervention_tick,
+                llm_api_key=os.environ.get("LLM_API_KEY"),
+                llm_base_url=os.environ.get("LLM_BASE_URL"),
+                llm_model_name=os.environ.get("LLM_MODEL_NAME"),
+            )
+        else:
+            adjacency = build_topology(agents, topology_type="campus_local")
+            result = run_forked_propagation(
+                event=event,
+                agents=agents,
+                adjacency=adjacency,
+                ticks=ticks,
+                intervention_tick=intervention_tick,
+                strategy_type="official_clarification",
+            )
+        return result.to_dict()
 
 
 # -----------------------------------------------------------------------

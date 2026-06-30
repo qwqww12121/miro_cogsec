@@ -1,4 +1,4 @@
-﻿"""CogSec 场景分析编排服务。"""
+"""CogSec 场景分析编排服务。"""
 
 from __future__ import annotations
 
@@ -259,22 +259,6 @@ class CogSecService:
             tone=tone,
         )
 
-        # -- benchmark adapter / dual-track analysis output --
-        try:
-            benchmark_payload = build_benchmark_payload(
-                result=analysis_result.to_dict(),
-                scenario_text=analysis_text,
-                scenario_type=canonical,
-            )
-            analysis_result.benchmark_prediction = benchmark_payload["prediction"]
-            analysis_result.cogsec_analysis = benchmark_payload["cogsec_analysis"]
-            analysis_result.adapter_diagnostics = benchmark_payload["adapter_diagnostics"]
-        except Exception as exc:
-            logger.warning("benchmark adapter failed: %s", exc)
-            analysis_result.benchmark_prediction = {}
-            analysis_result.cogsec_analysis = {}
-            analysis_result.adapter_diagnostics = {"adapter_warnings": [str(exc)]}
-
         # -- role report rendering (Phase V) --
         try:
             from ..modules.reporters import render_role_report
@@ -292,6 +276,22 @@ class CogSecService:
                 "error": str(exc),
                 "role": user_role,
             }
+
+        # -- benchmark adapter / dual-track analysis output --
+        try:
+            benchmark_payload = build_benchmark_payload(
+                result=analysis_result.to_dict(),
+                scenario_text=analysis_text,
+                scenario_type=canonical,
+            )
+            analysis_result.benchmark_prediction = benchmark_payload["prediction"]
+            analysis_result.cogsec_analysis = benchmark_payload["cogsec_analysis"]
+            analysis_result.adapter_diagnostics = benchmark_payload["adapter_diagnostics"]
+        except Exception as exc:
+            logger.warning("benchmark adapter failed: %s", exc)
+            analysis_result.benchmark_prediction = {}
+            analysis_result.cogsec_analysis = {}
+            analysis_result.adapter_diagnostics = {"adapter_warnings": [str(exc)]}
 
         # -- user-facing conversational response layer --
         try:

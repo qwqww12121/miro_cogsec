@@ -39,12 +39,22 @@ class T0FastResponder:
         {
             "id": "safe_account_transfer",
             "tags": ["safe_account", "transfer"],
-            "regex": r"(安全账户|监管账户|safe\s*account).{0,24}(转账|汇款|打款|transfer)|(转账|汇款|打款|transfer).{0,16}(安全账户|监管账户)",
+            "regex": r"(安全账户|监管账户|safe\s*account).{0,24}(转账|转入|汇款|打款|transfer)|(转账|转入|汇款|打款|transfer).{0,16}(安全账户|监管账户)",
         },
         {
             "id": "police_secrecy_isolation",
             "tags": ["police", "secrecy", "isolation"],
             "regex": r"(公安|警方|police).{0,28}(保密|不要告诉|单独联系|隔离|不要联系家人|secrecy|isolation)",
+        },
+        {
+            "id": "credit_fraud_app",
+            "tags": ["credit_fraud", "app_download"],
+            "regex": r"(征信|信用(评分|记录|异常)|贷款(异常|风险)).{0,40}(下载|安装|APP|app|点击链接)",
+        },
+        {
+            "id": "impersonation_with_app",
+            "tags": ["impersonation", "app_download"],
+            "regex": r"(冒充|我是).{0,20}(银行|客服|监管|公安|法院).{0,40}(下载|安装|APP|app|开启|共享)",
         },
     ]
 

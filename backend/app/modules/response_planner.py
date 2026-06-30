@@ -134,7 +134,7 @@ def build_latency_profile(*, result: Dict[str, Any]) -> Dict[str, Any]:
 
     fallback_reason = diagnostics.get("fallback_reason") or ""
     if not fallback_reason and metric_source in {"proxy", "heuristic", "llm_hypothesis"}:
-        fallback_reason = str(notes[0]) if notes else "Full OASIS branch runtime was not used for these branch metrics."
+        fallback_reason = str(notes[0]) if notes else "当前分支指标基于轻量代理仿真，非完整 OASIS 运行结果。"
 
     return {
         "quick_response_latency_ms": metrics.get("t0_latency_ms"),
@@ -305,7 +305,7 @@ def _plan_fraud_im(prediction: Dict[str, Any], evidence_trace: List[Dict[str, An
 def _selected_branch_summary(selected: Dict[str, Any]) -> str:
     if not selected:
         return ""
-    branch_id = selected.get("branch_id") or selected.get("candidate_id") or "selected branch"
+    branch_id = selected.get("branch_id") or selected.get("candidate_id") or "最优分支"
     window = _first_dict(selected.get("best_intervention_window"))
     label = window.get("label") or window.get("open_stage") or window.get("open_step") or "早期窗口"
     reason = _selection_reason_zh(selected.get("selection_reason"))
@@ -326,13 +326,14 @@ def _candidate_summaries(search: Dict[str, Any]) -> List[Dict[str, Any]]:
         if not candidate:
             continue
         cid = str(candidate.get("candidate_id") or "")
+        raw_source = _first_dict(search.get("provenance")).get("metric_source")
         out.append(
             {
                 "candidate_id": cid,
                 "intervention_type": candidate.get("intervention_type"),
                 "target_stage": candidate.get("target_stage"),
                 "message": candidate.get("message"),
-                "metric_source": _first_dict(search.get("provenance")).get("metric_source"),
+                "metric_source": _metric_source_zh(raw_source),
                 "total_score": score_by_candidate.get(cid),
             }
         )
@@ -398,8 +399,8 @@ def _metric_source(search: Dict[str, Any], cogsec: Dict[str, Any]) -> str:
         _first_dict(_first_dict(cogsec.get("provenance"))).get("metric_source"),
     ]:
         if value:
-            return str(value)
-    return "runtime"
+            return _metric_source_zh(value)
+    return _metric_source_zh("runtime")
 
 
 def _evidence_trace(prediction: Dict[str, Any], cogsec: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -502,6 +503,16 @@ def _unique(items: Iterable[Any]) -> List[Any]:
         seen.add(key)
         out.append(item)
     return out
+
+
+def _metric_source_zh(value: Any) -> str:
+    text = str(value or "runtime").lower()
+    return {
+        "runtime": "完整仿真",
+        "proxy": "代理仿真",
+        "heuristic": "启发式估算",
+        "llm_hypothesis": "LLM 假设推断",
+    }.get(text, str(value or "完整仿真"))
 
 
 def _clip(value: Any, limit: int = 140) -> str:

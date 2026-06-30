@@ -1,4 +1,4 @@
-﻿"""CogSec API 路由。"""
+"""CogSec API 路由。"""
 
 import traceback
 from flask import jsonify, request
@@ -6,6 +6,7 @@ from flask import jsonify, request
 from . import cogsec_bp
 from ..services.cogsec_service import CogSecService
 from ..services.session_manager import SessionManager
+from ..modules.conversational_response import answer_followup_from_state
 from ..modules.session import (
     build_incremental_analysis,
     build_session_text,
@@ -60,6 +61,43 @@ def analyze_cogsec():
         }), 500
 
 
+@cogsec_bp.route('/followup', methods=['POST'])
+def cogsec_followup():
+    """从缓存的 conversation_state 直接回答追问，不重跑完整 pipeline。
+
+    Request JSON:
+        state:   conversation_state（来自上次分析结果）
+        message: 用户追问文本
+        tone:    可选，默认沿用 state 里的 tone
+    """
+    try:
+        data = request.get_json() or {}
+        state = data.get('state')
+        message = (data.get('message') or '').strip()
+        tone = data.get('tone')
+
+        if not state or not message:
+            return jsonify({"success": False, "error": "请提供 state 和 message"}), 400
+
+        result = answer_followup_from_state(
+            state=state,
+            user_message=message,
+            tone=tone,
+        )
+        if result is None:
+            return jsonify({"success": False, "error": "无法从缓存状态回答，请重新分析"}), 422
+
+        return jsonify({"success": True, "data": result})
+
+    except Exception as e:
+        logger.error(f"追问失败: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
+        }), 500
+
+
 @cogsec_bp.route('/report/<report_id>', methods=['GET'])
 def analyze_cogsec_by_report(report_id: str):
     """根据现有报告生成 CogSec 分析数据。"""
@@ -101,8 +139,7 @@ def analyze_cogsec_by_report(report_id: str):
         service = CogSecService()
         result = service.analyze_text(
             scenario_text=scenario_text,
-            scenario_type=request.args.get('scenario_type'),
-            tone=request.args.get('tone', 'friendly'),
+            scenario_type=request.args.get('scenario_type')
         )
 
         return jsonify({

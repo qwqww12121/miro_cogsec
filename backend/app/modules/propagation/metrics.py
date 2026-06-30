@@ -40,7 +40,15 @@ def compute_key_nodes(
         })
 
     scores.sort(key=lambda x: x["score"], reverse=True)
-    return scores[:top_k]
+    # 同一角色只保留得分最高的一个
+    seen_roles: set[str] = set()
+    deduped = []
+    for s in scores:
+        role = s["role"]
+        if role not in seen_roles:
+            seen_roles.add(role)
+            deduped.append(s)
+    return deduped[:top_k]
 
 
 def summarize_trace(trace: PropagationTrace) -> dict:

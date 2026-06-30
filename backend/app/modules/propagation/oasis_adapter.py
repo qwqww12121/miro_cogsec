@@ -374,5 +374,5 @@ class OasisPropagationAdapter:
             model_type=_model_name,
             api_key=_api_key,
             url=_base_url,
-            model_config_dict={"temperature": 0.7, "max_tokens": 1024},
+            model_config_dict={"temperature": 0.7},
         )

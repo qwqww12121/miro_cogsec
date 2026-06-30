@@ -63,7 +63,7 @@ def answer_followup_from_state(
     graph_payload = build_graph_payload(result=result, response_plan=plan)
     latency_profile = build_latency_profile(result=result)
     latency_profile["pipeline_rerun"] = False
-    latency_profile["fallback_reason"] = latency_profile.get("fallback_reason") or "Answered from cached conversation state."
+    latency_profile["fallback_reason"] = latency_profile.get("fallback_reason") or "已从缓存的对话状态中直接回答，无需重新运行完整分析。"
 
     return {
         "assistant_message": message,
@@ -100,9 +100,9 @@ def render_followup_message(plan: Dict[str, Any], intent: str, tone: str | None 
         for item in candidates[:4]:
             msg = item.get("message") or item.get("intervention_type") or item.get("candidate_id")
             score = item.get("total_score")
-            source = item.get("metric_source") or plan.get("metric_source")
+            source = item.get("metric_source") or plan.get("metric_source") or "完整仿真"
             suffix = f"；近似分数 {score}" if score is not None else ""
-            lines.append(f"{msg}{suffix}，指标来源：{source or 'runtime'}。")
+            lines.append(f"{msg}{suffix}，指标来源：{source}。")
         return _section("备选方案", lines)
     if intent == "selected_reason":
         summary = plan.get("selected_branch_summary") or "当前缓存里没有 selected best branch。"
@@ -154,11 +154,11 @@ def _render_expert(plan: Dict[str, Any]) -> str:
     for candidate in (plan.get("candidate_summaries") or [])[:4]:
         msg = candidate.get("message") or candidate.get("intervention_type") or candidate.get("candidate_id")
         score = candidate.get("total_score")
-        source = candidate.get("metric_source") or plan.get("metric_source")
+        source = candidate.get("metric_source") or plan.get("metric_source") or "完整仿真"
         suffix = f"；分支分数 {score}" if score is not None else ""
-        branch_lines.append(f"{msg}{suffix}，指标来源：{source or 'runtime'}。")
-    if not branch_lines and plan.get("metric_source") in {"proxy", "heuristic", "llm_hypothesis"}:
-        branch_lines.append(f"当前传播/分支指标来源为 {plan.get('metric_source')}，不等同完整 OASIS runtime。")
+        branch_lines.append(f"{msg}{suffix}，指标来源：{source}。")
+    if not branch_lines and plan.get("metric_source") in {"proxy", "heuristic", "llm_hypothesis", "代理仿真", "启发式估算", "LLM 假设推断"}:
+        branch_lines.append(f"当前传播/分支指标来源为{plan.get('metric_source')}，不等同完整仿真结果。")
 
     return "\n".join(
         [
