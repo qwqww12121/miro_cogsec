@@ -1,0 +1,27 @@
+{
+  "layer": "api_scenario_smoke",
+  "benchmark_version": "v0.1",
+  "scenario_type": "public_opinion",
+  "case_count": 1,
+  "runtime_success_rate": 100.0,
+  "scenario_resolution_accuracy": 100.0,
+  "propagation_presence_rate": 100.0,
+  "latency_ms": {
+    "p50": 16607.403,
+    "p95": null,
+    "max": 16607.403
+  },
+  "error_count": 0,
+  "errors": [],
+  "per_case": [
+    {
+      "id": "public-opinion-v0.1-001",
+      "ok": true,
+      "latency_ms": 16607.403,
+      "scenario_match": true,
+      "resolved_scenario_type": "public_opinion",
+      "has_propagation": true,
+      "error": null
+    }
+  ]
+}

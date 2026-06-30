@@ -1,0 +1,105 @@
+{
+  "layer": "scenario_prediction_evaluation",
+  "benchmark_version": "v0.1",
+  "scoring_method": "semantic_aware_res_v0.2",
+  "scoring_note": "Discrete fields use deterministic rules; free-text fields use semantic vector cosine with lexical fallback.",
+  "scenario_type": "event_propagation",
+  "case_count": 5,
+  "scored_case_count": 1,
+  "format_success_rate": 20.0,
+  "complete_schema_rate": 20.0,
+  "ANS": 11.7,
+  "CAS": 0.0,
+  "CWS": 100.0,
+  "DCS": 0.0,
+  "EAR": 0.0,
+  "OVS": 0.0,
+  "PCS": 20.5,
+  "RCA": 100.0,
+  "layer_scores": {
+    "detection": 0.2,
+    "reasoning": 0.016,
+    "intervention": 0.1,
+    "evidence": 0.0,
+    "runtime": 0.667
+  },
+  "RES": 0.289,
+  "per_case": [
+    {
+      "id": "event-propagation-v0.1-001",
+      "ok": true,
+      "confidence": 0.7,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "detection": 1.0,
+        "reasoning": 0.081,
+        "intervention": 0.5,
+        "evidence": 0.0,
+        "runtime": 0.667
+      },
+      "OVS": 0.0,
+      "ANS": 0.117,
+      "PCS": 0.205,
+      "DCS": 0.0,
+      "RCA": 1.0,
+      "CWS": 1.0,
+      "CAS": 0.0,
+      "EAR": 0.0,
+      "RES": 0.289,
+      "expected_risk": "high",
+      "predicted_risk": "high"
+    },
+    {
+      "id": "event-propagation-v0.1-002",
+      "ok": false,
+      "missing": true,
+      "RES": 0.0,
+      "layer_scores": {
+        "detection": 0.0,
+        "reasoning": 0.0,
+        "intervention": 0.0,
+        "evidence": 0.0,
+        "runtime": null
+      }
+    },
+    {
+      "id": "event-propagation-v0.1-003",
+      "ok": false,
+      "missing": true,
+      "RES": 0.0,
+      "layer_scores": {
+        "detection": 0.0,
+        "reasoning": 0.0,
+        "intervention": 0.0,
+        "evidence": 0.0,
+        "runtime": null
+      }
+    },
+    {
+      "id": "event-propagation-v0.1-004",
+      "ok": false,
+      "missing": true,
+      "RES": 0.0,
+      "layer_scores": {
+        "detection": 0.0,
+        "reasoning": 0.0,
+        "intervention": 0.0,
+        "evidence": 0.0,
+        "runtime": null
+      }
+    },
+    {
+      "id": "event-propagation-v0.1-005",
+      "ok": false,
+      "missing": true,
+      "RES": 0.0,
+      "layer_scores": {
+        "detection": 0.0,
+        "reasoning": 0.0,
+        "intervention": 0.0,
+        "evidence": 0.0,
+        "runtime": null
+      }
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "layer": "closed_model_blind_judge",
+  "benchmark_version": "v0.1",
+  "judge_mode": "no_gold",
+  "judge_policy": "In with_gold mode, gold is treated as a reference annotation rather than an absolute truth. In no_gold mode, the judge uses only the original input, blind Answer A/B outputs, runtime summaries, practical intervention value, evidence support, and overall task quality.",
+  "overall": {
+    "case_count": 30,
+    "wins": {
+      "miro_cogsec": 15,
+      "llm_only": 14
+    },
+    "ties": 1,
+    "win_rate": {
+      "miro_cogsec": 50.0,
+      "llm_only": 46.67
+    },
+    "tie_rate": 3.33,
+    "average_scores": {
+      "miro_cogsec": {
+        "problem_localization": 8.1,
+        "actionability": 7.767,
+        "evidence_grounding": 8.233,
+        "mechanism_insight": 7.333,
+        "output_reliability": 8.3
+      },
+      "llm_only": {
+        "problem_localization": 8.4,
+        "actionability": 7.333,
+        "evidence_grounding": 7.6,
+        "mechanism_insight": 6.633,
+        "output_reliability": 8.1
+      }
+    }
+  },
+  "by_scenario": {
+    "event_propagation": {
+      "case_count": 5,
+      "wins": {
+        "miro_cogsec": 1,
+        "llm_only": 4
+      },
+      "ties": 0,
+      "win_rate": {
+        "miro_cogsec": 20.0,
+        "llm_only": 80.0
+      },
+      "tie_rate": 0.0,
+      "average_scores": {
+        "miro_cogsec": {
+          "problem_localization": 7.8,
+          "actionability": 7.4,
+          "evidence_grounding": 7.4,
+          "mechanism_insight": 7.0,
+          "output_reliability": 8.2
+        },
+        "llm_only": {
+          "problem_localization": 9.2,
+          "actionability": 8.0,
+          "evidence_grounding": 9.0,
+          "mechanism_insight": 8.6,
+          "output_reliability": 8.4
+        }
+      }
+    },
+    "fraud_im": {
+      "case_count": 20,
+      "wins": {
+        "miro_cogsec": 13,
+        "llm_only": 6
+      },
+      "ties": 1,
+      "win_rate": {
+        "miro_cogsec": 65.0,
+        "llm_only": 30.0
+      },
+      "tie_rate": 5.0,
+      "average_scores": {
+        "miro_cogsec": {
+          "problem_localization": 8.4,
+          "actionability": 8.05,
+          "evidence_grounding": 8.6,
+          "mechanism_insight": 7.55,
+          "output_reliability": 8.5
+        },
+        "llm_only": {
+          "problem_localization": 8.2,
+          "actionability": 7.0,
+          "evidence_grounding": 7.1,
+          "mechanism_insight": 5.85,
+          "output_reliability": 8.0
+        }
+      }
+    },
+    "public_opinion": {
+      "case_count": 5,
+      "wins": {
+        "miro_cogsec": 1,
+        "llm_only": 4
+      },
+      "ties": 0,
+      "win_rate": {
+        "miro_cogsec": 20.0,
+        "llm_only": 80.0
+      },
+      "tie_rate": 0.0,
+      "average_scores": {
+        "miro_cogsec": {
+          "problem_localization": 7.2,
+          "actionability": 7.0,
+          "evidence_grounding": 7.6,
+          "mechanism_insight": 6.8,
+          "output_reliability": 7.6
+        },
+        "llm_only": {
+          "problem_localization": 8.4,
+          "actionability": 8.0,
+          "evidence_grounding": 8.2,
+          "mechanism_insight": 7.8,
+          "output_reliability": 8.2
+        }
+      }
+    }
+  }
+}

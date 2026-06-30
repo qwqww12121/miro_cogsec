@@ -1,0 +1,240 @@
+{
+  "layer": "api_scenario_runtime_after_adapter",
+  "benchmark_version": "v0.1",
+  "scenario_type": "fraud_im",
+  "case_count": 20,
+  "runtime_success_rate": 100.0,
+  "scenario_resolution_accuracy": 100.0,
+  "propagation_presence_rate": null,
+  "intervention_search_presence_rate": null,
+  "mean_counterfactual_branch_count": null,
+  "latency_ms": {
+    "p50": 7612.075,
+    "p95": 8889.306,
+    "max": 8903.61
+  },
+  "error_count": 0,
+  "errors": [],
+  "per_case": [
+    {
+      "id": "cogsec-v0.1-001",
+      "ok": true,
+      "latency_ms": 8903.61,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-002",
+      "ok": true,
+      "latency_ms": 8163.072,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-003",
+      "ok": true,
+      "latency_ms": 8023.514,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-004",
+      "ok": true,
+      "latency_ms": 8617.535,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-005",
+      "ok": true,
+      "latency_ms": 8614.39,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-006",
+      "ok": true,
+      "latency_ms": 7420.708,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-007",
+      "ok": true,
+      "latency_ms": 7414.931,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-008",
+      "ok": true,
+      "latency_ms": 7436.375,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-009",
+      "ok": true,
+      "latency_ms": 8188.517,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-010",
+      "ok": true,
+      "latency_ms": 7976.89,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-011",
+      "ok": true,
+      "latency_ms": 7522.071,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-012",
+      "ok": true,
+      "latency_ms": 8427.105,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-013",
+      "ok": true,
+      "latency_ms": 7403.184,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-014",
+      "ok": true,
+      "latency_ms": 6386.977,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-015",
+      "ok": true,
+      "latency_ms": 7639.192,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-016",
+      "ok": true,
+      "latency_ms": 5096.029,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-017",
+      "ok": true,
+      "latency_ms": 7031.708,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-018",
+      "ok": true,
+      "latency_ms": 8208.335,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-019",
+      "ok": true,
+      "latency_ms": 7584.957,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    },
+    {
+      "id": "cogsec-v0.1-020",
+      "ok": true,
+      "latency_ms": 6740.337,
+      "scenario_match": true,
+      "resolved_scenario_type": "fraud_im",
+      "has_propagation": false,
+      "has_intervention_search": false,
+      "counterfactual_branch_count": null,
+      "error": null
+    }
+  ]
+}

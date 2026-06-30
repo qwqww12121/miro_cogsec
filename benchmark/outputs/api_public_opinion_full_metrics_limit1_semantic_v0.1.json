@@ -1,0 +1,107 @@
+{
+  "layer": "scenario_prediction_evaluation",
+  "benchmark_version": "v0.1",
+  "scoring_method": "semantic_aware_res_v0.2",
+  "scoring_note": "Discrete fields use deterministic rules; free-text fields use semantic vector cosine with lexical fallback.",
+  "scenario_type": "public_opinion",
+  "case_count": 5,
+  "scored_case_count": 1,
+  "format_success_rate": 20.0,
+  "complete_schema_rate": 20.0,
+  "EAR": 0.0,
+  "EAS": 45.0,
+  "IAS": 0.0,
+  "IWA": 21.0,
+  "NSS": 1.7,
+  "OGS": 0.0,
+  "RCA": 100.0,
+  "SPS": 0.0,
+  "UGS": 0.0,
+  "layer_scores": {
+    "detection": 0.2,
+    "reasoning": 0.023,
+    "intervention": 0.014,
+    "evidence": 0.0,
+    "runtime": 0.667
+  },
+  "RES": 0.198,
+  "per_case": [
+    {
+      "id": "public-opinion-v0.1-001",
+      "ok": true,
+      "confidence": 0.7,
+      "missing_prediction_fields": [],
+      "layer_scores": {
+        "detection": 1.0,
+        "reasoning": 0.117,
+        "intervention": 0.07,
+        "evidence": 0.0,
+        "runtime": 0.667
+      },
+      "NSS": 0.017,
+      "EAS": 0.45,
+      "UGS": 0.0,
+      "OGS": 0.0,
+      "RCA": 1.0,
+      "IWA": 0.21,
+      "IAS": 0.0,
+      "SPS": 0.0,
+      "EAR": 0.0,
+      "RES": 0.198,
+      "expected_risk": "high",
+      "predicted_risk": "high"
+    },
+    {
+      "id": "public-opinion-v0.1-002",
+      "ok": false,
+      "missing": true,
+      "RES": 0.0,
+      "layer_scores": {
+        "detection": 0.0,
+        "reasoning": 0.0,
+        "intervention": 0.0,
+        "evidence": 0.0,
+        "runtime": null
+      }
+    },
+    {
+      "id": "public-opinion-v0.1-003",
+      "ok": false,
+      "missing": true,
+      "RES": 0.0,
+      "layer_scores": {
+        "detection": 0.0,
+        "reasoning": 0.0,
+        "intervention": 0.0,
+        "evidence": 0.0,
+        "runtime": null
+      }
+    },
+    {
+      "id": "public-opinion-v0.1-004",
+      "ok": false,
+      "missing": true,
+      "RES": 0.0,
+      "layer_scores": {
+        "detection": 0.0,
+        "reasoning": 0.0,
+        "intervention": 0.0,
+        "evidence": 0.0,
+        "runtime": null
+      }
+    },
+    {
+      "id": "public-opinion-v0.1-005",
+      "ok": false,
+      "missing": true,
+      "RES": 0.0,
+      "layer_scores": {
+        "detection": 0.0,
+        "reasoning": 0.0,
+        "intervention": 0.0,
+        "evidence": 0.0,
+        "runtime": null
+      }
+    }
+  ]
+}
