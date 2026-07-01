@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { classifyScenario } from '../api/classify'
+import { classifyScenario, LOW_CONFIDENCE_THRESHOLD } from '../api/classify'
 import { SCENARIOS, THEME_CLASSES } from '../scenarios/config'
 import Icon from './Icon'
 
@@ -73,6 +73,8 @@ export default function IntelligentClassifier() {
             theme={theme}
             confidence={result.confidence}
             reason={result.reason}
+            extractedSummary={result.extracted_summary}
+            model={result.model}
             onEnter={onEnterScenario}
           />
         )}
@@ -108,9 +110,23 @@ function ClassifierError({ message }) {
   )
 }
 
-function ClassifierResult({ scenario, theme, confidence, reason, onEnter }) {
-  if (!scenario || !theme) return null
+function ClassifierResult({
+  scenario,
+  theme,
+  confidence,
+  reason,
+  extractedSummary,
+  model,
+  onEnter,
+}) {
   const pct = Math.round((confidence ?? 0) * 100)
+  const lowConfidence = confidence != null && confidence < LOW_CONFIDENCE_THRESHOLD
+
+  if (lowConfidence) {
+    return <LowConfidenceCard pct={pct} reason={reason} extractedSummary={extractedSummary} />
+  }
+
+  if (!scenario || !theme) return null
   return (
     <div className={`card p-4 ${theme.border}`}>
       <div className="flex items-center justify-between gap-3 mb-2">
@@ -133,6 +149,8 @@ function ClassifierResult({ scenario, theme, confidence, reason, onEnter }) {
         />
       </div>
 
+      <ExtractedSummaryBlock extractedSummary={extractedSummary} model={model} theme={theme} />
+
       <div className="mt-3 text-sm text-ink-900 leading-relaxed">
         <span className="text-ink-500 text-xs mr-1">理由：</span>
         {reason}
@@ -147,6 +165,57 @@ function ClassifierResult({ scenario, theme, confidence, reason, onEnter }) {
         进入分析
         <Icon name="arrow-right" className="w-4 h-4 ml-1" />
       </button>
+    </div>
+  )
+}
+
+// 低置信度卡片：信息不足时不强行把用户导进某个具体场景，
+// 但仍展示 reason 与 extracted_summary，让用户看到系统理解到了什么。
+function LowConfidenceCard({ pct, reason, extractedSummary }) {
+  return (
+    <div className="card p-4 border-dashed border-ink-300">
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-md bg-slate-100 text-ink-500 flex items-center justify-center">
+            <Icon name="alert" className="w-4 h-4" />
+          </div>
+          <div className="text-sm">
+            <span className="font-semibold text-ink-900">信息不足，暂无法可靠判断场景</span>
+          </div>
+        </div>
+        <span className="tag bg-slate-100 text-ink-500">置信度 {pct}%（偏低）</span>
+      </div>
+
+      <div className="mt-2 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+        <div className="h-full rounded-full bg-ink-300 transition-all" style={{ width: `${pct}%` }} />
+      </div>
+
+      <ExtractedSummaryBlock extractedSummary={extractedSummary} />
+
+      <div className="mt-3 text-sm text-ink-900 leading-relaxed">
+        <span className="text-ink-500 text-xs mr-1">理由：</span>
+        {reason}
+      </div>
+
+      <div className="mt-4 text-xs text-ink-500 leading-relaxed">
+        建议补充更多上下文（对话原文、传播过程或事件细节）后再次识别。
+      </div>
+    </div>
+  )
+}
+
+// 从用户模糊输入里提炼出的关键线索摘要，让用户看到"系统理解到了什么"。
+function ExtractedSummaryBlock({ extractedSummary, model, theme }) {
+  if (!extractedSummary) return null
+  const accentClass = theme ? theme.accent : 'text-ink-500'
+  return (
+    <div className="mt-3 rounded-lg bg-slate-50 border border-slate-100 px-3 py-2.5">
+      <div className={`flex items-center gap-1.5 text-xs font-medium ${accentClass}`}>
+        <Icon name="spark" className="w-3.5 h-3.5" />
+        系统理解到的关键线索
+        {model && <span className="text-ink-500 font-normal">· {model}</span>}
+      </div>
+      <div className="mt-1 text-sm text-ink-900 leading-relaxed">{extractedSummary}</div>
     </div>
   )
 }
