@@ -4,6 +4,8 @@
 
 支持**诈骗IM、舆情分析、事件传播**三类场景，具备单次分析与多轮对话两种输入模式。
 
+> **快速开始**：安装依赖、配置 LLM key、起后端、冒烟测试，以及两个已知环境坑（Windows 非 ASCII 用户名 / PyTorch CUDA 安装）的解决办法，见 **[docs/RUNNING.md](docs/RUNNING.md)**。
+
 ---
 
 ## 项目定位

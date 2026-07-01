@@ -17,9 +17,9 @@ openai>=1.0.0
 # Gemma / HuggingFace 本地模型（COGSEC_USE_LOCAL_GEMMA=true 时启用）
 # PyTorch 需单独安装 CUDA 版本：
 #   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-transformers>=5.0.0
+transformers>=4.46.0,<5.0.0
 accelerate>=0.26.0
-huggingface_hub>=1.0.0
+huggingface_hub>=0.24.0,<1.0.0
 
 # ============= OASIS 多智能体传播仿真 =============
 # camel-oasis 驱动 public_opinion / event_propagation 场景的真实多 Agent 社交仿真
