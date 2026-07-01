@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { classifyScenario, LOW_CONFIDENCE_THRESHOLD } from '../api/classify'
 import { SCENARIOS, THEME_CLASSES } from '../scenarios/config'
 import Icon from './Icon'
+import Spinner from './Spinner'
 
 export default function IntelligentClassifier() {
   const navigate = useNavigate()
@@ -60,7 +61,7 @@ export default function IntelligentClassifier() {
         onClick={onClassify}
         disabled={loading}
       >
-        <Icon name="spark" className="w-4 h-4 mr-1.5" />
+        {loading ? <Spinner className="w-4 h-4 mr-1.5" /> : <Icon name="spark" className="w-4 h-4 mr-1.5" />}
         {loading ? '识别中…' : '开始识别'}
       </button>
 

@@ -14,6 +14,13 @@ import Section from '../Section'
 import StatTile from '../StatTile'
 import Empty from '../Empty'
 import Icon from '../Icon'
+import RiskHeadline from '../RiskHeadline'
+import Spinner from '../Spinner'
+import {
+  GLOSSARY,
+  describeCialdini,
+  describeScenarioType,
+} from '../../scenarios/glossary'
 
 /**
  * 消费 /api/cogsec/analyze 的真实返回。把 branch_a_log / branch_b_log 当作
@@ -24,8 +31,8 @@ export default function EventPropagationResult({ data, loading, error }) {
   if (loading) {
     return (
       <Section title="分析进行中">
-        <div className="py-12 text-center text-sm text-ink-500">
-          <span className="inline-block w-2 h-2 rounded-full bg-sand mr-2 animate-pulse" />
+        <div className="py-12 flex items-center justify-center gap-2 text-sm text-ink-500">
+          <Spinner className="w-4 h-4 text-sand" />
           推演两条传播路径中…
         </div>
       </Section>
@@ -75,43 +82,63 @@ export default function EventPropagationResult({ data, loading, error }) {
 
   const window = fork.best_intervention_window || counter.best_intervention_window || {}
   const trajectoryGap = fork.trajectory_gap
+  const overall = profile.overall_vulnerability_score
+
+  // 核心结论补充：把传播场景最关键的两个量挂到横幅下
+  const extraParts = []
+  if (trajectoryGap != null) {
+    extraParts.push(`两路径分离度 ${trajectoryGap.toFixed(3)}（越大说明及时干预价值越高）`)
+  }
+  if (window.open_step != null) {
+    extraParts.push(`最佳干预窗口：第 ${window.open_step}${window.close_step != null ? `–${window.close_step}` : ''} 步`)
+  }
 
   return (
     <>
+      <RiskHeadline
+        scenarioType={profile.scenario_type}
+        vulnerabilityScore={overall}
+        extra={extraParts.length ? extraParts.join('；') : undefined}
+      />
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatTile
           label="推演总步长"
           value={totalSteps}
-          hint="branch_a/branch_b 步数"
+          hint="攻击/防御两路径步数"
           tone="sand"
         />
         <StatTile
           label="路径分离度"
           value={trajectoryGap != null ? trajectoryGap.toFixed(3) : '—'}
-          hint="fork_comparison.trajectory_gap"
+          hint="两路径风险结果差距"
           tone="brand"
+          info={GLOSSARY.trajectory_gap}
         />
         <StatTile
           label="最佳干预步"
           value={window.open_step != null ? `第 ${window.open_step} 步` : '—'}
-          hint={window.close_step != null ? `窗口到第 ${window.close_step} 步` : '—'}
+          hint={window.close_step != null ? `窗口到第 ${window.close_step} 步` : '建议介入时机'}
           tone="leaf"
+          info={GLOSSARY.intervention_window}
         />
         <StatTile
           label="端到端耗时"
           value={metrics.end_to_end_ms != null ? `${(metrics.end_to_end_ms / 1000).toFixed(2)} s` : '—'}
           hint={metrics.end_to_end_target_met ? '✓ <30s' : '超时降级'}
           tone={metrics.end_to_end_target_met ? 'leaf' : 'sand'}
+          prominence="muted"
+          info={GLOSSARY.end_to_end}
         />
       </div>
 
       <Section title="事件场景摘要">
         <div className="text-sm text-ink-900 leading-relaxed">
-          {profile.summary || `场景类型：${profile.scenario_type || '—'}；脆弱度 ${profile.overall_vulnerability_score?.toFixed?.(1) ?? '—'}/100。`}
+          {profile.summary || `场景类型：${describeScenarioType(profile.scenario_type)}；脆弱度 ${overall?.toFixed?.(1) ?? '—'}/100。`}
         </div>
       </Section>
 
-      <Section title="两条路径的累计资产暴露">
+      <Section title="两条路径的累计资产暴露" info={GLOSSARY.asset_exposure}>
         {timeline.length === 0 ? (
           <Empty title="后端未返回分支日志" />
         ) : (
@@ -141,7 +168,7 @@ export default function EventPropagationResult({ data, loading, error }) {
         )}
       </Section>
 
-      <Section title="路径分歧风险">
+      <Section title="路径分歧风险" info={GLOSSARY.trajectory_gap}>
         {timeline.length === 0 ? (
           <Empty title="后端未返回分支日志" />
         ) : (
@@ -171,7 +198,7 @@ export default function EventPropagationResult({ data, loading, error }) {
               <li key={i} className="flex items-center gap-3 text-sm">
                 <span className="tag bg-sand-50 text-sand-600">{s.tactic_name || s.id}</span>
                 <Icon name="arrow-right" className="w-4 h-4 text-ink-300" />
-                <span className="text-ink-500 text-xs">{s.cialdini_principle || '—'}</span>
+                <span className="text-ink-500 text-xs">{describeCialdini(s.cialdini_principle)}</span>
                 <span className="ml-auto text-xs text-ink-500">强度 {s.intensity_level ?? '—'}</span>
               </li>
             ))}
@@ -179,7 +206,7 @@ export default function EventPropagationResult({ data, loading, error }) {
         )}
       </Section>
 
-      <Section title={`干预建议 · ${interventions.length} 条`}>
+      <Section title={`干预建议 · ${interventions.length} 条`} info={GLOSSARY.intervention_window}>
         {interventions.length === 0 ? (
           <Empty title="暂无干预建议" />
         ) : (
@@ -199,7 +226,7 @@ export default function EventPropagationResult({ data, loading, error }) {
         )}
       </Section>
 
-      <Section title="反事实路径报告">
+      <Section title="反事实路径报告" info={GLOSSARY.counterfactual}>
         <div className="text-sm text-ink-900 leading-relaxed whitespace-pre-wrap">
           {counter.summary_branch_a
             ? `[A·攻击路径] ${counter.summary_branch_a}\n[B·防御路径] ${counter.summary_branch_b || ''}`

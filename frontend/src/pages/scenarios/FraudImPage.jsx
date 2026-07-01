@@ -5,6 +5,7 @@ import ScenarioLayout from '../../components/ScenarioLayout'
 import Section from '../../components/Section'
 import { FormField, TextInput, TextArea, Select } from '../../components/FormField'
 import Icon from '../../components/Icon'
+import Spinner from '../../components/Spinner'
 import { runFraudImAnalysis } from '../../api/scenarios'
 import FraudImResult from '../../components/results/FraudImResult'
 
@@ -105,7 +106,7 @@ export default function FraudImPage() {
               />
             </FormField>
             <button type="submit" className="btn-primary w-full" disabled={loading}>
-              <Icon name="spark" className="w-4 h-4 mr-1.5" />
+              {loading ? <Spinner className="w-4 h-4 mr-1.5" /> : <Icon name="spark" className="w-4 h-4 mr-1.5" />}
               {loading ? '分析中…' : '开始分析'}
             </button>
             <div className="text-[11px] text-ink-500 leading-relaxed pt-1">

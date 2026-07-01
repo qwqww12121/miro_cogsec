@@ -16,6 +16,16 @@ import Section from '../Section'
 import StatTile from '../StatTile'
 import Empty from '../Empty'
 import Icon from '../Icon'
+import InfoHint from '../InfoHint'
+import RiskHeadline from '../RiskHeadline'
+import Spinner from '../Spinner'
+import AnomalyTag from '../AnomalyTag'
+import {
+  GLOSSARY,
+  describeCialdini,
+  describeCognitiveMode,
+  describeScenarioType,
+} from '../../scenarios/glossary'
 
 /**
  * 直接消费 backend /api/cogsec/analyze 的真实返回，按"舆情分析"语义重新组织展示，
@@ -25,8 +35,8 @@ export default function PublicOpinionResult({ data, loading, error }) {
   if (loading) {
     return (
       <Section title="分析进行中">
-        <div className="py-12 text-center text-sm text-ink-500">
-          <span className="inline-block w-2 h-2 rounded-full bg-leaf mr-2 animate-pulse" />
+        <div className="py-12 flex items-center justify-center gap-2 text-sm text-ink-500">
+          <Spinner className="w-4 h-4 text-leaf" />
           正在调用后端 CogSec 引擎…
         </div>
       </Section>
@@ -58,6 +68,9 @@ export default function PublicOpinionResult({ data, loading, error }) {
   const counter = data.counterfactual_report || {}
   const anomalies = data.anomalies || []
 
+  const cog = describeCognitiveMode(psv.cognitive_mode)
+  const overall = profile.overall_vulnerability_score
+
   // 情绪向量：直接来自 profile 的真实维度（0-10）
   const emotionDims = [
     { dim: '情绪波动', value: profile.emotional_volatility ?? 0 },
@@ -82,17 +95,13 @@ export default function PublicOpinionResult({ data, loading, error }) {
 
   return (
     <>
+      <RiskHeadline scenarioType={profile.scenario_type} vulnerabilityScore={overall} />
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile
-          label="脆弱度评分"
-          value={profile.overall_vulnerability_score != null ? profile.overall_vulnerability_score.toFixed(1) : '—'}
-          hint="0-100"
-          tone={getRiskTone(profile.overall_vulnerability_score)}
-        />
         <StatTile
           label="情绪波动维度"
           value={profile.emotional_volatility != null ? profile.emotional_volatility.toFixed(1) : '—'}
-          hint="0-10"
+          hint="0–10，越高越易被情绪带动"
           tone="leaf"
         />
         <StatTile
@@ -102,10 +111,18 @@ export default function PublicOpinionResult({ data, loading, error }) {
           tone="brand"
         />
         <StatTile
+          label="命中高危关键词"
+          value={keywordItems.length}
+          hint="T0 即时检测"
+          tone="sand"
+        />
+        <StatTile
           label="端到端耗时"
           value={metrics.end_to_end_ms != null ? `${(metrics.end_to_end_ms / 1000).toFixed(2)} s` : '—'}
           hint={metrics.end_to_end_target_met ? '✓ <30s' : '超时降级'}
           tone={metrics.end_to_end_target_met ? 'leaf' : 'sand'}
+          prominence="muted"
+          info={GLOSSARY.end_to_end}
         />
       </div>
 
@@ -113,16 +130,19 @@ export default function PublicOpinionResult({ data, loading, error }) {
         <div className="grid md:grid-cols-2 gap-4 text-sm">
           <div>
             <div className="text-[11px] text-ink-500 mb-1">场景类型</div>
-            <div className="font-medium text-ink-900">{profile.scenario_type || '—'}</div>
+            <div className="font-medium text-ink-900">{describeScenarioType(profile.scenario_type)}</div>
           </div>
           <div>
-            <div className="text-[11px] text-ink-500 mb-1">认知模式</div>
-            <div className="font-medium text-ink-900">{psv.cognitive_mode || '—'}</div>
+            <div className="text-[11px] text-ink-500 mb-1 flex items-center gap-1">
+              认知模式
+              <InfoHint text={GLOSSARY.cognitive_mode} />
+            </div>
+            <div className="font-medium text-ink-900">{cog.label}</div>
           </div>
           <div className="md:col-span-2">
             <div className="text-[11px] text-ink-500 mb-1">摘要</div>
             <div className="text-ink-900 leading-relaxed">
-              {profile.summary || `脆弱度 ${profile.overall_vulnerability_score?.toFixed?.(1) ?? '—'}/100`}
+              {profile.summary || `脆弱度 ${overall?.toFixed?.(1) ?? '—'}/100`}
             </div>
           </div>
         </div>
@@ -147,7 +167,7 @@ export default function PublicOpinionResult({ data, loading, error }) {
           )}
         </Section>
 
-        <Section title="T0 命中的高危关键词">
+        <Section title="T0 命中的高危关键词" info={GLOSSARY.t0_latency}>
           {keywordRows.length === 0 ? (
             <Empty title="未命中高危关键词" />
           ) : (
@@ -176,7 +196,7 @@ export default function PublicOpinionResult({ data, loading, error }) {
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-medium text-ink-900 text-sm">{s.tactic_name || s.id}</div>
                   <div className="flex items-center gap-1.5">
-                    <span className="tag bg-leaf-50 text-leaf-600">{s.cialdini_principle || '—'}</span>
+                    <span className="tag bg-leaf-50 text-leaf-600">{describeCialdini(s.cialdini_principle)}</span>
                     <span className="tag bg-slate-100 text-ink-500">强度 {s.intensity_level ?? '—'}</span>
                   </div>
                 </div>
@@ -192,7 +212,7 @@ export default function PublicOpinionResult({ data, loading, error }) {
         )}
       </Section>
 
-      <Section title="反事实路径报告">
+      <Section title="反事实路径报告" info={GLOSSARY.counterfactual}>
         <div className="text-sm text-ink-900 leading-relaxed whitespace-pre-wrap">
           {counter.summary_branch_a
             ? `[危险分支] ${counter.summary_branch_a}\n[防御分支] ${counter.summary_branch_b || ''}`
@@ -206,18 +226,11 @@ export default function PublicOpinionResult({ data, loading, error }) {
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {anomalies.map((a) => (
-              <span key={a} className="tag bg-rose-50 text-rose-600">{a}</span>
+              <AnomalyTag key={a} raw={a} />
             ))}
           </div>
         )}
       </Section>
     </>
   )
-}
-
-function getRiskTone(score) {
-  if (score == null) return 'default'
-  if (score >= 70) return 'danger'
-  if (score >= 50) return 'sand'
-  return 'leaf'
 }

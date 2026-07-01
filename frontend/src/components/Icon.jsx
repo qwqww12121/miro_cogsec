@@ -43,6 +43,12 @@ const PATHS = {
     </g>
   ),
   check: <path d="M5 12.5L10 17.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />,
+  info: (
+    <g strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5M12 7.8h.01" />
+    </g>
+  ),
 }
 
 export default function Icon({ name, className = 'w-5 h-5' }) {

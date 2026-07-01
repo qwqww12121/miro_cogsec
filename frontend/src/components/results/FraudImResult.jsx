@@ -2,21 +2,24 @@ import Section from '../Section'
 import StatTile from '../StatTile'
 import Empty from '../Empty'
 import Icon from '../Icon'
-
-function getRiskTone(score) {
-  if (score == null) return 'default'
-  if (score >= 70) return 'danger'
-  if (score >= 50) return 'sand'
-  return 'leaf'
-}
+import InfoHint from '../InfoHint'
+import RiskHeadline from '../RiskHeadline'
+import Spinner from '../Spinner'
+import AnomalyTag from '../AnomalyTag'
+import {
+  GLOSSARY,
+  describeCialdini,
+  describeCognitiveMode,
+  describeScenarioType,
+} from '../../scenarios/glossary'
 
 export default function FraudImResult({ data, loading, error }) {
   if (loading) {
     return (
       <Section title="分析进行中">
-        <div className="py-12 flex items-center justify-center text-sm text-ink-500">
-          <span className="w-2 h-2 rounded-full bg-brand mr-2 animate-pulse" />
-          正在调用 CogSec 引擎，预计 5-30 秒…
+        <div className="py-12 flex items-center justify-center gap-2 text-sm text-ink-500">
+          <Spinner className="w-4 h-4 text-brand" />
+          正在调用 CogSec 引擎，预计 5–30 秒…
         </div>
       </Section>
     )
@@ -49,33 +52,42 @@ export default function FraudImResult({ data, loading, error }) {
 
   const overall = profile.overall_vulnerability_score
   const protection = profile.protection_score
+  const cog = describeCognitiveMode(data.persona_state_vector?.cognitive_mode)
 
   return (
     <>
+      <RiskHeadline scenarioType={profile.scenario_type} vulnerabilityScore={overall} />
+
+      {/* 业务指标 normal，技术性能指标 muted（视觉上次要于核心结论） */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile
-          label="脆弱度评分"
-          value={overall != null ? overall.toFixed(1) : '—'}
-          hint="0-100，越高越易受骗"
-          tone={getRiskTone(overall)}
-        />
         <StatTile
           label="保护因子均值"
           value={protection != null ? protection.toFixed(2) : '—'}
-          hint="6 维保护习惯均值"
+          hint="防范习惯均值，越高越安全"
           tone="leaf"
+          info={GLOSSARY.protection_score}
+        />
+        <StatTile
+          label="检测到话术数"
+          value={strategies.length}
+          hint="后端策略库命中"
+          tone="brand"
         />
         <StatTile
           label="T0 拦截延迟"
           value={metrics.t0_latency_ms != null ? `${metrics.t0_latency_ms} ms` : '—'}
           hint={metrics.t0_target_met ? '✓ 达成 <500ms' : '未达成'}
           tone={metrics.t0_target_met ? 'leaf' : 'sand'}
+          prominence="muted"
+          info={GLOSSARY.t0_latency}
         />
         <StatTile
           label="端到端耗时"
           value={metrics.end_to_end_ms != null ? `${(metrics.end_to_end_ms / 1000).toFixed(2)} s` : '—'}
           hint={metrics.end_to_end_target_met ? '✓ 达成 <30s' : '超时降级'}
           tone={metrics.end_to_end_target_met ? 'leaf' : 'sand'}
+          prominence="muted"
+          info={GLOSSARY.end_to_end}
         />
       </div>
 
@@ -83,13 +95,14 @@ export default function FraudImResult({ data, loading, error }) {
         <div className="grid md:grid-cols-2 gap-4 text-sm">
           <div>
             <div className="text-[11px] text-ink-500 mb-1">场景类型</div>
-            <div className="font-medium text-ink-900">{profile.scenario_type || '—'}</div>
+            <div className="font-medium text-ink-900">{describeScenarioType(profile.scenario_type)}</div>
           </div>
           <div>
-            <div className="text-[11px] text-ink-500 mb-1">认知模式</div>
-            <div className="font-medium text-ink-900">
-              {data.persona_state_vector?.cognitive_mode || '—'}
+            <div className="text-[11px] text-ink-500 mb-1 flex items-center gap-1">
+              认知模式
+              <InfoHint text={GLOSSARY.cognitive_mode} />
             </div>
+            <div className="font-medium text-ink-900">{cog.label}</div>
           </div>
           <div className="md:col-span-2">
             <div className="text-[11px] text-ink-500 mb-1">摘要</div>
@@ -108,7 +121,7 @@ export default function FraudImResult({ data, loading, error }) {
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-medium text-ink-900 text-sm">{s.tactic_name || s.id}</div>
                   <div className="flex items-center gap-1.5">
-                    <span className="tag bg-brand-50 text-brand-600">{s.cialdini_principle || '—'}</span>
+                    <span className="tag bg-brand-50 text-brand-600">{describeCialdini(s.cialdini_principle)}</span>
                     <span className="tag bg-slate-100 text-ink-500">强度 {s.intensity_level ?? '—'}</span>
                   </div>
                 </div>
@@ -125,7 +138,7 @@ export default function FraudImResult({ data, loading, error }) {
       </Section>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <Section title="T0 即时拦截">
+        <Section title="T0 即时拦截" info={GLOSSARY.t0_latency}>
           <div className="text-sm space-y-2">
             <Row label="是否命中">
               <span className={`tag ${t0.matched ? 'bg-rose-50 text-rose-600' : 'bg-leaf-50 text-leaf-600'}`}>
@@ -146,20 +159,20 @@ export default function FraudImResult({ data, loading, error }) {
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {anomalies.map((a) => (
-                <span key={a} className="tag bg-rose-50 text-rose-600">{a}</span>
+                <AnomalyTag key={a} raw={a} />
               ))}
             </div>
           )}
         </Section>
       </div>
 
-      <Section title="反事实路径报告">
+      <Section title="反事实路径报告" info={GLOSSARY.counterfactual}>
         <div className="text-sm text-ink-900 leading-relaxed whitespace-pre-wrap">
           {counter.narrative || counter.summary || '后端未返回叙事内容。'}
         </div>
       </Section>
 
-      <Section title={`干预处方 · ${interventions.length} 条`}>
+      <Section title={`干预处方 · ${interventions.length} 条`} info={GLOSSARY.intervention_window}>
         {interventions.length === 0 ? (
           <Empty title="暂无干预建议" />
         ) : (
@@ -184,6 +197,8 @@ export default function FraudImResult({ data, loading, error }) {
   )
 }
 
+// 认知模式那一行复用 InfoHint 组件做悬浮解释
+
 function Row({ label, children }) {
   return (
     <div className="flex items-center justify-between gap-3">
@@ -195,5 +210,5 @@ function Row({ label, children }) {
 
 function profileSummary(profile) {
   if (!profile || !profile.scenario_type) return '—'
-  return `场景：${profile.scenario_type}；脆弱度 ${(profile.overall_vulnerability_score ?? 0).toFixed(1)}/100。`
+  return `场景：${describeScenarioType(profile.scenario_type)}；脆弱度 ${(profile.overall_vulnerability_score ?? 0).toFixed(1)}/100。`
 }
