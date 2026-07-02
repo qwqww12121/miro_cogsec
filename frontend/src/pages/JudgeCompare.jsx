@@ -2,8 +2,8 @@
  * 裁判对比结果展示（轻量版，纯读静态文件，不调后端）。
  *
  * 数据源（已复制到 frontend/public/judge_data/，靠 id join，30 条完整配对）：
- *   /judge_data/judge_results_no_gold_v2.0_direct_actions_v4flash.jsonl  判决
- *   /judge_data/judge_requests_no_gold_v2.0_direct_actions.jsonl         输入+双方报告
+ *   *   /judge_data/judge_results_no_gold_FAIR_v1.2_qwen.jsonl  判决
+ *   /judge_data/judge_requests_no_gold_FAIR_v1.2_norewrite.jsonl  输入+双方报告
  *
  * 关键点：A/B 槽位在生成时按 sha256(id) 随机化过（30 条里 9 条翻转），
  * 这里通过 results 的 answer_a_system/answer_b_system 把槽位归位为
@@ -25,8 +25,8 @@ import Breadcrumbs from '../components/Breadcrumbs'
 import Section from '../components/Section'
 import JudgeCard from '../components/judge/JudgeCard'
 
-const RESULTS_URL = '/judge_data/judge_results_no_gold_v2.0_direct_actions_v4flash.jsonl'
-const REQUESTS_URL = '/judge_data/judge_requests_no_gold_v2.0_direct_actions.jsonl'
+const RESULTS_URL = '/judge_data/judge_results_no_gold_FAIR_v1.2_qwen.jsonl'
+const REQUESTS_URL = '/judge_data/judge_requests_no_gold_FAIR_v1.2_norewrite.jsonl'
 
 const DIMS = [
   'problem_localization',
