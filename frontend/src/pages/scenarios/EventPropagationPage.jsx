@@ -8,6 +8,16 @@ import Icon from '../../components/Icon'
 import Spinner from '../../components/Spinner'
 import { runEventPropagationAnalysis } from '../../api/scenarios'
 import EventPropagationResult from '../../components/results/EventPropagationResult'
+import PlainViewWrapper from '../../components/results/PlainViewWrapper'
+
+const EP_CHANNELS = ['微博', '抖音', '小红书', '知乎', '跨平台']
+
+function matchChannel(extracted) {
+  if (!extracted) return ''
+  // 多个渠道 → 跨平台
+  if (extracted.includes('、') || extracted.includes(',') || extracted.includes('，')) return '跨平台'
+  return EP_CHANNELS.find((c) => extracted.includes(c)) || ''
+}
 
 const initialForm = {
   eventName: '某高校学术不端事件',
@@ -24,10 +34,21 @@ const SAMPLE = `节点A: @学生论坛账号 - 转发原始爆料
 
 export default function EventPropagationPage() {
   const location = useLocation()
-  const prefillText = location.state?.prefillText
-  const [form, setForm] = useState(
-    prefillText ? { ...initialForm, nodes: prefillText } : initialForm
-  )
+  const prefillText = location.state?.prefillText ?? ''
+  const ef = location.state?.extractedFields ?? {}
+
+  const [form, setForm] = useState(() => {
+    const base = { ...initialForm }
+    if (prefillText) base.nodes = prefillText
+    // 应用智能提取的字段（仅覆盖非空值）
+    if (ef.event_name) base.eventName = ef.event_name
+    if (ef.origin) base.origin = ef.origin
+    const matchedChannel = matchChannel(ef.channels)
+    if (matchedChannel) base.channel = matchedChannel
+    // time_window 为自然语言，无法映射到 6h/24h/7d，跳过
+    return base
+  })
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [data, setData] = useState(null)
@@ -101,7 +122,11 @@ export default function EventPropagationPage() {
           </form>
         </Section>
       }
-      result={<EventPropagationResult data={data} loading={loading} error={error} />}
+      result={
+        <PlainViewWrapper data={data}>
+          <EventPropagationResult data={data} loading={loading} error={error} />
+        </PlainViewWrapper>
+      }
     />
   )
 }

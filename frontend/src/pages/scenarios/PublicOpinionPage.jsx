@@ -8,6 +8,14 @@ import Icon from '../../components/Icon'
 import Spinner from '../../components/Spinner'
 import { runPublicOpinionAnalysis } from '../../api/scenarios'
 import PublicOpinionResult from '../../components/results/PublicOpinionResult'
+import PlainViewWrapper from '../../components/results/PlainViewWrapper'
+
+const PO_PLATFORMS = ['微博', '抖音', '小红书', '知乎', '多平台聚合']
+
+function matchPlatform(extracted) {
+  if (!extracted) return ''
+  return PO_PLATFORMS.find((p) => extracted.includes(p) || p.includes(extracted)) || ''
+}
 
 const initialForm = {
   platform: '微博',
@@ -24,10 +32,20 @@ const SAMPLE = `1. 看了这次官方回应，根本没回应核心问题
 
 export default function PublicOpinionPage() {
   const location = useLocation()
-  const prefillText = location.state?.prefillText
-  const [form, setForm] = useState(
-    prefillText ? { ...initialForm, samples: prefillText } : initialForm
-  )
+  const prefillText = location.state?.prefillText ?? ''
+  const ef = location.state?.extractedFields ?? {}
+
+  const [form, setForm] = useState(() => {
+    const base = { ...initialForm }
+    if (prefillText) base.samples = prefillText
+    // 应用智能提取的字段（仅覆盖非空值）
+    const matchedPlatform = matchPlatform(ef.platform)
+    if (matchedPlatform) base.platform = matchedPlatform
+    if (ef.topic) base.topic = ef.topic
+    // time_window 为自然语言（如"昨天到今天"），无法映射到 6h/24h/7d，跳过
+    return base
+  })
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [data, setData] = useState(null)
@@ -98,7 +116,11 @@ export default function PublicOpinionPage() {
           </form>
         </Section>
       }
-      result={<PublicOpinionResult data={data} loading={loading} error={error} />}
+      result={
+        <PlainViewWrapper data={data}>
+          <PublicOpinionResult data={data} loading={loading} error={error} />
+        </PlainViewWrapper>
+      }
     />
   )
 }

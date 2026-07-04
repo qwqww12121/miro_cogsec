@@ -34,7 +34,12 @@ export default function IntelligentClassifier() {
   const onEnterScenario = () => {
     const scenario = result && SCENARIOS[result.scenario_type]
     if (!scenario) return
-    navigate(scenario.path, { state: { prefillText: text } })
+    navigate(scenario.path, {
+      state: {
+        prefillText: text,
+        extractedFields: result.extracted_fields || {},
+      },
+    })
   }
 
   const scenario = result ? SCENARIOS[result.scenario_type] : null

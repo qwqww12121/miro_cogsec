@@ -15,7 +15,6 @@ export async function runFraudImAnalysis(form) {
   const scenarioText = joinScenario([
     form.platform ? `[平台]${form.platform}` : '',
     form.attackerRole ? `[嫌疑人身份]${form.attackerRole}` : '',
-    form.victimContext ? `[受害人背景]${form.victimContext}` : '',
     form.conversation ? `[对话内容]\n${form.conversation}` : '',
   ])
 
