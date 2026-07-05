@@ -35,7 +35,7 @@ export async function runPublicOpinionAnalysis(form) {
 
   return analyzeCogSec({
     scenario: scenarioText,
-    scenario_type: form.scenarioType || '舆情分析',
+    scenario_type: 'public_opinion',
   })
 }
 
@@ -50,6 +50,6 @@ export async function runEventPropagationAnalysis(form) {
 
   return analyzeCogSec({
     scenario: scenarioText,
-    scenario_type: form.scenarioType || '事件传播分析',
+    scenario_type: 'event_propagation',
   })
 }

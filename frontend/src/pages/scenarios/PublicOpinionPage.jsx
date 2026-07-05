@@ -111,13 +111,13 @@ export default function PublicOpinionPage() {
               {loading ? '分析中…' : '开始分析'}
             </button>
             <div className="text-[11px] text-ink-500 leading-relaxed pt-1">
-              将调用 <code className="text-ink-900">POST /api/cogsec/analyze</code>（scenario_type=舆情分析）；结果直接读取真实 CogSec 引擎输出。
+              将调用 <code className="text-ink-900">POST /api/cogsec/analyze</code>，结果直接读取真实 CogSec 引擎输出。
             </div>
           </form>
         </Section>
       }
       result={
-        <PlainViewWrapper data={data}>
+        <PlainViewWrapper data={data} scenarioType="public_opinion">
           <PublicOpinionResult data={data} loading={loading} error={error} />
         </PlainViewWrapper>
       }

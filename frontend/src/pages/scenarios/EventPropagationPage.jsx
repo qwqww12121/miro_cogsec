@@ -117,13 +117,13 @@ export default function EventPropagationPage() {
               {loading ? '推演中…' : '开始分析'}
             </button>
             <div className="text-[11px] text-ink-500 leading-relaxed pt-1">
-              将调用 <code className="text-ink-900">POST /api/cogsec/analyze</code>（scenario_type=事件传播分析）；时间线由 branch_a/b_log 与 fork_comparison 派生。
+              将调用 <code className="text-ink-900">POST /api/cogsec/analyze</code>，时间线由 branch_a/b_log 与 fork_comparison 派生。
             </div>
           </form>
         </Section>
       }
       result={
-        <PlainViewWrapper data={data}>
+        <PlainViewWrapper data={data} scenarioType="event_propagation">
           <EventPropagationResult data={data} loading={loading} error={error} />
         </PlainViewWrapper>
       }

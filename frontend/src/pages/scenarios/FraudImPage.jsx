@@ -152,7 +152,7 @@ export default function FraudImPage() {
         </Section>
       }
       result={
-        <PlainViewWrapper data={data}>
+        <PlainViewWrapper data={data} scenarioType="fraud_im">
           <FraudImResult data={data} loading={loading} error={error} />
         </PlainViewWrapper>
       }

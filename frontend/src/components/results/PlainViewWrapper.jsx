@@ -16,7 +16,7 @@ import Icon from '../Icon'
  * - data 有值时显示 Tab，通俗视图结果缓存，来回切换不重复请求
  * - data 变化（新一次分析完成）时自动重置缓存并切回专业视图
  */
-export default function PlainViewWrapper({ data, children }) {
+export default function PlainViewWrapper({ data, scenarioType, children }) {
   const [viewMode, setViewMode] = useState('expert')
   const [plainData, setPlainData] = useState(null)
   const [plainLoading, setPlainLoading] = useState(false)
@@ -40,7 +40,7 @@ export default function PlainViewWrapper({ data, children }) {
     setPlainLoading(true)
     setPlainError(null)
     try {
-      const input = extractPlainifyInput(data)
+      const input = extractPlainifyInput(data, scenarioType)
       const result = await plainifyResult(input)
       if (fetchIdRef.current === myId) setPlainData(result)
     } catch (err) {

@@ -7,7 +7,7 @@ import client from './client'
  * 返回：CogSecAnalysisResult（profile / strategies / graph / counterfactual_report / metrics ...）
  */
 export async function analyzeCogSec(payload) {
-  const resp = await client.post('/api/cogsec/analyze', payload)
+  const resp = await client.post('/api/cogsec/analyze', payload, { timeout: 180000 })
   if (resp?.data?.success === false) {
     throw new Error(resp.data.error || '分析失败')
   }
