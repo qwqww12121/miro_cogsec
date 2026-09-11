@@ -501,9 +501,20 @@ class CogSecService:
                     fraud_result_obj,
                     existing_fork=runtime_result.fork_comparison,
                 )
-                # Demo dual-path is always the mainline 6-step trace.
-                # Fraud multi-role output stays in fraud_interaction only.
                 if adapted_fork is not None:
+                    # The fraud interaction is the primary counterfactual
+                    # source for fraud_im.  Keep the original FORK result in
+                    # the supplementary field, but make the adapted trace
+                    # feed RiskScorer and the final provenance flag.
+                    effective_fork_comparison = adapted_fork
+                    effective_branch_a_log = [
+                        step.to_dict()
+                        for step in adapted_fork.branch_a_state_trace
+                    ]
+                    effective_branch_b_log = [
+                        step.to_dict()
+                        for step in adapted_fork.branch_b_state_trace
+                    ]
                     runtime_components["fraud_interaction"] = fraud_result_obj.status
                     if fraud_result_obj.status != "complete":
                         degraded_reasons.extend(
