@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CogSec-MiroFish 最小演示</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='cogsec_demo.css') }}">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">CogSec-MiroFish Demo</p>
+        <h1>认知安全最小可视化演示</h1>
+        <p class="hero-text">
+          这个页面直接调用 Flask API，展示场景识别、认知画像、攻击分支、防御分支与反事实建议。
+        </p>
+      </div>
+      <div class="hero-badge">
+        <span>后端</span>
+        <strong>Flask</strong>
+      </div>
+    </header>
+
+    <section class="panel input-panel">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Input</p>
+          <h2>场景输入</h2>
+        </div>
+        <div class="actions">
+          <button id="fill-sample-btn" class="ghost-btn">填入示例</button>
+          <button id="analyze-btn" class="primary-btn">开始分析</button>
+        </div>
+      </div>
+
+      <label class="field">
+        <span>诈骗类别（可选）</span>
+        <select id="scenario-type">
+          <option value="">自动识别</option>
+          <option value="虚假征信类">虚假征信类</option>
+          <option value="刷单返利类">刷单返利类</option>
+          <option value="虚假网络投资理财类">虚假网络投资理财类</option>
+          <option value="冒充电商物流客服类">冒充电商物流客服类</option>
+          <option value="冒充公检法及政府机关类">冒充公检法及政府机关类</option>
+          <option value="冒充领导熟人类">冒充领导熟人类</option>
+          <option value="网络游戏产品虚假交易类">网络游戏产品虚假交易类</option>
+          <option value="网络婚恋交友类">网络婚恋交友类</option>
+          <option value="机票退改签类">机票退改签类</option>
+          <option value="虚假贷款代办信用卡类">虚假贷款代办信用卡类</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>场景文本</span>
+        <textarea id="scenario-input" rows="6">{{ default_scenario }}</textarea>
+      </label>
+
+      <div id="status-box" class="status-box idle">等待分析</div>
+    </section>
+
+    <section id="result-shell" class="result-shell hidden">
+      <div class="metrics-grid" id="metrics-grid"></div>
+
+      <div class="two-col">
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Profile</p>
+              <h2>18 维认知画像</h2>
+            </div>
+          </div>
+          <div id="profile-groups" class="profile-groups"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Outcome</p>
+              <h2>最终评分对比</h2>
+            </div>
+          </div>
+          <div id="score-summary" class="score-summary"></div>
+          <div class="chart-box">
+            <svg id="trend-chart" viewBox="0 0 760 280" preserveAspectRatio="none"></svg>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Timeline</p>
+            <h2>危险 / 防御双分支流程</h2>
+          </div>
+        </div>
+        <div id="timeline-grid" class="timeline-grid"></div>
+      </section>
+
+      <div class="two-col">
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Graph</p>
+              <h2>关系图可视化</h2>
+            </div>
+          </div>
+          <div id="graph-stage" class="graph-stage"></div>
+        </section>
+
+        <section class="panel">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Advice</p>
+              <h2>个性化建议</h2>
+            </div>
+          </div>
+          <div id="recommend-list" class="recommend-list"></div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">JSON</p>
+            <h2>原始返回</h2>
+          </div>
+        </div>
+        <pre id="raw-json" class="raw-json"></pre>
+      </section>
+    </section>
+  </div>
+
+  <script>
+    window.__COGSEC_DEFAULT_SCENARIO__ = {{ default_scenario|tojson }};
+  </script>
+  <script src="{{ url_for('static', filename='cogsec_demo.js') }}"></script>
+</body>
+</html>

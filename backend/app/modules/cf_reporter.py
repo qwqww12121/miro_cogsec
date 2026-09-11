@@ -1,0 +1,652 @@
+﻿"""反事实报告模块。"""
+
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Optional, Tuple
+
+
+@dataclass
+class TriggerPoint:
+    """关键触发点。"""
+
+    step: int
+    branch: str
+    triggered_principle: str
+    agent_action: str
+    victim_response: str
+    score_delta: Dict[str, float]
+    evidence_case_id: Optional[str] = None
+    evidence_similarity: float = 0.0
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)
+
+
+@dataclass
+class CFReport:
+    """反事实分析报告。"""
+
+    summary_branch_a: str
+    summary_branch_b: str
+    risk_level: str
+    critical_bifurcation_step: int
+    critical_bifurcation_reason: str
+    trigger_points: List[TriggerPoint]
+    recommendations: List[Dict[str, Any]]
+    score_comparison: Dict[str, Any]
+    related_case_summary: Optional[str] = None
+    structured_report: Optional[Dict[str, Any]] = None
+    digital_twin_summary: Optional[Dict[str, Any]] = None
+    cognitive_weakness_chain: Optional[List[Dict[str, Any]]] = None
+    attack_strategy_chain: Optional[List[Dict[str, Any]]] = None
+    fork_nodes: Optional[List[Dict[str, Any]]] = None
+    branch_contrast: Optional[Dict[str, Any]] = None
+    irreversible_nodes: Optional[List[Dict[str, Any]]] = None
+    best_intervention_window: Optional[Dict[str, Any]] = None
+    intervention_prescriptions: Optional[List[Dict[str, Any]]] = None
+    implementation_status: Optional[Dict[str, Any]] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        payload = asdict(self)
+        payload["trigger_points"] = [point.to_dict() for point in self.trigger_points]
+        payload["report_sections"] = self.structured_report or {}
+        return payload
+
+
+class CounterfactualReporter:
+    """比较危险分支与防御分支并生成可解释结论。"""
+
+    def generate_report(
+        self,
+        branch_a_log: List[dict],
+        branch_b_log: List[dict],
+        scorer_a: Any,
+        scorer_b: Any,
+        cognitive_profile: Any,
+        case_evidence: Optional[str] = None,
+        persona_state_vector: Optional[Any] = None,
+        risk_graph_bundle: Optional[Any] = None,
+        fork_comparison: Optional[Any] = None,
+        risk_breakdown: Optional[Any] = None,
+        intervention_prescriptions: Optional[List[Dict[str, Any]]] = None,
+    ) -> CFReport:
+        """生成反事实报告。"""
+        if fork_comparison is not None and risk_breakdown is not None:
+            return self._generate_mainline_report(
+                branch_a_log=branch_a_log,
+                branch_b_log=branch_b_log,
+                scorer_a=scorer_a,
+                scorer_b=scorer_b,
+                cognitive_profile=cognitive_profile,
+                case_evidence=case_evidence,
+                persona_state_vector=persona_state_vector,
+                risk_graph_bundle=risk_graph_bundle,
+                fork_comparison=fork_comparison,
+                risk_breakdown=risk_breakdown,
+                intervention_prescriptions=intervention_prescriptions or [],
+            )
+
+        bifurcation_step, bifurcation_reason = self._find_bifurcation(
+            branch_a_log,
+            branch_b_log,
+            scorer_a,
+            scorer_b,
+        )
+        triggers = self._extract_triggers(branch_a_log, branch_b_log)
+        recommendations = self._generate_recommendations(cognitive_profile, triggers)
+
+        final_a = scorer_a.scores
+        final_b = scorer_b.scores
+        risk_level = max(
+            [final_a.summary_risk_level(), final_b.summary_risk_level()],
+            key=lambda level: ["LOW", "MEDIUM", "HIGH", "CRITICAL"].index(level),
+        )
+
+        structured = {
+            "overview": {
+                "branch_a": self._compose_branch_summary("A", final_a, branch_a_log),
+                "branch_b": self._compose_branch_summary("B", final_b, branch_b_log),
+                "final_outcomes": {
+                    "branch_a": final_a.to_dict(),
+                    "branch_b": final_b.to_dict(),
+                },
+                "overall_risk_level": risk_level,
+            },
+            "trigger_analysis": {
+                "critical_bifurcation_step": bifurcation_step,
+                "critical_bifurcation_reason": bifurcation_reason,
+                "trigger_points": [item.to_dict() for item in triggers],
+            },
+            "recommendations": recommendations,
+        }
+
+        return CFReport(
+            summary_branch_a=structured["overview"]["branch_a"],
+            summary_branch_b=structured["overview"]["branch_b"],
+            risk_level=risk_level,
+            critical_bifurcation_step=bifurcation_step,
+            critical_bifurcation_reason=bifurcation_reason,
+            trigger_points=triggers,
+            recommendations=recommendations,
+            score_comparison={
+                "branch_a_final": final_a.to_dict(),
+                "branch_b_final": final_b.to_dict(),
+                "timeline_a": scorer_a.get_score_timeline(),
+                "timeline_b": scorer_b.get_score_timeline(),
+            },
+            related_case_summary=case_evidence,
+            structured_report=structured,
+        )
+
+    def _generate_mainline_report(
+        self,
+        branch_a_log: List[dict],
+        branch_b_log: List[dict],
+        scorer_a: Any,
+        scorer_b: Any,
+        cognitive_profile: Any,
+        case_evidence: Optional[str],
+        persona_state_vector: Optional[Any],
+        risk_graph_bundle: Optional[Any],
+        fork_comparison: Any,
+        risk_breakdown: Any,
+        intervention_prescriptions: List[Dict[str, Any]],
+    ) -> CFReport:
+        bifurcation_step = fork_comparison.best_intervention_window.get("open_step", 1)
+        bifurcation_reason = (
+            f"主对照分叉是「{self._fork_type_zh(fork_comparison.fork_point_type)}」，"
+            f"高危分支在第 {bifurcation_step} 步进入不可逆前窗口。"
+        )
+        triggers = self._extract_triggers(branch_a_log, branch_b_log)
+        if not intervention_prescriptions:
+            intervention_prescriptions = self._generate_mainline_prescriptions(
+                profile=cognitive_profile,
+                fork_comparison=fork_comparison,
+                persona_state_vector=persona_state_vector,
+            )
+
+        structured = {
+            "digital_twin_summary": {
+                "scenario_type": getattr(cognitive_profile, "scenario_type", "unknown"),
+                "persona_state_vector": persona_state_vector.to_dict() if persona_state_vector is not None else {},
+                "cognitive_profile_summary": cognitive_profile.summary() if hasattr(cognitive_profile, "summary") else "",
+            },
+            "cognitive_weakness_chain": (risk_graph_bundle.persona_weakness_hits if risk_graph_bundle else []),
+            "attack_strategy_chain": (risk_graph_bundle.attack_strategy_chain if risk_graph_bundle else []),
+            "fork_nodes": (risk_graph_bundle.fork_points if risk_graph_bundle else []),
+            "branch_contrast": {
+                "branch_a": branch_a_log,
+                "branch_b": branch_b_log,
+                "trajectory_gap": risk_breakdown.trajectory_gap,
+                "fork_point_type": risk_breakdown.fork_point_type,
+            },
+            "irreversible_nodes": [
+                {
+                    "branch": item.get("branch"),
+                    "step": item.get("step"),
+                    "action": item.get("action"),
+                }
+                for item in branch_a_log
+                if item.get("irreversible") or item.get("world_state", {}).get("reversibility", 1.0) < 0.35
+            ],
+            "best_intervention_window": fork_comparison.best_intervention_window,
+            "intervention_prescriptions": intervention_prescriptions,
+            "mainline_risk_breakdown": risk_breakdown.to_dict(),
+            "implementation_status": {
+                "stable_base": [
+                    "PrivacySanitizer",
+                    "CognitiveProfileExtractor",
+                    "ThreatKnowledgeRAG retrieval",
+                    "Frontend report workbench",
+                ],
+                "new_mainline": [
+                    "persona_state_vector runtime init",
+                    "risk_graph_bundle construction",
+                    "WorldState + Fork branch traces",
+                    "counterfactual branch-delta risk scoring",
+                    "node-bound intervention prescriptions",
+                ],
+                "phase_ii": [
+                    "deeper live ZEP memory sync into runtime",
+                    "multi-fork parallel search across longer horizons",
+                    "full multi-agent runtime with Context/Audit live loop",
+                ],
+            },
+        }
+
+        recommendations = [
+            {
+                "priority": item.get("priority", index + 1),
+                "action": item.get("title", "Intervention"),
+                "reason": item.get("rationale", ""),
+            }
+            for index, item in enumerate(intervention_prescriptions)
+        ]
+        risk_level = risk_breakdown.risk_level
+
+        return CFReport(
+            summary_branch_a=self._compose_mainline_branch_summary("A", branch_a_log),
+            summary_branch_b=self._compose_mainline_branch_summary("B", branch_b_log),
+            risk_level=risk_level,
+            critical_bifurcation_step=bifurcation_step,
+            critical_bifurcation_reason=bifurcation_reason,
+            trigger_points=triggers,
+            recommendations=recommendations,
+            score_comparison={
+                "final_risk": risk_breakdown.final_risk,
+                "risk_breakdown": risk_breakdown.to_dict(),
+                "branch_a_final": self._rolling_final(scorer_a, branch_a_log, defensive=False),
+                "branch_b_final": self._rolling_final(scorer_b, branch_b_log, defensive=True),
+                "timeline_a": self._rolling_timeline(scorer_a, branch_a_log, defensive=False),
+                "timeline_b": self._rolling_timeline(scorer_b, branch_b_log, defensive=True),
+                "reversibility_curve": fork_comparison.reversibility_curve,
+                "delta_r_curve": getattr(fork_comparison, "delta_r_curve", None) or [],
+                "loss_critical_step": getattr(fork_comparison, "loss_critical_step", None),
+            },
+            related_case_summary=case_evidence,
+            structured_report=structured,
+            digital_twin_summary=structured["digital_twin_summary"],
+            cognitive_weakness_chain=structured["cognitive_weakness_chain"],
+            attack_strategy_chain=structured["attack_strategy_chain"],
+            fork_nodes=structured["fork_nodes"],
+            branch_contrast=structured["branch_contrast"],
+            irreversible_nodes=structured["irreversible_nodes"],
+            best_intervention_window=structured["best_intervention_window"],
+            intervention_prescriptions=structured["intervention_prescriptions"],
+            implementation_status=structured["implementation_status"],
+        )
+
+    def _rolling_final(self, scorer: Any, branch_log: list, defensive: bool) -> dict:
+        if branch_log:
+            last = branch_log[-1] if isinstance(branch_log[-1], dict) else {}
+            scores_after = last.get("scores_after")
+            if isinstance(scores_after, dict) and scores_after:
+                return scores_after
+        if scorer is not None and getattr(scorer, "scores", None) is not None:
+            return scorer.scores.to_dict()
+        return self._synth_scores(branch_log, defensive=defensive)
+
+    def _rolling_timeline(self, scorer: Any, branch_log: list, defensive: bool) -> list:
+        scorer_rows = []
+        if scorer is not None and hasattr(scorer, "get_score_timeline"):
+            scorer_rows = scorer.get_score_timeline() or []
+        rows = []
+        for index, item in enumerate(branch_log or []):
+            ws = item.get("world_state", {}) if isinstance(item, dict) else {}
+            if isinstance(item, dict) and item.get("scores_after"):
+                row = dict(item["scores_after"])
+            elif index < len(scorer_rows):
+                row = dict(scorer_rows[index])
+            else:
+                row = self._ws_to_timeline(ws, defensive=defensive)
+            row["t"] = index
+            posterior = ws.get("posterior_risk")
+            if posterior is not None:
+                value = float(posterior)
+                row["posterior_risk"] = round(value * 100.0 if value <= 1.0 else value, 2)
+            rows.append(row)
+        return rows
+
+    def _synth_scores(self, branch_log: list, defensive: bool) -> dict:
+        """从分支日志末态合成四维评分。"""
+        ws = branch_log[-1].get("world_state", {}) if branch_log else {}
+        post_risk = float(ws.get("posterior_risk", 0.0))
+        exposure = float(ws.get("asset_exposure", 0.0))
+        reversibility = float(ws.get("reversibility", 1.0))
+        if defensive:
+            return {
+                "CHS": round(max(0.0, min(100.0, 100 - post_risk * 30)), 1),
+                "ASS": round(max(0.0, min(100.0, 100 - exposure * 50)), 1),
+                "SSS": round(max(0.0, min(100.0, 55 + reversibility * 30)), 1),
+                "EES": round(max(0.0, min(100.0, post_risk * 20)), 1),
+            }
+        return {
+            "CHS": round(max(0.0, min(100.0, 100 - post_risk * 70)), 1),
+            "ASS": round(max(0.0, min(100.0, 100 - exposure * 90)), 1),
+            "SSS": round(max(0.0, min(100.0, 50 - (1 - reversibility) * 40)), 1),
+            "EES": round(max(0.0, min(100.0, post_risk * 60 + exposure * 30)), 1),
+        }
+
+    def _ws_to_timeline(self, ws: dict, defensive: bool) -> dict:
+        """将 world_state 转换为图表所需时间线格式。"""
+        scores = self._synth_scores([{"world_state": ws}], defensive=defensive)
+        scores["posterior_risk"] = round(float(ws.get("posterior_risk", 0.0)) * 100, 2)
+        scores["reversibility"] = round(float(ws.get("reversibility", 1.0)) * 100, 2)
+        scores["cognitive_mode"] = ws.get("cognitive_mode", "SYSTEM_2")
+        return scores
+
+    def _find_bifurcation(
+        self,
+        log_a: List[dict],
+        log_b: List[dict],
+        scorer_a: Any,
+        scorer_b: Any,
+    ) -> Tuple[int, str]:
+        """寻找两个分支差异最大的拐点。"""
+        best_step = 0
+        best_gap = -1.0
+        best_reason = "初始判断已导致明显分化。"
+
+        max_steps = min(len(scorer_a.history), len(scorer_b.history))
+        for step_idx in range(max_steps):
+            scores_a = scorer_a.history[step_idx]
+            scores_b = scorer_b.history[step_idx]
+            ass_gap = abs(scores_a.ASS - scores_b.ASS)
+            chs_gap = abs(scores_a.CHS - scores_b.CHS)
+            ees_gap = abs(scores_a.EES - scores_b.EES)
+            risk_gap = abs(getattr(scores_a, "risk_score", 0.0) - getattr(scores_b, "risk_score", 0.0))
+            total_gap = ass_gap * 0.45 + chs_gap * 0.2 + ees_gap * 0.15 + risk_gap * 0.2
+
+            if total_gap <= best_gap:
+                continue
+
+            best_gap = total_gap
+            best_step = step_idx
+            action_a = (
+                log_a[step_idx - 1].get("agent_action", "高风险操作")
+                if step_idx > 0 and step_idx - 1 < len(log_a)
+                else "起始动作"
+            )
+            action_b = (
+                log_b[step_idx - 1].get("agent_action", "保护动作")
+                if step_idx > 0 and step_idx - 1 < len(log_b)
+                else "起始动作"
+            )
+            best_reason = (
+                f"第 {step_idx} 步出现最大分叉：危险分支执行“{action_a}”，"
+                f"防御分支选择“{action_b}”，导致资产与认知分数差距迅速拉开。"
+            )
+
+        return best_step, best_reason
+
+    def _extract_triggers(self, branch_a_log: List[dict], branch_b_log: List[dict]) -> List[TriggerPoint]:
+        """提取危险分支与防御分支中的关键触发点。"""
+        trigger_points: List[TriggerPoint] = []
+
+        for branch_name, logs in (("A", branch_a_log), ("B", branch_b_log)):
+            for item in logs:
+                principles = item.get("triggered_principles", [])
+                if not principles and not item.get("is_protection_action"):
+                    continue
+                principle = "、".join(principles) if principles else "protection"
+                trigger_points.append(
+                    TriggerPoint(
+                        step=int(item.get("step", 0)),
+                        branch=branch_name,
+                        triggered_principle=principle,
+                        agent_action=item.get("agent_action", ""),
+                        victim_response=item.get("victim_response", ""),
+                        score_delta=item.get("score_delta", {}),
+                        evidence_case_id=item.get("evidence_case_id"),
+                        evidence_similarity=float(item.get("evidence_similarity", 0.0)),
+                    )
+                )
+
+        trigger_points.sort(
+            key=lambda point: (
+                point.step,
+                0 if point.branch == "A" else 1,
+                -(point.score_delta.get("ASS", 0) - point.score_delta.get("CHS", 0)),
+            )
+        )
+        return trigger_points[:8]
+
+    def _generate_recommendations(self, profile: Any, triggers: List[TriggerPoint]) -> List[dict]:
+        """生成个性化建议。"""
+        recommendations: List[Dict[str, Any]] = []
+        principles = "、".join(
+            {point.triggered_principle for point in triggers if point.triggered_principle != "protection"}
+        )
+
+        if getattr(profile, "verification_habit", 5.0) < 4:
+            recommendations.append(
+                {
+                    "priority": 1,
+                    "action": "凡涉及资金、征信、账户安全操作，必须通过 APP 官方入口或公开客服电话二次核验。",
+                    "reason": f"您的二次核验习惯评分为 {profile.verification_habit:.1f}，低于安全基线。",
+                }
+            )
+        if getattr(profile, "decision_delay", 5.0) < 4:
+            recommendations.append(
+                {
+                    "priority": 2,
+                    "action": "建立“强制冷静 30 分钟”规则，任何‘立即处理’情境都不能当场转账或共享屏幕。",
+                    "reason": "推演显示时间压力是本次攻击中的主要杠杆。",
+                }
+            )
+        if getattr(profile, "help_seeking", 5.0) < 4:
+            recommendations.append(
+                {
+                    "priority": 3,
+                    "action": "为高风险决策指定家人/同学作为担保联系人，转账或提供验证码前先联系对方。",
+                    "reason": "社会支持系统能显著提升认知防御能力。",
+                }
+            )
+        if getattr(profile, "link_check_ability", 5.0) < 4:
+            recommendations.append(
+                {
+                    "priority": 4,
+                    "action": "把“看域名、查来电、比对收款账户”做成固定流程，并在手机里保存常用官方渠道。",
+                    "reason": "当前链接与身份校验能力偏弱，容易被伪装渠道绕过。",
+                }
+            )
+        if principles:
+            recommendations.append(
+                {
+                    "priority": 5,
+                    "action": "针对本次命中的劝诱原则做专项训练，例如复盘权威施压、稀缺制造和从众暗示的识别方式。",
+                    "reason": f"本次分支中反复出现的操控原则为：{principles}。",
+                }
+            )
+
+        recommendations.sort(key=lambda item: item["priority"])
+        return recommendations[:3]
+
+    def _compose_branch_summary(self, branch_name: str, scores: Any, log: List[dict]) -> str:
+        """拼装分支摘要。"""
+        steps = len(log)
+        exposure_events = sum(1 for item in log if item.get("asset_exposure_coefficient", 0.0) > 0.05)
+        protection_events = sum(1 for item in log if item.get("is_protection_action"))
+        last_action = log[-1].get("agent_action", "无关键动作") if log else "无交互"
+        label = "危险路径" if branch_name == "A" else "防御路径"
+        return (
+            f"分支 {branch_name}（{label}）共经历 {steps} 个步骤，资产暴露事件 {exposure_events} 次，"
+            f"保护动作 {protection_events} 次。最终 CHS={scores.CHS:.1f}、ASS={scores.ASS:.1f}、"
+            f"EES={scores.EES:.1f}，风险等级为 {scores.summary_risk_level()}。"
+            f" 最后一个关键动作是“{last_action}”。"
+        )
+
+    def _compose_mainline_branch_summary(self, branch_name: str, log: List[dict]) -> str:
+        if not log:
+            side = "继续走" if branch_name == "A" else "及时止损"
+            return f"{side}还没有对照轨迹。"
+        last = log[-1].get("world_state", {})
+        risk = last.get("posterior_risk", 0)
+        reversibility = last.get("reversibility", 0)
+        action = log[-1].get("action", log[-1].get("agent_action", ""))
+        side = "继续走" if branch_name == "A" else "及时止损"
+        return (
+            f"{side}共 {len(log)} 步；最后一步风险 {float(risk):.3f}，可逆性 {float(reversibility):.3f}。"
+            f"{('动作：' + str(action)) if action else ''}"
+        )
+
+    def _generate_propagation_prescriptions(
+        self,
+        scenario_type: str,
+    ) -> List[Dict[str, Any]]:
+        """为舆情/事件传播场景生成专属干预处方。"""
+        if scenario_type == "event_propagation":
+            return [
+                {
+                    "title": "在第一跳启动官方辟谣快速响应",
+                    "priority": 1,
+                    "rationale": "事件传播最佳干预窗口出现在谣言节点尚未进入裂变阶段前，应对齐传播图的第一跳。",
+                    "recommended_actions": [
+                        "由权威账号第一时间发布经核实的事实声明",
+                        "联系平台对失实内容添加核查标签",
+                        "在原始帖子评论区置顶官方回应",
+                    ],
+                    "channel": "platform_moderation",
+                    "expected_effect": "将传播覆盖率降低 30-50%，缩短谣言生命周期。",
+                    "fallback": "若平台未及时处理，改为直接接触第一跳节点并同步官方声明。",
+                },
+                {
+                    "title": "对关键传播节点实施可见度干预",
+                    "priority": 2,
+                    "rationale": "高影响力节点（大V、媒体账号）的二次传播是主要放大器。",
+                    "recommended_actions": [
+                        "识别并接触 top-3 传播节点，提供准确信息",
+                        "申请平台对违规转发帖降低推荐权重",
+                    ],
+                    "channel": "key_node_outreach",
+                    "expected_effect": "截断二次传播链，防止跨平台扩散。",
+                    "fallback": "若大V未回应，改为媒体通报和评论区置顶官方声明。",
+                },
+                {
+                    "title": "建立持续监测与反馈机制",
+                    "priority": 3,
+                    "rationale": "防止澄清信息发布后舆情再次反弹。",
+                    "recommended_actions": [
+                        "设置关键词监控，追踪变体谣言",
+                        "每 6 小时评估一次传播趋势并调整干预策略",
+                    ],
+                    "channel": "monitoring",
+                    "expected_effect": "将舆情生命周期压缩在 24 小时内。",
+                    "fallback": "若热度回升，立即更新事实声明并扩大关键词监测范围。",
+                },
+            ]
+        # public_opinion
+        return [
+            {
+                "title": "在第一跳注入多元视角内容",
+                "priority": 1,
+                "rationale": "信息茧房极化在群体认知偏移完成前可逆；应对齐传播图的第一跳，在意见领袖或媒体接到后介入。",
+                "recommended_actions": [
+                    "引入权威反向观点打破回声室",
+                    "设计高情绪价值的理性叙事内容",
+                ],
+                "channel": "content_injection",
+                "expected_effect": "降低群体极化程度，提升受众信息多元性。",
+                "fallback": "若意见领袖未转发，改为官方账号直接发布对照事实并置顶。",
+            },
+            {
+                "title": "联合平台对情绪化极端内容降权",
+                "priority": 2,
+                "rationale": "情感共鸣激活类内容传播速度是理性内容的 3-5 倍，需平台协同干预。",
+                "recommended_actions": [
+                    "标记并限流包含极端化词汇的内容",
+                    "在情绪化帖子下方展示事实核查结果",
+                ],
+                "channel": "platform_moderation",
+                "expected_effect": "减缓情绪化内容传播速度，为理性讨论创造空间。",
+                "fallback": "若平台降权延迟，改为在高热帖下方集中投放核查结果。",
+            },
+            {
+                "title": "建立官方账号与关键节点直接沟通渠道",
+                "priority": 3,
+                "rationale": "热点借势操控依赖信息不对称；直接沟通可消除权威真空。",
+                "recommended_actions": [
+                    "主动向高影响力账号提供第一手资料",
+                    "开设官方直播或 AMA 解答公众疑虑",
+                ],
+                "channel": "key_node_outreach",
+                "expected_effect": "压缩谣言生存空间，提升官方信息可信度。",
+                "fallback": "若关键节点拒回，改为公开 AMA 或直播答疑，减少权威真空。",
+            },
+        ]
+
+    def _generate_mainline_prescriptions(
+        self,
+        profile: Any,
+        fork_comparison: Any,
+        persona_state_vector: Optional[Any],
+    ) -> List[Dict[str, Any]]:
+        scenario_type = getattr(profile, "scenario_type", "fraud_im") or "fraud_im"
+        open_step = fork_comparison.best_intervention_window.get("open_step", 1)
+        close_step = fork_comparison.best_intervention_window.get("close_step", open_step + 1)
+
+        if scenario_type in ("event_propagation", "public_opinion"):
+            return self._generate_propagation_prescriptions(scenario_type)
+
+        weak_verification = getattr(profile, "verification_habit", 5.0) < 5
+        weak_help = getattr(profile, "help_seeking", 5.0) < 5
+        fork_type = getattr(fork_comparison, "fork_point_type", "generic")
+        node_name = self._fork_type_zh(fork_type)
+        prescriptions = [
+            {
+                "title": f"在「{node_name}」发生前强制二次核验",
+                "priority": 1,
+                "target_failure_node": fork_type,
+                "trigger_step": open_step,
+                "window_open_step": open_step,
+                "window_close_step": close_step,
+                "rationale": "最佳干预窗口出现在高危分支进入不可逆操作前。",
+                "recommended_actions": [
+                    "改用官方应用或官方电话回拨",
+                    "暂停当前会话 10-30 分钟",
+                    "不向陌生渠道继续提供验证码、屏幕或资金",
+                ],
+                "channel": "in_app",
+                "expected_effect": "拦住危险分支继续走下去，让当事人回到停下来核验的判断。",
+                "fallback": "若无法核验，默认终止当前交互。",
+            }
+        ]
+        if weak_verification:
+            prescriptions.append(
+                {
+                    "title": "补强核验习惯缺口",
+                    "priority": 2,
+                    "target_failure_node": "verification_gap",
+                    "trigger_step": open_step,
+                    "window_open_step": open_step,
+                    "window_close_step": close_step,
+                    "rationale": "当前画像显示核验习惯不足，是本次弱点链核心节点。",
+                    "recommended_actions": ["保存官方热线", "对链接与收款账户做固定核对"],
+                    "channel": "training",
+                    "expected_effect": "提高下次相似场景中的分支区分度。",
+                    "fallback": "触发通用保护策略并提示人工协助。",
+                }
+            )
+        if weak_help:
+            prescriptions.append(
+                {
+                    "title": "在失败节点绑定外部求助",
+                    "priority": 3,
+                    "target_failure_node": "social_isolation",
+                    "trigger_step": open_step,
+                    "window_open_step": open_step,
+                    "window_close_step": close_step,
+                    "rationale": "引入亲友或同事可显著降低隔离诱导造成的误判。",
+                    "recommended_actions": ["指定一位高风险决策联系人", "转账或共享屏幕前先通知对方"],
+                    "channel": "social",
+                    "expected_effect": "恢复外部校验回路。",
+                    "fallback": "自动切换到保守默认拒绝策略。",
+                }
+            )
+        return prescriptions
+
+    def _fork_type_zh(self, fork_type: str) -> str:
+        mapping = {
+            "phishing_link_entry": "点击钓鱼链接并提交账号",
+            "transfer_money": "转账",
+            "screen_share": "屏幕共享",
+            "verification_code": "验证码",
+            "unknown_app_download": "安装不明应用",
+            "social_isolation": "切断外部核验",
+            "fake_official_verification": "伪造官方核实",
+            "private_contact_lure": "转到私人渠道继续沟通",
+            "identity_asset_exchange": "交出实名身份资料",
+            "unlicensed_financial_service": "未核验的代还或套现",
+            "gambling_entry": "被引向博彩充值",
+            "timeout_fallback": "对照超时回退",
+            "no_valid_fork": "未形成明确分叉",
+            "fraud_decision": "诈骗关键决策",
+            "fraud_multi_role_primary": "多方对打主线",
+            "verification_gap": "核验习惯缺口",
+            "info_propagation_risk": "信息不核实就扩散",
+            "misinformation_risk": "失实信息扩散",
+            "generic": "高危操作",
+        }
+        key = str(fork_type or "").strip()
+        return mapping.get(key, "高危操作")

@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Miro-CogSec Graph-Support Benchmark Case",
+  "type": "object",
+  "required": ["id", "source", "input", "answer", "annotation"],
+  "additionalProperties": true,
+  "properties": {
+    "id": {"type": "string"},
+    "source": {"type": "object"},
+    "input": {
+      "type": "object",
+      "required": ["language", "channel", "text"],
+      "properties": {
+        "language": {"type": "string"},
+        "channel": {"type": "string"},
+        "text": {"type": "string"}
+      }
+    },
+    "answer": {
+      "type": "object",
+      "required": [
+        "is_fraud",
+        "fraud_type",
+        "risk_level",
+        "attack_stage",
+        "cognitive_pressure",
+        "expected_fork",
+        "intervention_window",
+        "evidence_spans",
+        "evidence_keywords",
+        "scenario_frame",
+        "evidence_pack",
+        "attack_strategy_chain",
+        "persona_weakness_candidates",
+        "asset_targets",
+        "environment_context",
+        "fork_points",
+        "counterfactual_expectation",
+        "uncertainty"
+      ],
+      "properties": {
+        "is_fraud": {"type": "boolean"},
+        "fraud_type": {"type": "string"},
+        "risk_level": {"enum": ["low", "medium", "high", "critical"]},
+        "attack_stage": {"type": "string"},
+        "cognitive_pressure": {"type": "array", "items": {"type": "string"}},
+        "expected_fork": {"type": "string"},
+        "intervention_window": {
+          "type": "object",
+          "required": ["start_turn", "end_turn", "rationale"],
+          "properties": {
+            "start_turn": {"type": "integer", "minimum": 0},
+            "end_turn": {"type": "integer", "minimum": 0},
+            "rationale": {"type": "string"}
+          }
+        },
+        "evidence_spans": {"type": "array", "items": {"type": "string"}},
+        "evidence_keywords": {"type": "array", "items": {"type": "string"}},
+        "scenario_frame": {
+          "type": "object",
+          "required": ["summary", "channel", "source_label", "turns"],
+          "properties": {
+            "summary": {"type": "string"},
+            "language": {"type": "string"},
+            "channel": {"type": "string"},
+            "source_label": {"type": ["string", "null"]},
+            "adversary_role": {"type": "string"},
+            "target_user_action": {"type": "string"},
+            "observed_attack_surface": {"type": "string"},
+            "turns": {"type": "array", "items": {"type": "object"}}
+          }
+        },
+        "evidence_pack": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "span", "evidence_type", "supports", "confidence"],
+            "properties": {
+              "id": {"type": "string"},
+              "span": {"type": "string"},
+              "evidence_type": {"enum": ["direct_text", "source_label", "model_inference"]},
+              "supports": {"type": "array", "items": {"type": "string"}},
+              "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+            }
+          }
+        },
+        "attack_strategy_chain": {"type": "array", "items": {"type": "object"}},
+        "persona_weakness_candidates": {"type": "array", "items": {"type": "object"}},
+        "asset_targets": {"type": "array", "items": {"type": "object", "properties": {"evidence_refs": {"type": "array", "items": {"type": "string"}}, "matched_terms": {"type": "array", "items": {"type": "string"}}}}},
+        "environment_context": {"type": "object"},
+        "fork_points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "type", "severity", "asset", "reason"],
+            "properties": {
+              "id": {"type": "string"},
+              "type": {
+                "enum": [
+                  "transfer_money",
+                  "screen_share",
+                  "verification_code",
+                  "unknown_app_download",
+                  "social_isolation",
+                  "fake_official_verification",
+                  "no_fork_needed",
+                  "private_contact_lure",
+                  "identity_asset_exchange",
+                  "group_or_platform_join",
+                  "gambling_entry",
+                  "unlicensed_financial_service",
+                  "illicit_or_regulated_service",
+                  "phishing_link_entry"
+                ]
+              },
+              "severity": {"type": "number", "minimum": 0, "maximum": 1},
+              "asset": {"type": "string"},
+              "reason": {"type": "string"},
+              "evidence_refs": {"type": "array", "items": {"type": "string"}},
+              "matched_terms": {"type": "array", "items": {"type": "string"}},
+              "runtime_alignment": {
+                "type": "object",
+                "properties": {
+                  "status": {"enum": ["direct", "nearest", "unsupported"]},
+                  "runtime_type": {"type": ["string", "null"]}
+                }
+              }
+            }
+          }
+        },
+        "counterfactual_expectation": {
+          "type": "object",
+          "required": [
+            "branch_a_high_risk_path",
+            "branch_b_safe_path",
+            "irreversible_nodes",
+            "best_intervention_window",
+            "expected_trajectory_gap",
+            "expected_irreversibility_loss"
+          ]
+        },
+        "uncertainty": {
+          "type": "object",
+          "required": ["confidence", "needs_human_review", "unsupported_inferences", "runtime_alignment_notes"]
+        }
+      }
+    },
+    "annotation": {
+      "type": "object",
+      "required": ["teacher_model", "prompt_version", "review_status"],
+      "properties": {
+        "teacher_model": {"type": "string"},
+        "prompt_version": {"type": "string"},
+        "review_status": {"enum": ["silver_pending_review", "silver_reviewed", "gold_reviewed", "rejected"]},
+        "created_at": {"type": "string"}
+      }
+    }
+  }
+}

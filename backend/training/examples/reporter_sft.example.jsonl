@@ -1,0 +1,1 @@
+{"raw_input":"对方要求我立即转账到所谓安全账户。","report_state":{"schema_version":"report_state.v2","scenario":"fraud_im","risk_level":"high","evidence":["立即转账","安全账户"]},"target_answer":"这是高风险诈骗信号。请立即停止转账，不要提供验证码，并通过银行或公安机关的官方渠道独立核验。","metadata":{"record_type":"schema_example","training_data":false}}

@@ -1,0 +1,129 @@
+"""Metrics — compute key nodes and summarise traces without networkx."""
+
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from .schema import PropagationAction, PropagationAgent, PropagationTrace
+
+
+def compute_key_nodes(
+    agents: list[PropagationAgent],
+    adjacency: dict[str, list[str]],
+    actions: list[PropagationAction],
+    top_k: int = 5,
+) -> list[dict]:
+    """Heuristic key-node scoring.
+
+    score = 0.45 * norm_out_degree + 0.35 * norm_action_count + 0.20 * influence
+    """
+    n = max(1, len(agents))
+    raw_max_deg = max((len(adjacency.get(a.agent_id, [])) for a in agents), default=0)
+    max_deg = max(raw_max_deg, 1)  # guard against empty adjacency → division by zero
+    action_counts: dict[str, int] = {}
+    for act in actions:
+        action_counts[act.source_agent_id] = action_counts.get(act.source_agent_id, 0) + 1
+    max_actions = max(action_counts.values(), default=1)
+    id_to_agent = {item.agent_id: item for item in agents}
+
+    scores: list[dict] = []
+    for a in agents:
+        deg = len(adjacency.get(a.agent_id, []))
+        cnt = action_counts.get(a.agent_id, 0)
+        own_community = getattr(a, "community_id", "") or a.metadata.get("community_id", "")
+        cross_community_degree = 0
+        for neighbour_id in adjacency.get(a.agent_id, []):
+            neighbour = id_to_agent.get(neighbour_id)
+            if neighbour is None:
+                continue
+            neighbour_community = (
+                getattr(neighbour, "community_id", "")
+                or neighbour.metadata.get("community_id", "")
+            )
+            if neighbour_community != own_community:
+                cross_community_degree += 1
+        bridge_score = cross_community_degree / max(1, deg)
+        score = 0.45 * (deg / max_deg) + 0.35 * (cnt / max_actions) + 0.20 * a.influence
+        scores.append({
+            "agent_id": a.agent_id,
+            "role": a.role,
+            "score": round(score, 3),
+            "out_degree": deg,
+            "cross_community_degree": cross_community_degree,
+            "bridge_score": round(bridge_score, 3),
+            "action_count": cnt,
+            "intervention_reason": _reason(a.role, score, deg, cnt),
+        })
+
+    scores.sort(key=lambda x: x["score"], reverse=True)
+    # 同一角色只保留得分最高的一个
+    seen_roles: set[str] = set()
+    deduped = []
+    for s in scores:
+        role = s["role"]
+        if role not in seen_roles:
+            seen_roles.add(role)
+            deduped.append(s)
+    return deduped[:top_k]
+
+
+def summarize_trace(trace: PropagationTrace) -> dict:
+    """Return a compact summary dict for a PropagationTrace."""
+    peak_risk = 0.0
+    peak_emotion = "confusion"
+    if trace.emotion_curve:
+        max_item = max(trace.emotion_curve, key=lambda e: e.get("risk", 0.0))
+        peak_risk = round(max_item.get("risk", 0.0), 3)
+        peak_emotion = _dominant_emotion(max_item)
+
+    coverage_final = 0.0
+    if trace.coverage_curve:
+        coverage_final = trace.coverage_curve[-1].get("coverage", 0.0)
+
+    result = {
+        "coverage_final": round(coverage_final, 3),
+        "peak_risk": peak_risk,
+        "peak_emotion": peak_emotion,
+        "key_node_count": len(trace.key_nodes),
+        "total_actions": len(trace.actions),
+    }
+    if trace.narrative_analysis:
+        for key in (
+            "narrative_share", "narrative_entropy", "dominant_narrative",
+            "community_fragmentation", "stance_polarization",
+            "cross_community_disagreement", "narrative_switch_rate",
+            "narrative_polarization", "metric_semantics",
+        ):
+            if key in trace.narrative_analysis:
+                result[key] = trace.narrative_analysis[key]
+    if trace.claim_analysis:
+        for key in (
+            "supported", "claim_count", "claim_fidelity", "claim_fidelity_by_claim",
+            "distortion_index", "distortion_rate", "distortion_by_claim",
+            "source_loss_rate", "certainty_inflation", "unsupported_claim_share",
+            "verified_claim_reach", "correction_reach", "claim_generation_depth",
+            "claim_lineage_summary", "claim_lineage", "metric_semantics",
+            "claim_metric_source", "provenance", "actor_claim_states",
+        ):
+            if key in trace.claim_analysis:
+                result[key] = trace.claim_analysis[key]
+    return result
+
+
+def _reason(role: str, score: float, deg: int, cnt: int) -> str:
+    if score > 0.6:
+        return f"high influence and high repost activity ({role})"
+    if cnt > deg:
+        return f"frequent action originator ({role})"
+    return f"structural hub ({role})"
+
+
+def _dominant_emotion(item: dict) -> str:
+    best = "confusion"
+    best_v = item.get("confusion", 0.0)
+    for k in ("panic", "anger", "trust"):
+        v = item.get(k, 0.0)
+        if v > best_v:
+            best_v = v
+            best = k
+    return best
