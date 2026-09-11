@@ -10,7 +10,7 @@ import pytest
 REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(REPO_ROOT, "backend", "app"))
 
-from modules.ablation_config import (
+from app.modules.ablation_config import (
     ArchitectureVariant,
     PRESET_VARIANTS,
     get_variant,

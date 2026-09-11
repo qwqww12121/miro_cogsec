@@ -1,6 +1,6 @@
 """PrivacySanitizer 测试。"""
 
-from modules.privacy_sanitizer import PrivacySanitizer
+from app.modules.privacy_sanitizer import PrivacySanitizer
 
 
 def test_privacy_sanitizer_masks_phone_and_bank_card():

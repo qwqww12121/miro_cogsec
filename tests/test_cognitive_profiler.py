@@ -1,6 +1,6 @@
 """认知画像模块测试。"""
 
-from modules.cognitive_profiler import CognitiveProfileExtractor, FEATURE_KEYS
+from app.modules.cognitive_profiler import CognitiveProfileExtractor, FEATURE_KEYS
 
 
 class FakeLLM:

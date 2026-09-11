@@ -1,4 +1,4 @@
-"""Round 2 Completion upgrade tests — OASIS graph equivalence, tick binding,
+﻿"""Round 2 Completion upgrade tests — OASIS graph equivalence, tick binding,
 Top-K verification wiring, active scheduling, honest status reporting.
 
 All tests use source-level checks or mock imports since camel-oasis is not
@@ -230,7 +230,7 @@ class TestTopKOasisVerification:
 
     def test_topk_function_exists(self):
         """run_topk_oasis_verification should be importable."""
-        from modules.propagation.oasis_verification import run_topk_oasis_verification
+        from app.modules.propagation.oasis_verification import run_topk_oasis_verification
         assert callable(run_topk_oasis_verification)
 
     def test_topk_imported_in_service(self):
@@ -262,7 +262,7 @@ class TestTopKOasisVerification:
 
     def test_not_run_status_without_oasis_key(self):
         """Without OASIS/API key, Top-K verification should return status=not_run."""
-        from modules.propagation.oasis_verification import run_topk_oasis_verification
+        from app.modules.propagation.oasis_verification import run_topk_oasis_verification
 
         mock_proxy_result = {
             "branch_comparison": {
@@ -286,7 +286,7 @@ class TestTopKOasisVerification:
 
     def test_verified_metrics_not_fabricated(self):
         """Without real OASIS execution, verified metrics should not be fabricated."""
-        from modules.propagation.oasis_verification import run_topk_oasis_verification
+        from app.modules.propagation.oasis_verification import run_topk_oasis_verification
 
         mock_proxy_result = {
             "branch_comparison": {

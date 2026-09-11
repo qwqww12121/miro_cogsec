@@ -1,6 +1,6 @@
 """T0FastResponder 测试。"""
 
-from modules.t0_fast_responder import T0FastResponder
+from app.modules.t0_fast_responder import T0FastResponder
 
 
 def test_t0_fast_responder_detects_required_patterns():

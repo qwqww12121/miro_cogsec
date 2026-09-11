@@ -1,10 +1,10 @@
 """CogSec-MIROFISH mainline runtime tests."""
 
-from modules.cognitive_profiler import CognitiveProfile
-from modules.mainline_runtime import MiroFishRuntime
-from modules.privacy_sanitizer import PrivacySanitizer
-from modules.risk_scorer import RiskScorer
-from modules.threat_rag import AttackStrategy, FraudCase, ThreatKnowledgeRAG
+from app.modules.cognitive_profiler import CognitiveProfile
+from app.modules.mainline_runtime import MiroFishRuntime
+from app.modules.privacy_sanitizer import PrivacySanitizer
+from app.modules.risk_scorer import RiskScorer
+from app.modules.threat_rag import AttackStrategy, FraudCase, ThreatKnowledgeRAG
 
 
 def build_case(case_id, category, principle, tactic):

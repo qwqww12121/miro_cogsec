@@ -1,4 +1,4 @@
-"""Static-contract tests for Phase 1.5 canonical case integration.
+﻿"""Static-contract tests for Phase 1.5 canonical case integration.
 
 These tests are intentionally added but not executed in this phase.  Runtime,
 LLM, OASIS, embedding, and API execution are outside the Phase 1.5 review.
@@ -8,7 +8,7 @@ import inspect
 
 
 def test_input_package_preserves_fragment_identity_and_provenance():
-    from modules import InputPackage
+    from app.modules import InputPackage
 
     package = InputPackage.from_fragments(
         primary_text="观察到首发消息",
@@ -23,7 +23,7 @@ def test_input_package_preserves_fragment_identity_and_provenance():
 
 
 def test_canonical_case_assigns_stable_observed_actor_ids_and_grounding():
-    from modules import InputPackage, build_canonical_case
+    from app.modules import InputPackage, build_canonical_case
 
     package = InputPackage.from_fragments(
         primary_text="学生称老师发布回应，媒体观察并转发。",
@@ -40,8 +40,8 @@ def test_canonical_case_assigns_stable_observed_actor_ids_and_grounding():
 
 
 def test_social_state_reuses_canonical_ids_and_tracks_actor_provenance():
-    from modules import InputPackage, build_canonical_case
-    from modules.social_state import build_social_state
+    from app.modules import InputPackage, build_canonical_case
+    from app.modules.social_state import build_social_state
 
     case = build_canonical_case(
         InputPackage.from_text("学生称老师发布回应，媒体转发。"),
@@ -62,8 +62,8 @@ def test_social_state_reuses_canonical_ids_and_tracks_actor_provenance():
 
 
 def test_cognitive_profile_changes_same_case_same_seed_initial_state():
-    from modules import CognitiveProfile, InputPackage, build_canonical_case
-    from modules.social_state import build_social_state
+    from app.modules import CognitiveProfile, InputPackage, build_canonical_case
+    from app.modules.social_state import build_social_state
 
     package = InputPackage.from_text("学生称老师发布回应，媒体转发。")
     cautious = CognitiveProfile(
@@ -88,8 +88,8 @@ def test_cognitive_profile_changes_same_case_same_seed_initial_state():
 
 
 def test_snapshot_and_oasis_mapping_keep_one_simulation_state_id():
-    from modules import InputPackage, build_canonical_case
-    from modules.social_state import actor_to_oasis_row, actor_to_propagation_agent, build_social_state, create_snapshot
+    from app.modules import InputPackage, build_canonical_case
+    from app.modules.social_state import actor_to_oasis_row, actor_to_propagation_agent, build_social_state, create_snapshot
 
     case = build_canonical_case(InputPackage.from_text("学生称官方回应并核验。"), scenario_type="event_propagation")
     state = build_social_state(case.summary, "event_propagation", n_agents=4, canonical_case=case)
@@ -102,7 +102,7 @@ def test_snapshot_and_oasis_mapping_keep_one_simulation_state_id():
 
 
 def test_proxy_search_has_canonical_state_path_without_rebuilding_agents():
-    from modules.propagation.intervention_search import run_proxy_intervention_search
+    from app.modules.propagation.intervention_search import run_proxy_intervention_search
 
     source = inspect.getsource(run_proxy_intervention_search)
     assert "social_state" in source
@@ -113,7 +113,7 @@ def test_proxy_search_has_canonical_state_path_without_rebuilding_agents():
 
 
 def test_oasis_verification_contract_accepts_shared_state_id_and_snapshot():
-    from modules.propagation.oasis_verification import run_topk_oasis_verification
+    from app.modules.propagation.oasis_verification import run_topk_oasis_verification
 
     signature = inspect.signature(run_topk_oasis_verification)
     assert "snapshot" in signature.parameters
@@ -124,7 +124,7 @@ def test_oasis_verification_contract_accepts_shared_state_id_and_snapshot():
 
 
 def test_social_proof_sensitivity_changes_share_probability():
-    from modules.propagation import PropagationAgent, compute_share_probability
+    from app.modules.propagation import PropagationAgent, compute_share_probability
 
     source = PropagationAgent(
         agent_id="source", role="student_kol", influence=0.8, stance="amplifying",
@@ -144,8 +144,8 @@ def test_social_proof_sensitivity_changes_share_probability():
 
 
 def test_dynamic_belief_update_recomputes_stance_from_one_helper():
-    from modules.propagation import PropagationAgent, update_belief_after_exposure
-    from modules.social_state import derive_stance_from_actor_state
+    from app.modules.propagation import PropagationAgent, update_belief_after_exposure
+    from app.modules.social_state import derive_stance_from_actor_state
 
     actor = PropagationAgent(
         agent_id="actor",
@@ -169,8 +169,8 @@ def test_dynamic_belief_update_recomputes_stance_from_one_helper():
 
 
 def test_grounding_level_and_synthetic_fill_are_explicit():
-    from modules import InputPackage, build_canonical_case
-    from modules.social_state import build_social_state
+    from app.modules import InputPackage, build_canonical_case
+    from app.modules.social_state import build_social_state
 
     sparse_case = build_canonical_case(InputPackage.from_text("不明"), scenario_type="public_opinion")
     rich_case = build_canonical_case(

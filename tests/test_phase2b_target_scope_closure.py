@@ -1,10 +1,10 @@
-"""Closure tests for CandidateInterventionFork actor-level target scope."""
+﻿"""Closure tests for CandidateInterventionFork actor-level target scope."""
 
 import pytest
 
 
 def _agent(agent_id):
-    from modules.propagation.schema import PropagationAgent
+    from app.modules.propagation.schema import PropagationAgent
 
     return PropagationAgent(
         agent_id=agent_id,
@@ -21,7 +21,7 @@ def _agent(agent_id):
 
 
 def _candidate(intervention_type, target_nodes):
-    from modules.propagation.intervention_search import InterventionCandidate
+    from app.modules.propagation.intervention_search import InterventionCandidate
 
     return InterventionCandidate(
         candidate_id=f"closure_{intervention_type}",
@@ -37,7 +37,7 @@ def _candidate(intervention_type, target_nodes):
 
 
 def _apply(intervention_type, target_nodes):
-    from modules.propagation.intervention_search import CandidateInterventionFork
+    from app.modules.propagation.intervention_search import CandidateInterventionFork
 
     agents = [_agent("A"), _agent("B"), _agent("C")]
     before = {agent.agent_id: agent.to_dict() for agent in agents}

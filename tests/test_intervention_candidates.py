@@ -1,6 +1,6 @@
 """Intervention wording should bind to the current case, not a fixed answer."""
 
-from modules.propagation.intervention_search import _candidate_cue, _evidence_basis
+from app.modules.propagation.intervention_search import _candidate_cue, _evidence_basis
 
 
 def test_candidate_cue_uses_observed_case_clause():

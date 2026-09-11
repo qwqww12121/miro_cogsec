@@ -1,4 +1,4 @@
-"""Final closure: ablation variant execution control tests.
+﻿"""Final closure: ablation variant execution control tests.
 
 Each variant must actually skip the modules its flags say are off.
 """
@@ -14,7 +14,7 @@ import pytest
 REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(REPO_ROOT, "backend", "app"))
 
-from modules.ablation_config import PRESET_VARIANTS, ArchitectureVariant
+from app.modules.ablation_config import PRESET_VARIANTS, ArchitectureVariant
 
 
 # ── Variant execution matrix (expected flags) ──────────────────────
@@ -188,6 +188,6 @@ class TestVariantConfigCorrectness:
 
     def test_all_variants_validate_clean(self):
         """No preset variant fails validation."""
-        from modules.ablation_config import validate_all_variants
+        from app.modules.ablation_config import validate_all_variants
         errors = validate_all_variants()
         assert errors == {}, f"Validation errors: {errors}"

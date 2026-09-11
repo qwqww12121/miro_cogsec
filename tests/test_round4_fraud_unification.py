@@ -1,4 +1,4 @@
-"""Final closure: fraud result unification tests."""
+﻿"""Final closure: fraud result unification tests."""
 
 from __future__ import annotations
 
@@ -10,9 +10,9 @@ import pytest
 REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(REPO_ROOT, "backend", "app"))
 
-from modules.fraud_runtime import FraudMultiRoleRuntime
-from modules.fraud_runtime.agents import ThreatActor, UserTwin, Verifier
-from modules.fraud_runtime.environment import FraudEnvironment
+from app.modules.fraud_runtime import FraudMultiRoleRuntime
+from app.modules.fraud_runtime.agents import ThreatActor, UserTwin, Verifier
+from app.modules.fraud_runtime.environment import FraudEnvironment
 
 
 class FakeProfile:
@@ -60,7 +60,7 @@ class TestFraudPrimaryResult:
     def test_deterministic_result_only_used_on_fallback(self):
         """When multi-role fails, fallback is explicitly marked."""
         # Simulate fallback construction
-        from modules.fraud_runtime.runtime import build_deterministic_fraud_result
+        from app.modules.fraud_runtime.runtime import build_deterministic_fraud_result
         fallback = build_deterministic_fraud_result(risk_graph_bundle=FakeRiskGraph())
         assert fallback.runtime_mode == "deterministic_fallback"
         assert fallback.status == "degraded"

@@ -10,11 +10,11 @@ import pytest
 REPO_ROOT = os.path.dirname(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(REPO_ROOT, "backend", "app"))
 
-from modules.fraud_runtime.agents import ThreatActor, UserTwin, Verifier
-from modules.fraud_runtime.environment import FraudEnvironment
-from modules.fraud_runtime.runtime import FraudMultiRoleRuntime
+from app.modules.fraud_runtime.agents import ThreatActor, UserTwin, Verifier
+from app.modules.fraud_runtime.environment import FraudEnvironment
+from app.modules.fraud_runtime.runtime import FraudMultiRoleRuntime
 from app.modules.fraud_runtime.runtime import adapt_fraud_to_fork_comparison
-from modules.fraud_runtime.schema import (
+from app.modules.fraud_runtime.schema import (
     FraudInteractionResult,
     ThreatActorState,
     UserTwinState,

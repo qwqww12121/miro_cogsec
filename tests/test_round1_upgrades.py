@@ -1,4 +1,4 @@
-"""Round 1 upgrade tests — correctness, privacy, performance, and observability.
+﻿"""Round 1 upgrade tests — correctness, privacy, performance, and observability.
 
 Tests added as part of BACKEND_UPGRADE_FIRST_ROUND.
 """
@@ -22,7 +22,7 @@ class TestForkRouting:
 
     @staticmethod
     def _empty_bundle():
-        from modules.runtime_schema import RiskGraphBundle
+        from app.modules.runtime_schema import RiskGraphBundle
         return RiskGraphBundle(
             schema_version="1.0",
             threat_template_nodes=[],
@@ -41,7 +41,7 @@ class TestForkRouting:
         )
 
     def test_public_opinion_does_not_fall_into_transfer_money(self):
-        from modules.mainline_runtime import MiroFishRuntime
+        from app.modules.mainline_runtime import MiroFishRuntime
 
         rt = MiroFishRuntime()
         fork = rt.select_primary_fork(
@@ -55,7 +55,7 @@ class TestForkRouting:
         assert fork["type"] in {"info_propagation_risk", "misinformation_risk", "no_valid_fork"}
 
     def test_event_propagation_does_not_fall_into_transfer_money(self):
-        from modules.mainline_runtime import MiroFishRuntime
+        from app.modules.mainline_runtime import MiroFishRuntime
 
         rt = MiroFishRuntime()
         fork = rt.select_primary_fork(
@@ -70,7 +70,7 @@ class TestForkRouting:
 
     def test_unknown_scenario_does_not_silently_become_fraud_im(self):
         """Unknown scenario type should produce no_valid_fork, not silently become fraud."""
-        from modules.mainline_runtime import MiroFishRuntime
+        from app.modules.mainline_runtime import MiroFishRuntime
 
         rt = MiroFishRuntime()
         fork = rt.select_primary_fork(
@@ -84,7 +84,7 @@ class TestForkRouting:
 
     def test_fraud_im_still_uses_transfer_money(self):
         """fraud_im scenarios should still use existing fraud FORK rules."""
-        from modules.mainline_runtime import MiroFishRuntime
+        from app.modules.mainline_runtime import MiroFishRuntime
 
         rt = MiroFishRuntime()
         fork = rt.select_primary_fork(
@@ -106,7 +106,7 @@ class TestPrivacyBoundary:
 
     def test_raw_phone_does_not_enter_propagation_seed(self):
         """Sanitized text should not contain raw phone numbers in propagation seed."""
-        from modules.privacy_sanitizer import PrivacySanitizer
+        from app.modules.privacy_sanitizer import PrivacySanitizer
 
         sanitizer = PrivacySanitizer(enabled=False)
         text = "某校发生事件，联系人手机13800138000，请关注。"
@@ -119,7 +119,7 @@ class TestPrivacyBoundary:
         assert "某手机号" in sanitized
 
     def test_raw_id_card_does_not_enter_propagation_seed(self):
-        from modules.privacy_sanitizer import PrivacySanitizer
+        from app.modules.privacy_sanitizer import PrivacySanitizer
 
         sanitizer = PrivacySanitizer(enabled=False)
         text = "身份证号110101199001011234的当事人声称看到异常情况。"
@@ -131,7 +131,7 @@ class TestPrivacyBoundary:
         )
 
     def test_raw_email_does_not_enter_sanitized_text(self):
-        from modules.privacy_sanitizer import PrivacySanitizer
+        from app.modules.privacy_sanitizer import PrivacySanitizer
 
         sanitizer = PrivacySanitizer(enabled=False)
         text = "请联系test@example.com了解更多情况。"
@@ -145,8 +145,8 @@ class TestPrivacyBoundary:
     def test_scenario_context_built_from_sanitized_text(self):
         """Verify that ScenarioContext's raw_inputs contain sanitized content
         when built correctly (sanitize-first order)."""
-        from modules.privacy_sanitizer import PrivacySanitizer
-        from modules.scenarios import build_scenario_context
+        from app.modules.privacy_sanitizer import PrivacySanitizer
+        from app.modules.scenarios import build_scenario_context
 
         sanitizer = PrivacySanitizer(enabled=False)
         raw = "手机号13800138000，银行卡6222021234567890123。"
@@ -589,7 +589,7 @@ class TestScenarioRegistry:
 
     def test_resolve_canonical_unknown_is_not_silently_fraud(self):
         """Round 2: unknown types now resolve to 'unknown', not fraud_im."""
-        from modules.scenarios import resolve_canonical
+        from app.modules.scenarios import resolve_canonical
 
         result = resolve_canonical("completely_unknown_type")
         # Round 2 behavior: unknown → unknown, not fraud_im
@@ -599,13 +599,13 @@ class TestScenarioRegistry:
 
     def test_resolve_canonical_none_is_unknown(self):
         """None/empty should resolve to 'unknown', not fraud_im."""
-        from modules.scenarios import resolve_canonical
+        from app.modules.scenarios import resolve_canonical
 
         assert resolve_canonical(None) == "unknown"
         assert resolve_canonical("") == "unknown"
 
     def test_known_canonicals_resolve_correctly(self):
-        from modules.scenarios import resolve_canonical
+        from app.modules.scenarios import resolve_canonical
 
         assert resolve_canonical("fraud_im") == "fraud_im"
         assert resolve_canonical("public_opinion") == "public_opinion"

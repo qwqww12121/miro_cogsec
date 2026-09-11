@@ -6,7 +6,7 @@ avoid asserting keyword-triggered benchmark answers.
 
 from copy import deepcopy
 
-from modules.benchmark_adapter import build_benchmark_payload
+from app.modules.benchmark_adapter import build_benchmark_payload
 
 
 def _fraud_state():

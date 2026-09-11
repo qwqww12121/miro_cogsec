@@ -2,8 +2,8 @@
 
 import pytest
 
-from modules.benchmark_adapter import build_benchmark_payload
-from modules.response_planner import build_response_plan
+from app.modules.benchmark_adapter import build_benchmark_payload
+from app.modules.response_planner import build_response_plan
 
 
 def test_benchmark_field_provenance_exposes_low_score_lineage():

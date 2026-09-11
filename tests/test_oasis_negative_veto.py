@@ -1,4 +1,4 @@
-"""Regression tests for candidate-level OASIS negative veto selection."""
+﻿"""Regression tests for candidate-level OASIS negative veto selection."""
 
 from unittest.mock import MagicMock, patch
 
@@ -6,7 +6,7 @@ import pytest
 
 
 def _agent(agent_id="agent-1"):
-    from modules.propagation.schema import PropagationAgent
+    from app.modules.propagation.schema import PropagationAgent
 
     return PropagationAgent(
         agent_id=agent_id,
@@ -45,16 +45,16 @@ def _fake_oasis_result(intervention_coverage):
 
 
 def _run_oasis(proxy_result, intervention_coverage):
-    from modules.propagation.oasis_verification import run_topk_oasis_verification
+    from app.modules.propagation.oasis_verification import run_topk_oasis_verification
 
-    with patch("modules.propagation.oasis_adapter._OASIS_AVAILABLE", True), \
+    with patch("app.modules.propagation.oasis_adapter._OASIS_AVAILABLE", True), \
          patch.dict("os.environ", {
              "MIRO_COGSEC_OASIS_API_KEY": "test-key",
              "MIRO_COGSEC_OASIS_BASE_URL": "https://oasis.test/v1",
              "MIRO_COGSEC_OASIS_MODEL": "oasis-test",
          }), \
          patch(
-             "modules.propagation.oasis_adapter.OasisPropagationAdapter.run",
+             "app.modules.propagation.oasis_adapter.OasisPropagationAdapter.run",
              return_value=_fake_oasis_result(intervention_coverage),
          ):
         return run_topk_oasis_verification(
@@ -68,7 +68,7 @@ def _run_oasis(proxy_result, intervention_coverage):
 
 
 def test_harmful_proxy_winner_is_vetoed_and_fallback_uses_next_candidate():
-    from modules.propagation.intervention_search import resolve_effective_intervention
+    from app.modules.propagation.intervention_search import resolve_effective_intervention
 
     official = _candidate("official", "official_response", 0.90)
     friction = _candidate("friction", "friction_prompt", 0.80)
@@ -88,7 +88,7 @@ def test_harmful_proxy_winner_is_vetoed_and_fallback_uses_next_candidate():
 
 
 def test_effective_oasis_candidate_still_promotes_over_proxy():
-    from modules.propagation.intervention_search import resolve_effective_intervention
+    from app.modules.propagation.intervention_search import resolve_effective_intervention
 
     friction = _candidate("friction", "friction_prompt", 0.90)
     official = _candidate("official", "official_response", 0.80)
@@ -117,7 +117,7 @@ def test_effective_oasis_candidate_still_promotes_over_proxy():
 def test_non_harmful_oasis_status_does_not_veto_proxy_candidate(
     verification_status, effectiveness_status
 ):
-    from modules.propagation.intervention_search import resolve_effective_intervention
+    from app.modules.propagation.intervention_search import resolve_effective_intervention
 
     official = _candidate("official", "official_response", 0.90)
     search = {
@@ -139,7 +139,7 @@ def test_non_harmful_oasis_status_does_not_veto_proxy_candidate(
 
 
 def test_candidate_identity_vetoes_only_matching_candidate_id():
-    from modules.propagation.intervention_search import resolve_effective_intervention
+    from app.modules.propagation.intervention_search import resolve_effective_intervention
 
     candidate_a = _candidate("official-a", "official_response", 0.90, ["target-a"])
     candidate_b = _candidate("official-b", "official_response", 0.80, ["target-b"])
@@ -161,7 +161,7 @@ def test_candidate_identity_vetoes_only_matching_candidate_id():
 
 
 def test_all_proxy_candidates_vetoed_returns_no_effective_intervention():
-    from modules.propagation.intervention_search import resolve_effective_intervention
+    from app.modules.propagation.intervention_search import resolve_effective_intervention
 
     official = _candidate("official", "official_response", 0.90)
     search = {

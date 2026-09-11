@@ -1,4 +1,4 @@
-"""Round 2 upgrade tests — SocialState, unified actor IDs, A/B equivalence,
+﻿"""Round 2 upgrade tests — SocialState, unified actor IDs, A/B equivalence,
 real metrics, resolve_canonical, intervention search renaming.
 """
 
@@ -20,7 +20,7 @@ class TestSocialStateSchema:
     """Verify SocialState data structures."""
 
     def test_actor_state_has_canonical_id(self):
-        from modules.social_state import ActorState
+        from app.modules.social_state import ActorState
 
         actor = ActorState(
             actor_id="actor_0001",
@@ -31,8 +31,8 @@ class TestSocialStateSchema:
         assert actor.provenance == "input"
 
     def test_actor_cognitive_features_from_profile(self):
-        from modules.social_state import ActorCognitiveFeatures
-        from modules.cognitive_profiler import CognitiveProfile
+        from app.modules.social_state import ActorCognitiveFeatures
+        from app.modules.cognitive_profiler import CognitiveProfile
 
         profile = CognitiveProfile(
             scenario_type="public_opinion",
@@ -47,7 +47,7 @@ class TestSocialStateSchema:
         assert features.profile_ref == "public_opinion"
 
     def test_social_edge_rejects_invalid_relation(self):
-        from modules.social_state import SocialEdge
+        from app.modules.social_state import SocialEdge
 
         with pytest.raises(ValueError):
             SocialEdge(
@@ -58,7 +58,7 @@ class TestSocialStateSchema:
             )
 
     def test_social_edge_accepts_valid_relations(self):
-        from modules.social_state import SocialEdge
+        from app.modules.social_state import SocialEdge
 
         for rel in ["follow", "trust", "friend", "same_community",
                      "official_relation", "information_flow"]:
@@ -71,7 +71,7 @@ class TestSocialStateSchema:
             assert edge.relation_type == rel
 
     def test_social_state_to_adjacency(self):
-        from modules.social_state import ActorState, SocialEdge, SocialState
+        from app.modules.social_state import ActorState, SocialEdge, SocialState
 
         actors = [
             ActorState(actor_id="actor_0000", role="student"),
@@ -92,7 +92,7 @@ class TestSocialStateSchema:
         assert "actor_0001" in adj["actor_0000"]
 
     def test_social_state_summary(self):
-        from modules.social_state import ActorState, SocialState
+        from app.modules.social_state import ActorState, SocialState
 
         actors = [
             ActorState(actor_id="actor_0000", role="student", provenance="input"),
@@ -119,7 +119,7 @@ class TestSocialStateSnapshot:
     """Verify snapshot immutability and clone behavior."""
 
     def test_snapshot_is_frozen(self):
-        from modules.social_state import (
+        from app.modules.social_state import (
             ActorState, SocialState, SocialStateSnapshot, create_snapshot,
         )
 
@@ -132,7 +132,7 @@ class TestSocialStateSnapshot:
         assert snap.actors[0].actor_id == "actor_0000"
 
     def test_snapshot_equality_same_input(self):
-        from modules.social_state import (
+        from app.modules.social_state import (
             ActorState, SocialState, create_snapshot,
             snapshot_equality_report,
         )
@@ -149,7 +149,7 @@ class TestSocialStateSnapshot:
         )
 
     def test_clone_is_identical(self):
-        from modules.social_state import (
+        from app.modules.social_state import (
             ActorState, SocialState, clone_snapshot, create_snapshot,
         )
 
@@ -171,7 +171,7 @@ class TestActorMapping:
     """Verify ActorMapping bidirectional registration."""
 
     def test_actor_mapping_bidirectional(self):
-        from modules.social_state import ActorMapping
+        from app.modules.social_state import ActorMapping
 
         mapping = ActorMapping()
         mapping.register("actor_0001", "propagation", "agent_0001")
@@ -182,7 +182,7 @@ class TestActorMapping:
         assert mapping.canonical_id("propagation", "agent_0001") == "actor_0001"
 
     def test_actor_to_propagation_agent(self):
-        from modules.social_state import ActorState, actor_to_propagation_agent
+        from app.modules.social_state import ActorState, actor_to_propagation_agent
 
         actor = ActorState(
             actor_id="actor_0003",
@@ -200,7 +200,7 @@ class TestActorMapping:
         assert pa.metadata["provenance"] == "input"
 
     def test_actor_to_oasis_row(self):
-        from modules.social_state import ActorState, actor_to_oasis_row
+        from app.modules.social_state import ActorState, actor_to_oasis_row
 
         actor = ActorState(
             actor_id="actor_0001",
@@ -224,7 +224,7 @@ class TestSocialStateBuilder:
     """Verify builder extracts actors from text and creates synthetic population."""
 
     def test_extract_actors_from_text(self):
-        from modules.social_state.builder import extract_actors_from_text
+        from app.modules.social_state.builder import extract_actors_from_text
 
         text = "某大学学生爆料称学校食堂存在卫生问题，校方回应称已成立调查组，警方已介入调查。有媒体记者在现场报道。"
         actors = extract_actors_from_text(text)
@@ -237,8 +237,8 @@ class TestSocialStateBuilder:
         )
 
     def test_build_synthetic_actors_does_not_duplicate(self):
-        from modules.social_state import ActorState
-        from modules.social_state.builder import build_synthetic_actors
+        from app.modules.social_state import ActorState
+        from app.modules.social_state.builder import build_synthetic_actors
 
         existing = [ActorState(actor_id="actor_0000", role="student_kol", provenance="input")]
         synthetic = build_synthetic_actors("public_opinion", existing, target_count=12)
@@ -248,8 +248,8 @@ class TestSocialStateBuilder:
         assert all(a.provenance == "synthetic" for a in synthetic)
 
     def test_brand_opinion_does_not_use_campus_cast(self):
-        from modules.social_state import build_social_state
-        from modules.social_state.builder import demo_topology_type, looks_like_campus_scene
+        from app.modules.social_state import build_social_state
+        from app.modules.social_state.builder import demo_topology_type, looks_like_campus_scene
 
         text = (
             "最近某品牌新品发布引发热议，一部分网友认为这是营销炒作，"
@@ -279,7 +279,7 @@ class TestSocialStateBuilder:
         assert "学生意见领袖" not in graph_labels
 
     def test_classmate_mention_alone_is_not_campus(self):
-        from modules.social_state.builder import (
+        from app.modules.social_state.builder import (
             extract_actors_from_text,
             looks_like_campus_scene,
             role_pool_for,
@@ -294,8 +294,8 @@ class TestSocialStateBuilder:
         assert "student_kol" not in role_pool_for("public_opinion", text)
 
     def test_social_override_beats_weak_school_words(self):
-        from modules.social_state import build_social_state
-        from modules.social_state.builder import looks_like_campus_scene
+        from app.modules.social_state import build_social_state
+        from app.modules.social_state.builder import looks_like_campus_scene
 
         text = "网友和同学们都在转发某品牌热搜，消费者争论这是不是营销。"
         assert not looks_like_campus_scene(text)
@@ -311,7 +311,7 @@ class TestSocialStateBuilder:
         assert "teacher" not in roles
 
     def test_event_propagation_never_uses_campus_cast(self):
-        from modules.social_state import build_social_state
+        from app.modules.social_state import build_social_state
 
         state = build_social_state(
             scenario_text="某高校学生反映食堂问题，校方已回应。",
@@ -325,7 +325,7 @@ class TestSocialStateBuilder:
         assert "teacher" not in roles
 
     def test_campus_opinion_keeps_school_roles(self):
-        from modules.social_state import build_social_state
+        from app.modules.social_state import build_social_state
 
         state = build_social_state(
             scenario_text="某高校学生反映食堂问题，校方已回应。",
@@ -339,7 +339,7 @@ class TestSocialStateBuilder:
         assert "校方" in labels or "普通学生" in labels or "学生意见领袖" in labels
 
     def test_build_social_state_integration(self):
-        from modules.social_state import build_social_state
+        from app.modules.social_state import build_social_state
 
         state = build_social_state(
             scenario_text="某高校学生反映食堂问题，校方已回应。",
@@ -360,7 +360,7 @@ class TestSocialStateBuilder:
             assert aid.startswith("actor_")
 
     def test_agent_factory_follows_social_role_pool(self):
-        from modules.propagation.agent_factory import build_agents
+        from app.modules.propagation.agent_factory import build_agents
 
         social = build_agents(
             "public_opinion",
@@ -541,7 +541,7 @@ class TestInterventionSearchRename:
 
     def test_proxy_function_exists(self):
         """New run_proxy_intervention_search should be importable."""
-        from modules.propagation.intervention_search import run_proxy_intervention_search
+        from app.modules.propagation.intervention_search import run_proxy_intervention_search
         assert callable(run_proxy_intervention_search)
 
     def test_provenance_still_says_proxy(self):
@@ -570,21 +570,21 @@ class TestResolveCanonical:
     """Verify resolve_canonical handles unknown correctly (Round 2)."""
 
     def test_unknown_not_fraud(self):
-        from modules.scenarios import resolve_canonical
+        from app.modules.scenarios import resolve_canonical
 
         assert resolve_canonical("some_random_type") == "unknown"
         assert resolve_canonical(None) == "unknown"
         assert resolve_canonical("") == "unknown"
 
     def test_known_types_still_work(self):
-        from modules.scenarios import resolve_canonical
+        from app.modules.scenarios import resolve_canonical
 
         assert resolve_canonical("fraud_im") == "fraud_im"
         assert resolve_canonical("public_opinion") == "public_opinion"
         assert resolve_canonical("event_propagation") == "event_propagation"
 
     def test_legacy_fraud_labels_still_map_to_fraud(self):
-        from modules.scenarios import resolve_canonical
+        from app.modules.scenarios import resolve_canonical
 
         assert resolve_canonical("虚假征信类") == "fraud_im"
         assert resolve_canonical("刷单返利类") == "fraud_im"
@@ -637,20 +637,20 @@ class TestMetricValue:
     """Verify MetricValue enforces source_type validity."""
 
     def test_metric_value_valid_sources(self):
-        from modules.social_state import MetricValue
+        from app.modules.social_state import MetricValue
 
         for src in ["native", "derived", "proxy", "estimated"]:
             mv = MetricValue(name="test", value=0.5, source_type=src)
             assert mv.source_type == src
 
     def test_metric_value_rejects_invalid_source(self):
-        from modules.social_state import MetricValue
+        from app.modules.social_state import MetricValue
 
         with pytest.raises(ValueError):
             MetricValue(name="test", value=0.5, source_type="made_up")
 
     def test_metric_value_to_dict(self):
-        from modules.social_state import MetricValue
+        from app.modules.social_state import MetricValue
 
         mv = MetricValue(
             name="cumulative_coverage",

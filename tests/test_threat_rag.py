@@ -1,7 +1,7 @@
 """ThreatKnowledgeRAG 测试。"""
 
-from modules.cognitive_profiler import CognitiveProfile
-from modules.threat_rag import AttackStrategy, FraudCase, ThreatKnowledgeRAG
+from app.modules.cognitive_profiler import CognitiveProfile
+from app.modules.threat_rag import AttackStrategy, FraudCase, ThreatKnowledgeRAG
 
 
 def build_case(case_id, category, principle, tactic):

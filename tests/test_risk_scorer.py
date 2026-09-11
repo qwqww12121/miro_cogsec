@@ -1,7 +1,7 @@
 """风险评分模块测试。"""
 
-from modules.cognitive_profiler import CognitiveProfile
-from modules.risk_scorer import RiskScorer
+from app.modules.cognitive_profiler import CognitiveProfile
+from app.modules.risk_scorer import RiskScorer
 
 
 def test_risk_scores_drop_on_attack_and_recover_on_protection():

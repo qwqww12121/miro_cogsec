@@ -1,8 +1,8 @@
-"""Regression tests for lightweight propagation seed activation timing."""
+﻿"""Regression tests for lightweight propagation seed activation timing."""
 
 
 def _agent(agent_id, *, influence=0.9, activity=1.0, susceptibility=0.9):
-    from modules.propagation.schema import PropagationAgent
+    from app.modules.propagation.schema import PropagationAgent
 
     return PropagationAgent(
         agent_id=agent_id,
@@ -22,7 +22,7 @@ def _agent(agent_id, *, influence=0.9, activity=1.0, susceptibility=0.9):
 
 
 def _event(scenario_type="event_propagation"):
-    from modules.propagation.schema import PropagationEvent
+    from app.modules.propagation.schema import PropagationEvent
 
     return PropagationEvent.create(
         scenario_type=scenario_type,
@@ -33,7 +33,7 @@ def _event(scenario_type="event_propagation"):
 
 
 def _run(monkeypatch, event, agents, adjacency, *, ticks=3, seed=42, narratives=None):
-    from modules.propagation import simulator
+    from app.modules.propagation import simulator
 
     monkeypatch.setattr(simulator, "compute_share_probability", lambda *args, **kwargs: 1.0)
     return simulator.run_propagation_simulation(
@@ -66,7 +66,7 @@ def test_event_propagation_multitick_smoke(monkeypatch):
 
 
 def test_public_narrative_propagation_reaches_non_seed_actor(monkeypatch):
-    from modules.propagation.narrative_model import NarrativeState
+    from app.modules.propagation.narrative_model import NarrativeState
 
     narratives = [
         NarrativeState(
@@ -112,7 +112,7 @@ def test_natural_stop_with_seed_without_neighbors(monkeypatch):
 
 
 def test_seed_is_not_reactivated_from_covered_after_first_step(monkeypatch):
-    from modules.propagation import simulator
+    from app.modules.propagation import simulator
 
     class SequenceRandom:
         def __init__(self, seed):

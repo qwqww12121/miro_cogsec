@@ -1,4 +1,4 @@
-"""Regression coverage for the event-only Phase 2B claim-fidelity model."""
+﻿"""Regression coverage for the event-only Phase 2B claim-fidelity model."""
 
 from copy import deepcopy
 
@@ -16,7 +16,7 @@ def _agent(
     social_proof=0.9,
     share=1.0,
 ):
-    from modules.propagation.schema import PropagationAgent
+    from app.modules.propagation.schema import PropagationAgent
 
     return PropagationAgent(
         agent_id=agent_id,
@@ -39,7 +39,7 @@ def _agent(
 
 
 def _event(emotion="panic"):
-    from modules.propagation.schema import PropagationEvent
+    from app.modules.propagation.schema import PropagationEvent
 
     return PropagationEvent.create(
         scenario_type="event_propagation",
@@ -50,7 +50,7 @@ def _event(emotion="panic"):
 
 
 def _claim():
-    from modules.canonical_case import CanonicalClaim
+    from app.modules.canonical_case import CanonicalClaim
 
     return CanonicalClaim(
         claim_id="C1",
@@ -62,7 +62,7 @@ def _claim():
 
 
 def _run(monkeypatch, agents, adjacency, *, claims=None, ticks=3, strategy=None):
-    from modules.propagation import simulator
+    from app.modules.propagation import simulator
 
     monkeypatch.setattr(simulator, "compute_share_probability", lambda *args, **kwargs: 1.0)
     return simulator.run_propagation_simulation(
@@ -77,7 +77,7 @@ def _run(monkeypatch, agents, adjacency, *, claims=None, ticks=3, strategy=None)
 
 
 def _candidate(intervention_type, target_nodes=None, tick=1):
-    from modules.propagation.intervention_search import InterventionCandidate
+    from app.modules.propagation.intervention_search import InterventionCandidate
 
     return InterventionCandidate(
         candidate_id=f"test_{intervention_type}",
@@ -93,7 +93,7 @@ def _candidate(intervention_type, target_nodes=None, tick=1):
 
 
 def _candidate_run(monkeypatch, intervention_type, target_nodes=None, *, adjacency=None):
-    from modules.propagation.intervention_search import CandidateInterventionFork
+    from app.modules.propagation.intervention_search import CandidateInterventionFork
 
     agents = [_agent("A", influence=0.95), _agent("B", influence=0.1)]
     return _run(
@@ -139,9 +139,9 @@ def test_missing_claims_use_honest_seed_text_fallback(monkeypatch):
 
 
 def test_public_opinion_does_not_activate_claim_engine(monkeypatch):
-    from modules.propagation.narrative_model import NarrativeState
-    from modules.propagation.schema import PropagationEvent
-    from modules.propagation import simulator
+    from app.modules.propagation.narrative_model import NarrativeState
+    from app.modules.propagation.schema import PropagationEvent
+    from app.modules.propagation import simulator
 
     monkeypatch.setattr(simulator, "compute_share_probability", lambda *args, **kwargs: 1.0)
     event = PropagationEvent.create(
@@ -221,7 +221,7 @@ def test_high_verification_preserves_fidelity(monkeypatch):
 
 
 def test_social_proof_raises_certainty_without_creating_evidence():
-    from modules.propagation.claim_model import initialize_claim_states, transmit_claim_states
+    from app.modules.propagation.claim_model import initialize_claim_states, transmit_claim_states
 
     source = _agent("A", verification=0.1)
     target = _agent("B", verification=0.1)
@@ -241,7 +241,7 @@ def test_social_proof_raises_certainty_without_creating_evidence():
 
 
 def test_source_loss_and_certainty_inflation_are_separate_metrics(monkeypatch):
-    from modules.canonical_case import CanonicalClaim
+    from app.modules.canonical_case import CanonicalClaim
 
     trace = _run(
         monkeypatch,
@@ -303,7 +303,7 @@ def test_debunking_reduces_certainty_and_reaches_correction(monkeypatch):
 
 
 def test_friction_has_no_direct_claim_fidelity_boost():
-    from modules.propagation.claim_model import initialize_claim_states, transmit_claim_states
+    from app.modules.propagation.claim_model import initialize_claim_states, transmit_claim_states
 
     source = _agent("A")
     target = _agent("B")
@@ -322,7 +322,7 @@ def test_friction_has_no_direct_claim_fidelity_boost():
 
 
 def test_correction_reach_requires_real_claim_propagation(monkeypatch):
-    from modules.propagation.intervention_search import CandidateInterventionFork
+    from app.modules.propagation.intervention_search import CandidateInterventionFork
 
     no_edge = _candidate_run(monkeypatch, "official_response", [], adjacency={"A": [], "B": []})
     with_edge = _candidate_run(monkeypatch, "official_response", [], adjacency={"A": ["B"], "B": []})
@@ -332,7 +332,7 @@ def test_correction_reach_requires_real_claim_propagation(monkeypatch):
 
 
 def test_targeted_debunking_does_not_leak_to_sibling(monkeypatch):
-    from modules.propagation.intervention_search import CandidateInterventionFork
+    from app.modules.propagation.intervention_search import CandidateInterventionFork
 
     trace = _run(
         monkeypatch,
@@ -353,7 +353,7 @@ def test_targeted_debunking_does_not_leak_to_sibling(monkeypatch):
 
 
 def test_targeted_correction_can_propagate_from_target_later(monkeypatch):
-    from modules.propagation.intervention_search import CandidateInterventionFork
+    from app.modules.propagation.intervention_search import CandidateInterventionFork
 
     trace = _run(
         monkeypatch,
@@ -379,7 +379,7 @@ def test_targeted_correction_can_propagate_from_target_later(monkeypatch):
 
 
 def test_targeted_source_verification_and_labeling_do_not_change_sibling(monkeypatch):
-    from modules.propagation.intervention_search import CandidateInterventionFork
+    from app.modules.propagation.intervention_search import CandidateInterventionFork
 
     agents = [_agent("A", influence=0.95), _agent("B", influence=0.1), _agent("C", influence=0.05)]
     adjacency = {"A": ["B", "C"], "B": [], "C": []}
@@ -410,8 +410,8 @@ def test_targeted_source_verification_and_labeling_do_not_change_sibling(monkeyp
 
 
 def test_event_proxy_selector_ranks_by_formula_28_coverage(monkeypatch):
-    from modules.propagation import intervention_search
-    from modules.propagation.schema import PropagationTrace
+    from app.modules.propagation import intervention_search
+    from app.modules.propagation.schema import PropagationTrace
 
     candidate_a = _candidate("debunking", ["B"])
     candidate_a.candidate_id = "coverage_first"
@@ -508,10 +508,10 @@ def test_lineage_records_match_existing_actions(monkeypatch):
 
 
 def test_forked_branches_start_with_identical_claim_state(monkeypatch):
-    from modules.propagation.simulator import run_forked_propagation
+    from app.modules.propagation.simulator import run_forked_propagation
 
     monkeypatch.setattr(
-        __import__("modules.propagation.simulator", fromlist=["compute_share_probability"]),
+        __import__("app.modules.propagation.simulator", fromlist=["compute_share_probability"]),
         "compute_share_probability",
         lambda *args, **kwargs: 1.0,
     )
@@ -529,8 +529,8 @@ def test_forked_branches_start_with_identical_claim_state(monkeypatch):
 
 
 def test_event_ranking_uses_claim_metrics_not_legacy_misinformation_alias():
-    from modules.propagation.intervention_search import InterventionCandidate, _compare_branch
-    from modules.propagation.schema import PropagationTrace
+    from app.modules.propagation.intervention_search import InterventionCandidate, _compare_branch
+    from app.modules.propagation.schema import PropagationTrace
 
     def trace(coverage, claims):
         return PropagationTrace(

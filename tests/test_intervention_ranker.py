@@ -1,4 +1,4 @@
-from modules.propagation.intervention_ranker import (
+from app.modules.propagation.intervention_ranker import (
     PairwiseLinearRanker,
     feature_vector,
     make_preference_record,

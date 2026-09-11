@@ -416,14 +416,24 @@ def _structured_answer(
     providers require before accepting ``response_format``).
     """
     if json_mode and hasattr(client, "chat_json"):
-        result = client.chat_json(messages, temperature=temperature, max_tokens=max_tokens)
+        result = client.chat_json(
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
         if not isinstance(result, dict) or not result:
             logger.warning(
                 "reporter chat_json returned no usable object; meta=%s",
                 dict(getattr(client, "last_response_metadata", {}) or {}),
             )
         return result if isinstance(result, dict) and result else _parse_json_object(str(result or ""))
-    content = _clean_text(client.chat(messages, temperature=temperature, max_tokens=max_tokens))
+    content = _clean_text(
+        client.chat(
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+    )
     if not content:
         logger.warning(
             "reporter chat returned empty content; meta=%s",

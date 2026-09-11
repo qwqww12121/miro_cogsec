@@ -1,4 +1,4 @@
-"""Round 3 adapter decoupling tests — online vs benchmark separation."""
+﻿"""Round 3 adapter decoupling tests — online vs benchmark separation."""
 
 from __future__ import annotations
 
@@ -91,7 +91,7 @@ class TestBenchmarkCLIStillWorks:
     def test_benchmark_cli_still_works(self):
         """build_benchmark_payload is still importable."""
         try:
-            from modules.benchmark_adapter import build_benchmark_payload
+            from app.modules.benchmark_adapter import build_benchmark_payload
             assert callable(build_benchmark_payload)
         except ImportError as e:
             pytest.skip(f"benchmark_adapter not importable: {e}")

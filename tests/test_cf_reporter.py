@@ -1,8 +1,8 @@
 """反事实报告模块测试。"""
 
-from modules.cf_reporter import CounterfactualReporter
-from modules.cognitive_profiler import CognitiveProfile
-from modules.risk_scorer import RiskScorer
+from app.modules.cf_reporter import CounterfactualReporter
+from app.modules.cognitive_profiler import CognitiveProfile
+from app.modules.risk_scorer import RiskScorer
 
 
 def test_counterfactual_report_contains_bifurcation_and_recommendations():

@@ -1,9 +1,9 @@
 """Regression tests for the unified report state and user-facing wording."""
 
-from modules.benchmark_adapter import build_benchmark_payload
-from modules.conversational_response import build_conversational_response
-from modules.privacy_sanitizer import PrivacySanitizer
-from modules.report_state import build_report_state
+from app.modules.benchmark_adapter import build_benchmark_payload
+from app.modules.conversational_response import build_conversational_response
+from app.modules.privacy_sanitizer import PrivacySanitizer
+from app.modules.report_state import build_report_state
 
 
 def _fraud_result():

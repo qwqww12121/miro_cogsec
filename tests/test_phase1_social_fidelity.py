@@ -1,4 +1,4 @@
-"""Static-contract tests for Phase 1 actor/social fidelity upgrades.
+﻿"""Static-contract tests for Phase 1 actor/social fidelity upgrades.
 
 These tests are intentionally added but not executed in this phase.  The
 runtime instruction for this deliverable is source/diff review only.
@@ -8,7 +8,7 @@ from random import Random
 
 
 def _actor(**kwargs):
-    from modules.propagation.schema import PropagationAgent
+    from app.modules.propagation.schema import PropagationAgent
 
     defaults = {
         "agent_id": "agent_test",
@@ -24,7 +24,7 @@ def _actor(**kwargs):
 
 
 def test_same_role_actors_receive_distinct_state_from_metadata():
-    from modules.social_state import build_actor_cognitive_state, build_scene_cognitive_prior
+    from app.modules.social_state import build_actor_cognitive_state, build_scene_cognitive_prior
 
     scene = build_scene_cognitive_prior(scenario_type="public_opinion")
     first = build_actor_cognitive_state(
@@ -38,7 +38,7 @@ def test_same_role_actors_receive_distinct_state_from_metadata():
 
 
 def test_same_role_oasis_personas_have_stable_actor_specific_voice():
-    from modules.social_state import actor_state_persona_summary
+    from app.modules.social_state import actor_state_persona_summary
 
     first = _actor(agent_id="viewer_001", role="ordinary_viewer")
     second = _actor(agent_id="viewer_002", role="ordinary_viewer")
@@ -51,7 +51,7 @@ def test_same_role_oasis_personas_have_stable_actor_specific_voice():
 
 
 def test_scene_prior_is_role_conditioned():
-    from modules.social_state import build_actor_cognitive_state, build_scene_cognitive_prior
+    from app.modules.social_state import build_actor_cognitive_state, build_scene_cognitive_prior
 
     scene = build_scene_cognitive_prior(scenario_type="event_propagation")
     official = build_actor_cognitive_state(scene, "official_responder", rng=Random(1))
@@ -61,7 +61,7 @@ def test_scene_prior_is_role_conditioned():
 
 
 def test_stance_uses_state_not_only_random_choice():
-    from modules.social_state import build_actor_cognitive_state, build_scene_cognitive_prior
+    from app.modules.social_state import build_actor_cognitive_state, build_scene_cognitive_prior
 
     scene = build_scene_cognitive_prior(scenario_type="public_opinion")
     skeptical = build_actor_cognitive_state(scene, "ordinary_student", {"prior_belief": 0.1}, Random(3))
@@ -70,7 +70,7 @@ def test_stance_uses_state_not_only_random_choice():
 
 
 def test_repeated_exposure_is_not_activation_coverage():
-    from modules.social_state import register_exposure
+    from app.modules.social_state import register_exposure
 
     target = _actor()
     register_exposure(target, tick=1, source_id="source")
@@ -81,7 +81,7 @@ def test_repeated_exposure_is_not_activation_coverage():
 
 
 def test_social_proof_saturates():
-    from modules.social_state import social_proof_from_exposure
+    from app.modules.social_state import social_proof_from_exposure
 
     values = [social_proof_from_exposure(count) for count in range(1, 20)]
     assert values[-1] <= 1.0
@@ -89,7 +89,7 @@ def test_social_proof_saturates():
 
 
 def test_verification_lowers_unverified_share_probability():
-    from modules.propagation import compute_share_probability
+    from app.modules.propagation import compute_share_probability
 
     source = _actor(influence=0.7, stance="amplifying")
     low_check = _actor(verification_tendency=0.2)
@@ -100,7 +100,7 @@ def test_verification_lowers_unverified_share_probability():
 
 
 def test_emotion_and_social_proof_raise_share_probability():
-    from modules.propagation import compute_share_probability
+    from app.modules.propagation import compute_share_probability
 
     source = _actor(stance="amplifying")
     target = _actor(emotional_activation=0.2, exposure_count=0)
@@ -112,7 +112,7 @@ def test_emotion_and_social_proof_raise_share_probability():
 
 
 def test_belief_update_respects_confirmation_bias():
-    from modules.propagation import update_belief_after_exposure
+    from app.modules.propagation import update_belief_after_exposure
 
     aligned = _actor(belief_strength=0.7, confirmation_bias=0.8, verification_tendency=0.1)
     conflicting = _actor(belief_strength=0.7, confirmation_bias=0.8, verification_tendency=0.1)
@@ -122,7 +122,7 @@ def test_belief_update_respects_confirmation_bias():
 
 
 def test_official_response_is_actor_conditioned():
-    from modules.social_state import update_institutional_trust
+    from app.modules.social_state import update_institutional_trust
 
     low_reactance = _actor(institutional_trust=0.8, reactance=0.1)
     high_reactance = _actor(institutional_trust=0.8, reactance=0.9)
@@ -133,7 +133,7 @@ def test_official_response_is_actor_conditioned():
 
 
 def test_community_is_separate_from_role():
-    from modules.social_state import ActorState, assign_communities
+    from app.modules.social_state import ActorState, assign_communities
 
     actors = [
         ActorState(actor_id="student_a", role="student", stance="supportive", prior_belief=0.8),
@@ -150,7 +150,7 @@ def test_community_is_separate_from_role():
 
 
 def test_snapshot_contract_includes_new_initial_state():
-    from modules.social_state import ActorState, SocialState, create_snapshot
+    from app.modules.social_state import ActorState, SocialState, create_snapshot
 
     state = SocialState(
         scenario_id="phase1",
@@ -165,7 +165,7 @@ def test_snapshot_contract_includes_new_initial_state():
 def test_same_seed_branches_start_from_equivalent_agent_state():
     from copy import deepcopy
 
-    from modules.propagation import build_agents, build_topology
+    from app.modules.propagation import build_agents, build_topology
 
     agents = build_agents("event_propagation", n_agents=8, seed=19)
     topology = build_topology(agents, topology_type="scale_free_like", seed=19)
