@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from app.modules.conversational_response import build_conversational_response
 from app.modules.reporter_policy import generate_reporter_answer, validate_reporter_text
 from app.modules.report_state import build_report_state
@@ -33,6 +35,17 @@ class MetadataReporterClient(FakeReporterClient):
         return value
 
 
+def _json_response(professional_message: str) -> str:
+    return json.dumps(
+        {
+            "professional_message": professional_message,
+            "plain_view": professional_message,
+            "most_important_action": "先暂停操作，并通过官方渠道核验。",
+        },
+        ensure_ascii=False,
+    )
+
+
 def _result() -> dict:
     return {
         "scenario_metadata": {"canonical": "fraud_im"},
@@ -59,7 +72,11 @@ def _result() -> dict:
 
 def test_llm_reporter_is_same_response_path_and_receives_no_benchmark_payload() -> None:
     client = FakeReporterClient([
-        "这条广告的主要风险不只是商品本身，而是它要求你转到私人微信继续交易。先不要添加或付款；留在原平台核验发布者身份，并保留广告页面用于举报。"
+        _json_response(
+            "这条广告的主要风险不只是商品本身，而是它要求你转到私人微信继续交易。"
+            "先不要添加或付款；留在原平台核验发布者身份，并保留广告页面用于举报。"
+            "如果对方继续催促或要求提供付款、验证码等信息，应立即停止并保留原始记录。"
+        )
     ])
     result = _result()
     result["benchmark_prediction"] = {"gold_like_field": "must not enter prompt"}
@@ -91,7 +108,7 @@ def test_invalid_llm_reporter_retries_then_uses_visible_fallback() -> None:
     provenance = response["reporter_provenance"]
     assert provenance["fallback_used"] is True
     assert provenance["retry_count"] == 1
-    assert provenance["fallback_reason"] == "machine_format_leaked"
+    assert provenance["fallback_reason"] == "empty_or_too_short"
     assert len(client.calls) == 2
 
 
@@ -99,7 +116,10 @@ def test_length_truncated_reporter_is_retried_with_more_budget() -> None:
     client = MetadataReporterClient(
         [
             "这是第一版回答，但在关键建议处被截断",
-            "这条信息存在较高风险。请先暂停付款，并通过平台官方入口核验发布者身份。",
+            _json_response(
+                "这条信息存在较高风险。请先暂停付款，并通过平台官方入口核验发布者身份。"
+                "不要按对方要求转移到私人渠道，也不要提交验证码或其他敏感资料；保留页面并使用官方举报入口。"
+            ),
         ],
         [
             {"finish_reason": "length", "completion_tokens": 300, "model": "reasoning-reporter"},
@@ -181,7 +201,10 @@ def test_low_risk_fraud_uses_neutral_guardrail_before_remote_generation() -> Non
 
 def test_observed_payment_request_bypasses_low_risk_guardrail() -> None:
     client = FakeReporterClient([
-        "广告要求先交包装费和通道费，并承诺无需征信保证下卡，这是明确的高风险收费信号。不要付款，应直接通过银行官方渠道核验。"
+        _json_response(
+            "广告要求先交包装费和通道费，并承诺无需征信保证下卡，这是明确的高风险收费信号。"
+            "不要付款，应直接通过银行官方渠道核验，并保留广告页面、聊天记录和收款要求。"
+        )
     ])
     state = {
         "scenario": "fraud_im",
@@ -204,7 +227,10 @@ def test_observed_payment_request_bypasses_low_risk_guardrail() -> None:
 
 def test_proxy_event_payload_hides_synthetic_trace_and_metrics() -> None:
     client = FakeReporterClient([
-        "原文说明高影响力账号加入判断性措辞后放大了未经证实的信息。建议核实首发来源，并把更正同步到原帖和主要转发链。"
+        _json_response(
+            "原文说明高影响力账号加入判断性措辞后放大了未经证实的信息。"
+            "建议核实首发来源，并把更正同步到原帖和主要转发链；当前结论应以这些可核验的原文证据为准。"
+        )
     ])
     state = {
         "scenario": "event_propagation",
